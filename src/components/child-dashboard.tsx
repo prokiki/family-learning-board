@@ -117,6 +117,10 @@ function formatTimer(totalSeconds: number) {
   return `${minutes}:${seconds}`;
 }
 
+function isCompletedStatus(status: TaskStatus) {
+  return status === "done_by_child" || status === "confirmed_by_parent";
+}
+
 export function ChildDashboard() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -134,6 +138,8 @@ export function ChildDashboard() {
   const timerTotalSeconds = getModeSeconds(timerState.mode);
   const timerProgress =
     ((timerTotalSeconds - timerState.secondsLeft) / timerTotalSeconds) * 100;
+  const currentTaskId =
+    tasks.find((task) => !isCompletedStatus(task.status))?.id ?? tasks[0]?.id ?? null;
 
   function getAudioContext() {
     const AudioContextConstructor =
@@ -324,118 +330,147 @@ export function ChildDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(125,211,252,0.25),rgba(255,255,255,1)_55%)] px-4 py-5 text-slate-900 md:px-8 md:py-8">
-      <div className="mx-auto max-w-5xl">
-        <section className="soft-shadow rounded-[2rem] border border-white/70 bg-white/90 p-6 md:p-8">
-          <p className="text-base font-semibold text-sky-700">今日任务</p>
-          <h1 className="font-title mt-3 text-4xl leading-tight text-slate-950 md:text-6xl">
-            放学啦，
-            <br />
-            一步一步来。
-          </h1>
-          <p className="mt-4 text-lg leading-8 text-slate-600 md:text-2xl">
-            今天是 {formatDisplayDate(today)}
-          </p>
-        </section>
-
-        <section className="soft-shadow mt-6 rounded-[2rem] border border-cyan-100 bg-[linear-gradient(135deg,rgba(14,165,233,0.12),rgba(255,255,255,0.96),rgba(250,204,21,0.18))] p-6 md:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-xl">
-              <p className="text-base font-semibold uppercase tracking-[0.2em] text-sky-700">
-                番茄时钟
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f7fafc_0%,#eef4fb_18%,#f8fafc_100%)] px-4 py-6 text-slate-900 md:px-8 md:py-10">
+      <div className="mx-auto max-w-6xl space-y-6 md:space-y-8">
+        <section className="soft-shadow rounded-[2rem] border border-slate-200/80 bg-white/92 px-6 py-5 md:px-8 md:py-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                Child Board
               </p>
-              <h2 className="font-title mt-3 text-3xl leading-tight text-slate-950 md:text-5xl">
-                {timerState.mode === "focus" ? "专心学习时间" : "休息一下时间"}
-              </h2>
-              <p className="mt-3 text-lg leading-8 text-slate-600 md:text-2xl">
-                {timerState.mode === "focus"
-                  ? "先专心做一会儿，再休息，会更轻松。"
-                  : "喝口水，活动一下，准备下一轮。"}
+              <h1 className="font-title mt-2 text-3xl leading-tight text-slate-950 md:text-5xl">
+                先看第一项，
+                <br />
+                一项一项完成。
+              </h1>
+              <p className="mt-3 text-base leading-7 text-slate-600 md:text-xl">
+                今天是 {formatDisplayDate(today)}
               </p>
             </div>
-
-            <div className="rounded-[2rem] bg-white/90 p-5 shadow-[0_18px_40px_rgba(14,165,233,0.14)]">
-              <div className="mx-auto flex h-52 w-52 items-center justify-center rounded-full border-[12px] border-white bg-slate-950 text-white md:h-60 md:w-60">
-                <div
-                  className="absolute h-52 w-52 rounded-full md:h-60 md:w-60"
-                  style={{
-                    background: `conic-gradient(#0f172a ${timerProgress * 3.6}deg, rgba(226,232,240,0.7) 0deg)`,
-                    mask:
-                      "radial-gradient(circle at center, transparent 68%, black 69%)",
-                    WebkitMask:
-                      "radial-gradient(circle at center, transparent 68%, black 69%)",
-                  }}
-                />
-                <div className="relative z-10 text-center">
-                  <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-300">
-                    {timerState.mode === "focus"
-                      ? `${FOCUS_MINUTES} 分钟专注`
-                      : `${BREAK_MINUTES} 分钟休息`}
-                  </p>
-                  <p className="font-title mt-3 text-5xl md:text-6xl">
-                    {formatTimer(timerState.secondsLeft)}
-                  </p>
-                </div>
+            <div className="grid grid-cols-3 gap-3 md:min-w-[18rem]">
+              <div className="rounded-[1.5rem] bg-slate-950 px-4 py-4 text-center text-white">
+                <p className="text-sm text-slate-300">全部</p>
+                <p className="mt-1 text-3xl font-bold">{tasks.length}</p>
+              </div>
+              <div className="rounded-[1.5rem] bg-slate-100 px-4 py-4 text-center text-slate-700">
+                <p className="text-sm">进行中</p>
+                <p className="mt-1 text-3xl font-bold">
+                  {tasks.filter((task) => task.status === "in_progress").length}
+                </p>
+              </div>
+              <div className="rounded-[1.5rem] bg-emerald-50 px-4 py-4 text-center text-emerald-800">
+                <p className="text-sm">完成</p>
+                <p className="mt-1 text-3xl font-bold">
+                  {tasks.filter((task) => isCompletedStatus(task.status)).length}
+                </p>
               </div>
             </div>
           </div>
+        </section>
 
-          <div className="mt-6 grid gap-3 md:grid-cols-[1fr_1fr_1.2fr_1.2fr_1.2fr]">
-            <button
-              type="button"
-              onClick={() => switchTimerMode("focus")}
-              className={`min-h-16 rounded-[1.5rem] px-4 py-4 text-xl font-bold md:text-2xl ${
-                timerState.mode === "focus"
-                  ? "bg-slate-950 text-white"
-                  : "bg-white text-slate-700"
-              }`}
-            >
-              专注 20 分钟
-            </button>
-            <button
-              type="button"
-              onClick={() => switchTimerMode("break")}
-              className={`min-h-16 rounded-[1.5rem] px-4 py-4 text-xl font-bold md:text-2xl ${
-                timerState.mode === "break"
-                  ? "bg-amber-400 text-slate-950"
-                  : "bg-white text-slate-700"
-              }`}
-            >
-              休息 5 分钟
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                primeTimerAudio();
-                dispatchTimer({ type: "start" });
-              }}
-              disabled={timerState.isRunning}
-              className="min-h-16 rounded-[1.5rem] bg-emerald-400 px-4 py-4 text-xl font-bold text-slate-950 disabled:bg-slate-200 disabled:text-slate-400 md:text-2xl"
-            >
-              开始循环
-            </button>
-            <button
-              type="button"
-              onClick={() => dispatchTimer({ type: "pause" })}
-              disabled={!timerState.isRunning}
-              className="min-h-16 rounded-[1.5rem] bg-sky-200 px-4 py-4 text-xl font-bold text-slate-950 disabled:bg-slate-200 disabled:text-slate-400 md:text-2xl"
-            >
-              暂停
-            </button>
-            <button
-              type="button"
-              onClick={resetTimer}
-              className="min-h-16 rounded-[1.5rem] bg-white px-4 py-4 text-xl font-bold text-slate-700 md:text-2xl"
-            >
-              重置
-            </button>
-          </div>
-
-          {timerState.notice ? (
-            <div className="mt-4 rounded-[1.5rem] bg-amber-300 px-5 py-4 text-center text-xl font-bold text-slate-950 md:text-2xl">
-              {timerState.notice}
+        <section className="soft-shadow rounded-[2rem] border border-slate-200/80 bg-white/88 px-5 py-5 md:px-6 md:py-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-lg">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                番茄时钟
+              </p>
+              <h2 className="font-title mt-2 text-2xl leading-tight text-slate-950 md:text-3xl">
+                {timerState.mode === "focus" ? "专注 20 分钟" : "休息 5 分钟"}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600 md:text-lg">
+                {timerState.mode === "focus"
+                  ? "专注做当前任务，到点后会自动提醒休息。"
+                  : "休息一下，结束后会自动开始下一轮专注。"}
+              </p>
             </div>
-          ) : null}
+
+            <div className="flex flex-col items-start gap-4 lg:items-end">
+              <div className="flex items-center gap-4">
+                <div className="relative flex h-32 w-32 items-center justify-center rounded-full bg-slate-950 text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)] md:h-36 md:w-36">
+                  <div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: `conic-gradient(#0f172a ${timerProgress * 3.6}deg, rgba(226,232,240,0.82) 0deg)`,
+                      mask:
+                        "radial-gradient(circle at center, transparent 66%, black 67%)",
+                      WebkitMask:
+                        "radial-gradient(circle at center, transparent 66%, black 67%)",
+                    }}
+                  />
+                  <div className="relative z-10 text-center">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-300">
+                      {timerState.mode === "focus" ? "专注" : "休息"}
+                    </p>
+                    <p className="font-title mt-2 text-3xl md:text-4xl">
+                      {formatTimer(timerState.secondsLeft)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => switchTimerMode("focus")}
+                      className={`rounded-full px-4 py-2 text-sm font-bold md:text-base ${
+                        timerState.mode === "focus"
+                          ? "bg-slate-950 text-white"
+                          : "bg-slate-100 text-slate-700"
+                      }`}
+                    >
+                      专注
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => switchTimerMode("break")}
+                      className={`rounded-full px-4 py-2 text-sm font-bold md:text-base ${
+                        timerState.mode === "break"
+                          ? "bg-slate-950 text-white"
+                          : "bg-slate-100 text-slate-700"
+                      }`}
+                    >
+                      休息
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        primeTimerAudio();
+                        dispatchTimer({ type: "start" });
+                      }}
+                      disabled={timerState.isRunning}
+                      className="rounded-[1.1rem] bg-slate-950 px-4 py-3 text-sm font-bold text-white disabled:bg-slate-200 disabled:text-slate-400 md:text-base"
+                    >
+                      开始
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => dispatchTimer({ type: "pause" })}
+                      disabled={!timerState.isRunning}
+                      className="rounded-[1.1rem] bg-slate-100 px-4 py-3 text-sm font-bold text-slate-700 disabled:bg-slate-100/80 disabled:text-slate-400 md:text-base"
+                    >
+                      暂停
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetTimer}
+                      className="rounded-[1.1rem] bg-slate-100 px-4 py-3 text-sm font-bold text-slate-700 md:text-base"
+                    >
+                      重置
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {timerState.notice ? (
+                <div className="rounded-[1.25rem] bg-slate-100 px-4 py-3 text-sm font-bold text-slate-800 md:text-base">
+                  {timerState.notice}
+                </div>
+              ) : null}
+            </div>
+          </div>
         </section>
 
         {!supabase ? (
@@ -462,41 +497,78 @@ export function ChildDashboard() {
             />
           </div>
         ) : (
-          <div className="mt-6 grid gap-5">
+          <section className="space-y-4 md:space-y-5">
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                  今日任务
+                </p>
+                <h2 className="mt-2 text-2xl font-bold text-slate-950 md:text-3xl">
+                  先做最上面的当前任务
+                </h2>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:gap-5">
             {tasks.map((task, index) => {
               const labels = actionLabels(task.status);
               const meta = TASK_STATUS_META[task.status];
+              const isCurrent = task.id === currentTaskId;
+              const isCompleted = isCompletedStatus(task.status);
+              const primaryButtonClass = isCompleted
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-emerald-500 text-white shadow-[0_12px_24px_rgba(16,185,129,0.22)]";
+              const helpButtonClass =
+                task.status === "needs_help"
+                  ? "bg-amber-300 text-slate-950"
+                  : "bg-amber-100 text-amber-900";
+              const weakButtonClass = "bg-slate-100 text-slate-700";
 
               return (
                 <article
                   key={task.id}
-                  className="soft-shadow rounded-[2rem] border border-slate-200 bg-white p-5 md:p-7"
+                  className={`soft-shadow rounded-[2rem] border p-5 md:p-7 ${
+                    isCurrent
+                      ? "border-slate-900 bg-white shadow-[0_22px_50px_rgba(15,23,42,0.12)]"
+                      : isCompleted
+                        ? "border-slate-200 bg-slate-50/90 opacity-78"
+                        : "border-slate-200 bg-white"
+                  }`}
                 >
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                     <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-                        任务 {index + 1}
-                      </p>
-                      <h2 className="mt-3 font-title text-3xl leading-tight text-slate-950 md:text-5xl">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                          任务 {index + 1}
+                        </p>
+                        {isCurrent ? (
+                          <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-white">
+                            当前任务
+                          </span>
+                        ) : null}
+                      </div>
+                      <h2 className="font-title mt-3 text-3xl leading-tight text-slate-950 md:text-5xl">
                         {task.title}
                       </h2>
                       {task.details ? (
-                        <p className="mt-3 text-lg leading-8 text-slate-600 md:text-2xl">
+                        <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600 md:text-xl">
                           {task.details}
                         </p>
                       ) : null}
                     </div>
-                    <div className={`rounded-full px-4 py-2 text-base font-bold ${meta.tone}`}>
+                    <div
+                      className={`rounded-full px-4 py-2 text-sm font-bold md:text-base ${meta.tone}`}
+                    >
                       {meta.childLabel}
                     </div>
                   </div>
 
-                  <div className="mt-6 grid gap-3 md:grid-cols-3">
+                  <div className="mt-6 grid gap-3 md:grid-cols-[1fr_1fr_0.9fr]">
                     <button
                       type="button"
                       disabled={isPending}
                       onClick={() => updateTask(task.id, "in_progress")}
-                      className="min-h-16 rounded-[1.5rem] bg-slate-950 px-4 py-4 text-xl font-bold text-white disabled:bg-slate-300 md:text-2xl"
+                      className={`min-h-16 rounded-[1.5rem] px-4 py-4 text-lg font-bold disabled:bg-slate-200 disabled:text-slate-400 md:text-2xl ${weakButtonClass}`}
                     >
                       {labels[0]}
                     </button>
@@ -504,7 +576,7 @@ export function ChildDashboard() {
                       type="button"
                       disabled={isPending}
                       onClick={() => updateTask(task.id, "done_by_child")}
-                      className="min-h-16 rounded-[1.5rem] bg-emerald-400 px-4 py-4 text-xl font-bold text-slate-950 disabled:bg-slate-200 md:text-2xl"
+                      className={`min-h-16 rounded-[1.5rem] px-4 py-4 text-xl font-bold disabled:bg-slate-200 disabled:text-slate-400 md:text-2xl ${primaryButtonClass}`}
                     >
                       {labels[1]}
                     </button>
@@ -512,7 +584,7 @@ export function ChildDashboard() {
                       type="button"
                       disabled={isPending}
                       onClick={() => updateTask(task.id, "needs_help")}
-                      className="min-h-16 rounded-[1.5rem] bg-amber-300 px-4 py-4 text-xl font-bold text-slate-950 disabled:bg-slate-200 md:text-2xl"
+                      className={`min-h-16 rounded-[1.5rem] px-4 py-4 text-lg font-bold disabled:bg-slate-200 disabled:text-slate-400 md:text-2xl ${helpButtonClass}`}
                     >
                       {labels[2]}
                     </button>
@@ -520,7 +592,8 @@ export function ChildDashboard() {
                 </article>
               );
             })}
-          </div>
+            </div>
+          </section>
         )}
       </div>
     </div>
