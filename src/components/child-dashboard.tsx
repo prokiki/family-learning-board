@@ -433,29 +433,27 @@ export function ChildDashboard() {
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
                 Child Board
               </p>
-              <h1 className="font-title mt-2 text-3xl leading-tight text-slate-950 md:text-5xl">
-                先看第一项，
-                <br />
-                一项一项完成。
+              <h1 className="font-title mt-2 text-2xl leading-tight text-slate-950 md:text-4xl">
+                今天的学习任务
               </h1>
-              <p className="mt-3 text-base leading-7 text-slate-600 md:text-xl">
+              <p className="mt-2 text-sm leading-6 text-slate-600 md:text-lg">
                 今天是 {formatDisplayDate(today)}
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-3 md:min-w-[18rem]">
-              <div className="rounded-[1.5rem] bg-slate-950 px-4 py-4 text-center text-white">
-                <p className="text-sm text-slate-300">全部</p>
-                <p className="mt-1 text-3xl font-bold">{tasks.length}</p>
+            <div className="grid grid-cols-3 gap-2 md:min-w-[16rem]">
+              <div className="rounded-[1.25rem] bg-slate-950 px-4 py-3 text-center text-white">
+                <p className="text-xs text-slate-300">全部</p>
+                <p className="mt-1 text-2xl font-bold">{tasks.length}</p>
               </div>
-              <div className="rounded-[1.5rem] bg-slate-100 px-4 py-4 text-center text-slate-700">
-                <p className="text-sm">进行中</p>
-                <p className="mt-1 text-3xl font-bold">
+              <div className="rounded-[1.25rem] bg-slate-100 px-4 py-3 text-center text-slate-700">
+                <p className="text-xs">进行中</p>
+                <p className="mt-1 text-2xl font-bold">
                   {tasks.filter((task) => task.status === "in_progress").length}
                 </p>
               </div>
-              <div className="rounded-[1.5rem] bg-emerald-50 px-4 py-4 text-center text-emerald-800">
-                <p className="text-sm">完成</p>
-                <p className="mt-1 text-3xl font-bold">
+              <div className="rounded-[1.25rem] bg-emerald-50 px-4 py-3 text-center text-emerald-800">
+                <p className="text-xs">完成</p>
+                <p className="mt-1 text-2xl font-bold">
                   {tasks.filter((task) => isCompletedStatus(task.status)).length}
                 </p>
               </div>
