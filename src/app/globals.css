@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fffdf7;
+  --foreground: #172033;
+  --card: rgba(255, 255, 255, 0.84);
+  --line: rgba(148, 163, 184, 0.24);
+  --font-body:
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
+    sans-serif;
+  --font-title:
+    "Arial Rounded MT Bold", "Trebuchet MS", "Avenir Next", "PingFang SC",
+    sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --font-sans: var(--font-body);
+  --font-title: var(--font-title);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), sans-serif;
+}
+
+a,
+button,
+input,
+textarea,
+select {
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+::selection {
+  background: rgba(56, 189, 248, 0.25);
+}
+
+.font-title {
+  font-family: var(--font-title), sans-serif;
+}
+
+.card-surface {
+  background: var(--card);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(18px);
+}
+
+.soft-shadow {
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+}
