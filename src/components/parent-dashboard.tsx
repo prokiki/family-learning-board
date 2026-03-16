@@ -6,8 +6,8 @@ import { SetupNotice } from "@/components/setup-notice";
 import { StatusPill } from "@/components/status-pill";
 import { formatDisplayDate, formatLocalDate } from "@/lib/date";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { parseHomeworkText } from "@/lib/task-parser";
-import type { TaskDraft, TaskRecord, TaskStatus } from "@/types/task";
+import { flattenHomeworkGroups, parseHomeworkGroups } from "@/lib/task-parser";
+import type { SubjectTaskGroup, TaskDraft, TaskRecord, TaskStatus } from "@/types/task";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
@@ -39,6 +39,7 @@ async function fetchTodayTasks(
 export function ParentDashboard() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [rawText, setRawText] = useState("");
+  const [importGroups, setImportGroups] = useState<SubjectTaskGroup[]>([]);
   const [manualTitle, setManualTitle] = useState("");
   const [manualDetails, setManualDetails] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -46,6 +47,7 @@ export function ParentDashboard() {
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
   const today = useMemo(() => formatLocalDate(), []);
+  const importDrafts = useMemo(() => flattenHomeworkGroups(importGroups), [importGroups]);
 
   useEffect(() => {
     if (!supabase) {
@@ -80,6 +82,10 @@ export function ParentDashboard() {
       active = false;
     };
   }, [supabase, today]);
+
+  useEffect(() => {
+    setImportGroups(parseHomeworkGroups(rawText));
+  }, [rawText]);
 
   useEffect(() => {
     if (!supabase) {
@@ -126,6 +132,7 @@ export function ParentDashboard() {
     const payload = drafts.map((draft, index) => ({
       board_id: boardId,
       due_date: today,
+      subject: draft.subject ?? null,
       title: draft.title,
       details: draft.details ?? null,
       status: "pending" as TaskStatus,
@@ -161,11 +168,55 @@ export function ParentDashboard() {
   }
 
   function handleImport() {
-    const drafts = parseHomeworkText(rawText);
-
     startTransition(() => {
-      void insertTasks(drafts, "imported");
+      void insertTasks(
+        importDrafts.filter((draft) => draft.title.trim()),
+        "imported",
+      );
     });
+  }
+
+  function updateImportedTask(subjectIndex: number, taskIndex: number, title: string) {
+    setImportGroups((current) =>
+      current.map((group, groupIndex) =>
+        groupIndex !== subjectIndex
+          ? group
+          : {
+              ...group,
+              tasks: group.tasks.map((task, currentTaskIndex) =>
+                currentTaskIndex !== taskIndex ? task : { ...task, title },
+              ),
+            },
+      ),
+    );
+  }
+
+  function deleteImportedTask(subjectIndex: number, taskIndex: number) {
+    setImportGroups((current) =>
+      current
+        .map((group, groupIndex) =>
+          groupIndex !== subjectIndex
+            ? group
+            : {
+                ...group,
+                tasks: group.tasks.filter((_, currentTaskIndex) => currentTaskIndex !== taskIndex),
+              },
+        )
+        .filter((group) => group.tasks.length > 0),
+    );
+  }
+
+  function addImportedTask(subjectIndex: number) {
+    setImportGroups((current) =>
+      current.map((group, groupIndex) =>
+        groupIndex !== subjectIndex
+          ? group
+          : {
+              ...group,
+              tasks: [...group.tasks, { subject: group.subject, title: "" }],
+            },
+      ),
+    );
   }
 
   function updateTaskStatus(id: string, status: TaskStatus) {
@@ -283,27 +334,96 @@ export function ParentDashboard() {
           <div className="card-surface soft-shadow rounded-[1.75rem] p-6">
             <h2 className="text-2xl font-bold text-slate-950">导入老师作业文本</h2>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              支持把钉钉群里复制的文本贴进来，系统按换行、编号和语义做基础拆分。
+              支持把钉钉群里的文字先按学科分组，再拆成孩子可执行的子任务。
             </p>
             <textarea
               value={rawText}
               onChange={(event) => setRawText(event.target.value)}
-              placeholder="例如：1. 语文：朗读课文第 5 课；2. 数学：口算 2 页；3. 英语：听读 15 分钟"
+              placeholder="例如：语文：预习第5课，抄写生字两遍。数学：完成口算2页，订正错题。"
               rows={8}
               className="mt-4 w-full rounded-[1.5rem] border border-slate-200 bg-white px-4 py-4 text-base outline-none focus:border-sky-400"
             />
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <p className="text-sm text-slate-500">
-                预计拆分为 {parseHomeworkText(rawText).length} 条任务
-              </p>
-              <button
-                type="button"
-                disabled={!rawText.trim() || !supabase || isPending}
-                onClick={handleImport}
-                className="rounded-2xl bg-amber-400 px-5 py-3 text-base font-semibold text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-200"
-              >
-                拆分并导入
-              </button>
+            <div className="mt-5 rounded-[1.5rem] border border-slate-200 bg-white/75 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-950">导入预览</h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    上方保留原始文本，下面按学科展示并支持逐条校对。
+                  </p>
+                </div>
+                <p className="text-sm font-semibold text-slate-500">
+                  共 {importDrafts.filter((draft) => draft.title.trim()).length} 条子任务
+                </p>
+              </div>
+
+              {importGroups.length === 0 ? (
+                <div className="mt-4 rounded-[1.25rem] bg-slate-100 px-4 py-5 text-sm text-slate-500">
+                  贴入老师作业后，这里会显示按学科分组的预览。
+                </div>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  {importGroups.map((group, subjectIndex) => (
+                    <section
+                      key={`${group.subject}-${subjectIndex}`}
+                      className="rounded-[1.25rem] border border-slate-200 bg-white p-4"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <h4 className="text-lg font-bold text-slate-950">{group.subject}</h4>
+                        <button
+                          type="button"
+                          onClick={() => addImportedTask(subjectIndex)}
+                          className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700"
+                        >
+                          补一条
+                        </button>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {group.tasks.map((task, taskIndex) => (
+                          <div
+                            key={`${group.subject}-${taskIndex}`}
+                            className="flex items-center gap-2"
+                          >
+                            <span className="w-8 text-center text-sm font-semibold text-slate-400">
+                              {taskIndex + 1}
+                            </span>
+                            <input
+                              value={task.title}
+                              onChange={(event) =>
+                                updateImportedTask(subjectIndex, taskIndex, event.target.value)
+                              }
+                              placeholder={`补充 ${group.subject} 子任务`}
+                              className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-sky-400"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => deleteImportedTask(subjectIndex, taskIndex)}
+                              className="rounded-xl bg-rose-50 px-3 py-2.5 text-sm font-semibold text-rose-700"
+                            >
+                              删除
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-4 flex items-center justify-end">
+                <button
+                  type="button"
+                  disabled={
+                    !rawText.trim() ||
+                    !supabase ||
+                    isPending ||
+                    importDrafts.filter((draft) => draft.title.trim()).length === 0
+                  }
+                  onClick={handleImport}
+                  className="rounded-2xl bg-amber-400 px-5 py-3 text-base font-semibold text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-200"
+                >
+                  确认导入
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -345,6 +465,11 @@ export function ParentDashboard() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <StatusPill status={task.status} />
+                        {task.subject ? (
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                            {task.subject}
+                          </span>
+                        ) : null}
                         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
                           {task.source === "imported" ? "导入" : "手动"}
                         </span>

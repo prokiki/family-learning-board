@@ -1,7 +1,13 @@
-import type { TaskDraft } from "@/types/task";
+import type { SubjectTaskGroup, TaskDraft } from "@/types/task";
 
 const LEADING_MARKERS =
   /^(\d+[\.\)、]|[一二三四五六七八九十]+[、.]|[-•●▪︎◦]|[（(]?\d+[）)])\s*/;
+const SUBJECTS = ["语文", "数学", "英语", "科学", "道法", "道德与法治"] as const;
+const SUBJECT_HEADER_PATTERN = new RegExp(
+  `(${SUBJECTS.map((subject) => subject.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\s*[：:]`,
+  "g",
+);
+const PURE_SUBJECT_PATTERN = new RegExp(`^(${SUBJECTS.join("|")})$`);
 
 function cleanLine(line: string) {
   return line
@@ -11,34 +17,72 @@ function cleanLine(line: string) {
     .trim();
 }
 
-export function parseHomeworkText(rawText: string): TaskDraft[] {
-  const normalized = rawText
+function normalizeHomeworkText(rawText: string) {
+  return rawText
+    .replace(/\r/g, "")
     .replace(/\t/g, "\n")
-    .replace(/；/g, ";\n")
-    .replace(/。(?=\S)/g, "。\n")
-    .replace(/(?<=\d)[、.](?=\S)/g, "$& ");
+    .replace(/(?<!\n)(语文|数学|英语|科学|道法|道德与法治)\s*[：:]/g, "\n$1：")
+    .trim();
+}
 
-  const lines = normalized
-    .split(/\n+/)
+function splitTasks(content: string, subject: string): TaskDraft[] {
+  return content
+    .replace(/[。]+/g, "\n")
+    .split(/[，、；;\n]+/)
     .map(cleanLine)
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((item) => !PURE_SUBJECT_PATTERN.test(item))
+    .map((title) => ({ subject, title }));
+}
 
-  const merged: string[] = [];
+export function parseHomeworkGroups(rawText: string): SubjectTaskGroup[] {
+  const normalized = normalizeHomeworkText(rawText);
 
-  for (const line of lines) {
-    const previous = merged.at(-1);
-
-    if (
-      previous &&
-      line.length < 10 &&
-      !/[作业练习朗读背诵订正复习预习听写打卡]/.test(line)
-    ) {
-      merged[merged.length - 1] = `${previous} ${line}`.trim();
-      continue;
-    }
-
-    merged.push(line);
+  if (!normalized) {
+    return [];
   }
 
-  return merged.map((title) => ({ title }));
+  const matches = [...normalized.matchAll(SUBJECT_HEADER_PATTERN)];
+
+  if (matches.length === 0) {
+    const tasks = normalized
+      .split(/\n+/)
+      .flatMap((line) => splitTasks(line, "其他"))
+      .filter((task) => task.title);
+
+    return tasks.length > 0 ? [{ subject: "其他", tasks }] : [];
+  }
+
+  const groups: SubjectTaskGroup[] = [];
+
+  for (let index = 0; index < matches.length; index += 1) {
+    const match = matches[index];
+    const subject = match[1].replace(/\s+/g, "");
+    const start = (match.index ?? 0) + match[0].length;
+    const end = matches[index + 1]?.index ?? normalized.length;
+    const content = normalized.slice(start, end).trim();
+    const tasks = splitTasks(content, subject);
+
+    if (tasks.length > 0) {
+      groups.push({ subject, tasks });
+    }
+  }
+
+  return groups;
+}
+
+export function flattenHomeworkGroups(groups: SubjectTaskGroup[]): TaskDraft[] {
+  return groups.flatMap((group) =>
+    group.tasks
+      .map((task) => ({
+        subject: group.subject,
+        title: cleanLine(task.title),
+        details: task.details,
+      }))
+      .filter((task) => task.title && !PURE_SUBJECT_PATTERN.test(task.title)),
+  );
+}
+
+export function parseHomeworkText(rawText: string): TaskDraft[] {
+  return flattenHomeworkGroups(parseHomeworkGroups(rawText));
 }

@@ -136,6 +136,22 @@ function taskSortWeight(status: TaskStatus) {
   }
 }
 
+function groupTasksBySubject(tasks: TaskRecord[]) {
+  const grouped = new Map<string, TaskRecord[]>();
+
+  for (const task of tasks) {
+    const subject = task.subject?.trim() || "今日任务";
+    const subjectTasks = grouped.get(subject) ?? [];
+    subjectTasks.push(task);
+    grouped.set(subject, subjectTasks);
+  }
+
+  return [...grouped.entries()].map(([subject, subjectTasks]) => ({
+    subject,
+    tasks: subjectTasks,
+  }));
+}
+
 export function ChildDashboard() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -174,6 +190,7 @@ export function ChildDashboard() {
     orderedTasks.find((task) => !isCompletedStatus(task.status))?.id ??
     orderedTasks[0]?.id ??
     null;
+  const groupedOrderedTasks = useMemo(() => groupTasksBySubject(orderedTasks), [orderedTasks]);
 
   function getAudioContext() {
     const AudioContextConstructor =
@@ -543,8 +560,14 @@ export function ChildDashboard() {
               </div>
             </div>
 
-            <div className="grid gap-4 md:gap-5">
-            {orderedTasks.map((task, index) => {
+            <div className="grid gap-5 md:gap-6">
+            {groupedOrderedTasks.map((group) => (
+              <section key={group.subject} className="space-y-3">
+                <div className="px-1">
+                  <h3 className="text-lg font-bold text-slate-700 md:text-xl">{group.subject}</h3>
+                </div>
+                <div className="grid gap-4 md:gap-5">
+            {group.tasks.map((task, index) => {
               const labels = actionLabels(task.status);
               const meta = TASK_STATUS_META[task.status];
               const isCurrent = task.id === currentTaskId;
@@ -626,6 +649,9 @@ export function ChildDashboard() {
                 </article>
               );
             })}
+                </div>
+              </section>
+            ))}
             </div>
           </section>
         )}

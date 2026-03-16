@@ -16,6 +16,7 @@ export interface TaskRecord {
   id: string;
   board_id: string;
   due_date: string;
+  subject: string | null;
   title: string;
   details: string | null;
   status: TaskStatus;
@@ -27,6 +28,12 @@ export interface TaskRecord {
 }
 
 export interface TaskDraft {
+  subject?: string;
   title: string;
   details?: string;
+}
+
+export interface SubjectTaskGroup {
+  subject: string;
+  tasks: TaskDraft[];
 }
