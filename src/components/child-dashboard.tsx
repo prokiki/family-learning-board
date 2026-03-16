@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { EmptyState } from "@/components/empty-state";
 import { SetupNotice } from "@/components/setup-notice";
@@ -67,21 +74,41 @@ export function ChildDashboard() {
     timerMode === "focus" ? FOCUS_MINUTES * 60 : BREAK_MINUTES * 60;
   const timerProgress = ((timerTotalSeconds - secondsLeft) / timerTotalSeconds) * 100;
 
-  function playTimerSound() {
+  function getAudioContext() {
     const AudioContextConstructor =
       window.AudioContext ||
       (window as typeof window & { webkitAudioContext?: typeof AudioContext })
         .webkitAudioContext;
 
     if (!AudioContextConstructor) {
-      return;
+      return null;
     }
 
     if (!audioContextRef.current) {
       audioContextRef.current = new AudioContextConstructor();
     }
 
-    const context = audioContextRef.current;
+    return audioContextRef.current;
+  }
+
+  function primeTimerAudio() {
+    const context = getAudioContext();
+
+    if (!context) {
+      return;
+    }
+
+    if (context.state === "suspended") {
+      void context.resume();
+    }
+  }
+
+  const playTimerSound = useEffectEvent(() => {
+    const context = getAudioContext();
+
+    if (!context) {
+      return;
+    }
 
     if (context.state === "suspended") {
       void context.resume();
@@ -105,7 +132,7 @@ export function ChildDashboard() {
       oscillator.start(startAt);
       oscillator.stop(endAt);
     });
-  }
+  });
 
   useEffect(() => {
     if (!isTimerRunning) {
@@ -328,6 +355,7 @@ export function ChildDashboard() {
             <button
               type="button"
               onClick={() => {
+                primeTimerAudio();
                 setTimerNotice(null);
                 setIsTimerRunning(true);
               }}
