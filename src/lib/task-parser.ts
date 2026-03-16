@@ -3,11 +3,15 @@ import type { SubjectTaskGroup, TaskDraft } from "@/types/task";
 const LEADING_MARKERS =
   /^(\d+[\.\)、]|[一二三四五六七八九十]+[、.]|[-•●▪︎◦]|[（(]?\d+[）)])\s*/;
 const SUBJECTS = ["语文", "数学", "英语", "科学", "道法", "道德与法治"] as const;
+const SUBJECT_PATTERN = SUBJECTS.map((subject) =>
+  subject.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+).join("|");
 const SUBJECT_HEADER_PATTERN = new RegExp(
-  `(${SUBJECTS.map((subject) => subject.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?:作业)?\\s*[：:]`,
+  `(${SUBJECT_PATTERN})(?:作业)?\\s*[：:]`,
   "g",
 );
 const PURE_SUBJECT_PATTERN = new RegExp(`^(${SUBJECTS.join("|")})(?:作业)?$`);
+const SUBJECT_LINE_PATTERN = new RegExp(`^(${SUBJECT_PATTERN})(?:作业)?$`);
 
 function cleanLine(line: string) {
   return line
@@ -25,6 +29,18 @@ function normalizeHomeworkText(rawText: string) {
       /(?<!\n)(语文|数学|英语|科学|道法|道德与法治)(?:作业)?\s*[：:]/g,
       "\n$1：",
     )
+    .split("\n")
+    .map((line) => cleanLine(line))
+    .map((line) => {
+      const subjectLine = line.match(SUBJECT_LINE_PATTERN);
+
+      if (!subjectLine) {
+        return line;
+      }
+
+      return `${subjectLine[1]}：`;
+    })
+    .join("\n")
     .trim();
 }
 
