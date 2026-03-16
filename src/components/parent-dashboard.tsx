@@ -144,7 +144,11 @@ export function ParentDashboard() {
     const { error } = await client.from("tasks").insert(payload);
 
     if (error) {
-      setMessage(error.message);
+      if (error.message.includes("subject")) {
+        setMessage("请先在 Supabase 执行 002_add_subject_to_tasks.sql，再刷新页面重试。");
+      } else {
+        setMessage(error.message);
+      }
       return;
     }
 

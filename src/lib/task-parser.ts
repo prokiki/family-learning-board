@@ -4,10 +4,10 @@ const LEADING_MARKERS =
   /^(\d+[\.\)、]|[一二三四五六七八九十]+[、.]|[-•●▪︎◦]|[（(]?\d+[）)])\s*/;
 const SUBJECTS = ["语文", "数学", "英语", "科学", "道法", "道德与法治"] as const;
 const SUBJECT_HEADER_PATTERN = new RegExp(
-  `(${SUBJECTS.map((subject) => subject.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\s*[：:]`,
+  `(${SUBJECTS.map((subject) => subject.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?:作业)?\\s*[：:]`,
   "g",
 );
-const PURE_SUBJECT_PATTERN = new RegExp(`^(${SUBJECTS.join("|")})$`);
+const PURE_SUBJECT_PATTERN = new RegExp(`^(${SUBJECTS.join("|")})(?:作业)?$`);
 
 function cleanLine(line: string) {
   return line
@@ -21,16 +21,21 @@ function normalizeHomeworkText(rawText: string) {
   return rawText
     .replace(/\r/g, "")
     .replace(/\t/g, "\n")
-    .replace(/(?<!\n)(语文|数学|英语|科学|道法|道德与法治)\s*[：:]/g, "\n$1：")
+    .replace(
+      /(?<!\n)(语文|数学|英语|科学|道法|道德与法治)(?:作业)?\s*[：:]/g,
+      "\n$1：",
+    )
     .trim();
 }
 
 function splitTasks(content: string, subject: string): TaskDraft[] {
   return content
+    .replace(/(^|\n)\s*[\d一二三四五六七八九十]+[\.\)、]\s*/g, "\n")
     .replace(/[。]+/g, "\n")
     .split(/[，、；;\n]+/)
     .map(cleanLine)
     .filter(Boolean)
+    .filter((item) => !/^\d+$/.test(item))
     .filter((item) => !PURE_SUBJECT_PATTERN.test(item))
     .map((title) => ({ subject, title }));
 }
