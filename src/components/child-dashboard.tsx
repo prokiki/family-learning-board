@@ -34,6 +34,7 @@ type TimerAction =
   | { type: "tick" }
   | { type: "switchMode"; mode: TimerMode }
   | { type: "reset" }
+  | { type: "startFocus" }
   | { type: "phaseComplete" };
 
 function getModeSeconds(mode: TimerMode) {
@@ -56,6 +57,13 @@ function timerReducer(state: TimerState, action: TimerAction): TimerState {
         mode: action.mode,
         secondsLeft: getModeSeconds(action.mode),
         isRunning: false,
+        notice: null,
+      };
+    case "startFocus":
+      return {
+        mode: "focus",
+        secondsLeft: getModeSeconds("focus"),
+        isRunning: true,
         notice: null,
       };
     case "reset":
@@ -383,6 +391,15 @@ export function ChildDashboard() {
 
     startTransition(() => {
       void (async () => {
+        if (status === "in_progress") {
+          primeTimerAudio();
+          dispatchTimer({ type: "startFocus" });
+        }
+
+        if (status === "done_by_child" || status === "confirmed_by_parent") {
+          dispatchTimer({ type: "reset" });
+        }
+
         const { error } = await client
           .from("tasks")
           .update({ status, last_updated_by: "child" })
