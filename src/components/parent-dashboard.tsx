@@ -7,7 +7,14 @@ import { StatusPill } from "@/components/status-pill";
 import { formatDisplayDate, formatLocalDate } from "@/lib/date";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { flattenHomeworkGroups, parseHomeworkGroups } from "@/lib/task-parser";
-import type { SubjectTaskGroup, TaskDraft, TaskRecord, TaskStatus } from "@/types/task";
+import type {
+  SubjectTaskGroup,
+  TaskDraft,
+  TaskRecord,
+  TaskStatus,
+  TaskSource,
+  TaskTemplateRecord,
+} from "@/types/task";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
@@ -36,12 +43,25 @@ async function fetchTodayTasks(
     .order("created_at", { ascending: true });
 }
 
+async function fetchTaskTemplates(supabase: SupabaseClient) {
+  return supabase
+    .from("task_templates")
+    .select("*")
+    .eq("board_id", boardId)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+}
+
 export function ParentDashboard() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
+  const [templates, setTemplates] = useState<TaskTemplateRecord[]>([]);
   const [rawText, setRawText] = useState("");
   const [importGroups, setImportGroups] = useState<SubjectTaskGroup[]>([]);
   const [manualTitle, setManualTitle] = useState("");
   const [manualDetails, setManualDetails] = useState("");
+  const [templateTitle, setTemplateTitle] = useState("");
+  const [templateSubject, setTemplateSubject] = useState("");
+  const [templateDetails, setTemplateDetails] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const supabase = getSupabaseBrowserClient();
   const [loading, setLoading] = useState(Boolean(supabase));
@@ -60,7 +80,10 @@ export function ParentDashboard() {
 
     async function run() {
       setLoading(true);
-      const { data, error } = await fetchTodayTasks(client, today);
+      const [{ data, error }, templatesResult] = await Promise.all([
+        fetchTodayTasks(client, today),
+        fetchTaskTemplates(client),
+      ]);
 
       if (!active) {
         return;
@@ -70,6 +93,7 @@ export function ParentDashboard() {
         setMessage(error.message);
       } else {
         setTasks((data as TaskRecord[]) ?? []);
+        setTemplates((templatesResult.data as TaskTemplateRecord[]) ?? []);
         setMessage(null);
       }
 
@@ -106,6 +130,7 @@ export function ParentDashboard() {
         },
         async () => {
           const { data, error } = await fetchTodayTasks(client, today);
+          const { data: templateData } = await fetchTaskTemplates(client);
 
           if (error) {
             setMessage(error.message);
@@ -113,6 +138,7 @@ export function ParentDashboard() {
           }
 
           setTasks((data as TaskRecord[]) ?? []);
+          setTemplates((templateData as TaskTemplateRecord[]) ?? []);
         },
       )
       .subscribe();
@@ -122,7 +148,7 @@ export function ParentDashboard() {
     };
   }, [supabase, today]);
 
-  async function insertTasks(drafts: TaskDraft[], source: "manual" | "imported") {
+  async function insertTasks(drafts: TaskDraft[], source: TaskSource) {
     if (!supabase || drafts.length === 0) {
       return;
     }
@@ -135,6 +161,7 @@ export function ParentDashboard() {
       subject: draft.subject ?? null,
       title: draft.title,
       details: draft.details ?? null,
+      template_id: draft.templateId ?? null,
       status: "pending" as TaskStatus,
       sort_order: tasks.length + index,
       source,
@@ -221,6 +248,112 @@ export function ParentDashboard() {
             },
       ),
     );
+  }
+
+  function createTemplate() {
+    if (!supabase || !templateTitle.trim()) {
+      return;
+    }
+
+    const client: SupabaseClient = supabase;
+
+    startTransition(() => {
+      void (async () => {
+        const payload = {
+          board_id: boardId,
+          subject: templateSubject.trim() || null,
+          title: templateTitle.trim(),
+          details: templateDetails.trim() || null,
+          is_active: true,
+          sort_order: templates.length,
+        };
+
+        const { error } = await client.from("task_templates").insert(payload);
+
+        if (error) {
+          setMessage(error.message);
+          return;
+        }
+
+        setTemplateTitle("");
+        setTemplateSubject("");
+        setTemplateDetails("");
+        setMessage("已新增固定任务模板");
+        const { data } = await fetchTaskTemplates(client);
+        setTemplates((data as TaskTemplateRecord[]) ?? []);
+      })();
+    });
+  }
+
+  function toggleTemplate(id: string, isActive: boolean) {
+    if (!supabase) {
+      return;
+    }
+
+    const client: SupabaseClient = supabase;
+
+    startTransition(() => {
+      void (async () => {
+        const { error } = await client
+          .from("task_templates")
+          .update({ is_active: !isActive })
+          .eq("id", id);
+
+        if (error) {
+          setMessage(error.message);
+          return;
+        }
+
+        const { data } = await fetchTaskTemplates(client);
+        setTemplates((data as TaskTemplateRecord[]) ?? []);
+      })();
+    });
+  }
+
+  function deleteTemplate(id: string) {
+    if (!supabase) {
+      return;
+    }
+
+    const client: SupabaseClient = supabase;
+
+    startTransition(() => {
+      void (async () => {
+        const { error } = await client.from("task_templates").delete().eq("id", id);
+
+        if (error) {
+          setMessage(error.message);
+          return;
+        }
+
+        const { data } = await fetchTaskTemplates(client);
+        setTemplates((data as TaskTemplateRecord[]) ?? []);
+      })();
+    });
+  }
+
+  function addTemplatesToToday() {
+    const activeTemplates = templates.filter((template) => template.is_active);
+    const existingTemplateIds = new Set(
+      tasks.map((task) => task.template_id).filter((templateId): templateId is string => Boolean(templateId)),
+    );
+    const drafts: TaskDraft[] = activeTemplates
+      .filter((template) => !existingTemplateIds.has(template.id))
+      .map((template) => ({
+        templateId: template.id,
+        subject: template.subject ?? undefined,
+        title: template.title,
+        details: template.details ?? undefined,
+      }));
+
+    if (drafts.length === 0) {
+      setMessage("今天的固定任务已经都加入了");
+      return;
+    }
+
+    startTransition(() => {
+      void insertTasks(drafts, "template");
+    });
   }
 
   function updateTaskStatus(id: string, status: TaskStatus) {
@@ -332,6 +465,115 @@ export function ParentDashboard() {
               >
                 添加到今日任务
               </button>
+            </div>
+          </div>
+
+          <div className="card-surface soft-shadow rounded-[1.75rem] p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-950">每天固定任务</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  先维护常用模板，再一键加入今天任务，避免每天重复录入。
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={!supabase || isPending || templates.filter((item) => item.is_active).length === 0}
+                onClick={addTemplatesToToday}
+                className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                加入今天任务
+              </button>
+            </div>
+
+            <div className="mt-4 grid gap-3">
+              <input
+                value={templateTitle}
+                onChange={(event) => setTemplateTitle(event.target.value)}
+                placeholder="固定任务标题，例如：英语听读 15 分钟"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base outline-none focus:border-sky-400"
+              />
+              <input
+                value={templateSubject}
+                onChange={(event) => setTemplateSubject(event.target.value)}
+                placeholder="学科，可选，例如：英语"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base outline-none focus:border-sky-400"
+              />
+              <textarea
+                value={templateDetails}
+                onChange={(event) => setTemplateDetails(event.target.value)}
+                placeholder="备注，可选"
+                rows={2}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base outline-none focus:border-sky-400"
+              />
+              <button
+                type="button"
+                disabled={!supabase || !templateTitle.trim() || isPending}
+                onClick={createTemplate}
+                className="w-full rounded-2xl bg-slate-100 px-5 py-3 text-base font-semibold text-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200"
+              >
+                保存为固定任务
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {templates.length === 0 ? (
+                <div className="rounded-[1.25rem] bg-slate-100 px-4 py-5 text-sm text-slate-500">
+                  还没有固定任务模板，先加一条每天都会出现的常规任务。
+                </div>
+              ) : (
+                templates.map((template) => (
+                  <article
+                    key={template.id}
+                    className="rounded-[1.25rem] border border-slate-200 bg-white p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {template.subject ? (
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                              {template.subject}
+                            </span>
+                          ) : null}
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                              template.is_active
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            {template.is_active ? "启用中" : "已停用"}
+                          </span>
+                        </div>
+                        <h3 className="mt-3 text-lg font-bold text-slate-950">
+                          {template.title}
+                        </h3>
+                        {template.details ? (
+                          <p className="mt-2 text-sm leading-6 text-slate-600">
+                            {template.details}
+                          </p>
+                        ) : null}
+                      </div>
+                      <div className="grid gap-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleTemplate(template.id, template.is_active)}
+                          className="rounded-xl bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700"
+                        >
+                          {template.is_active ? "停用" : "启用"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteTemplate(template.id)}
+                          className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700"
+                        >
+                          删除
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))
+              )}
             </div>
           </div>
 
@@ -475,7 +717,11 @@ export function ParentDashboard() {
                           </span>
                         ) : null}
                         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                          {task.source === "imported" ? "导入" : "手动"}
+                          {task.source === "imported"
+                            ? "导入"
+                            : task.source === "template"
+                              ? "固定"
+                              : "手动"}
                         </span>
                       </div>
                       <h3 className="mt-3 text-xl font-bold text-slate-950">

@@ -8,7 +8,7 @@ export const TASK_STATUSES = [
 
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
-export type TaskSource = "manual" | "imported";
+export type TaskSource = "manual" | "imported" | "template";
 
 export type Actor = "parent" | "child";
 
@@ -16,6 +16,7 @@ export interface TaskRecord {
   id: string;
   board_id: string;
   due_date: string;
+  template_id: string | null;
   subject: string | null;
   title: string;
   details: string | null;
@@ -28,6 +29,7 @@ export interface TaskRecord {
 }
 
 export interface TaskDraft {
+  templateId?: string;
   subject?: string;
   title: string;
   details?: string;
@@ -36,4 +38,16 @@ export interface TaskDraft {
 export interface SubjectTaskGroup {
   subject: string;
   tasks: TaskDraft[];
+}
+
+export interface TaskTemplateRecord {
+  id: string;
+  board_id: string;
+  subject: string | null;
+  title: string;
+  details: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
 }
