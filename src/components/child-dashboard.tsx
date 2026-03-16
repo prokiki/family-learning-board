@@ -121,6 +121,21 @@ function isCompletedStatus(status: TaskStatus) {
   return status === "done_by_child" || status === "confirmed_by_parent";
 }
 
+function taskSortWeight(status: TaskStatus) {
+  switch (status) {
+    case "in_progress":
+      return 0;
+    case "pending":
+      return 1;
+    case "needs_help":
+      return 2;
+    case "done_by_child":
+      return 3;
+    case "confirmed_by_parent":
+      return 4;
+  }
+}
+
 export function ChildDashboard() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -138,8 +153,27 @@ export function ChildDashboard() {
   const timerTotalSeconds = getModeSeconds(timerState.mode);
   const timerProgress =
     ((timerTotalSeconds - timerState.secondsLeft) / timerTotalSeconds) * 100;
+  const orderedTasks = useMemo(
+    () =>
+      [...tasks].sort((left, right) => {
+        const weightDiff = taskSortWeight(left.status) - taskSortWeight(right.status);
+
+        if (weightDiff !== 0) {
+          return weightDiff;
+        }
+
+        if (left.sort_order !== right.sort_order) {
+          return left.sort_order - right.sort_order;
+        }
+
+        return left.created_at.localeCompare(right.created_at);
+      }),
+    [tasks],
+  );
   const currentTaskId =
-    tasks.find((task) => !isCompletedStatus(task.status))?.id ?? tasks[0]?.id ?? null;
+    orderedTasks.find((task) => !isCompletedStatus(task.status))?.id ??
+    orderedTasks[0]?.id ??
+    null;
 
   function getAudioContext() {
     const AudioContextConstructor =
@@ -510,7 +544,7 @@ export function ChildDashboard() {
             </div>
 
             <div className="grid gap-4 md:gap-5">
-            {tasks.map((task, index) => {
+            {orderedTasks.map((task, index) => {
               const labels = actionLabels(task.status);
               const meta = TASK_STATUS_META[task.status];
               const isCurrent = task.id === currentTaskId;
