@@ -5,6 +5,7 @@ import {
   useEffectEvent,
   useMemo,
   useRef,
+  useReducer,
   useState,
   useTransition,
 } from "react";
@@ -21,6 +22,64 @@ const FOCUS_MINUTES = 20;
 const BREAK_MINUTES = 5;
 
 type TimerMode = "focus" | "break";
+type TimerState = {
+  mode: TimerMode;
+  secondsLeft: number;
+  isRunning: boolean;
+  notice: string | null;
+};
+type TimerAction =
+  | { type: "start" }
+  | { type: "pause" }
+  | { type: "tick" }
+  | { type: "switchMode"; mode: TimerMode }
+  | { type: "reset" }
+  | { type: "phaseComplete" };
+
+function getModeSeconds(mode: TimerMode) {
+  return mode === "focus" ? FOCUS_MINUTES * 60 : BREAK_MINUTES * 60;
+}
+
+function timerReducer(state: TimerState, action: TimerAction): TimerState {
+  switch (action.type) {
+    case "start":
+      return { ...state, isRunning: true, notice: null };
+    case "pause":
+      return { ...state, isRunning: false };
+    case "tick":
+      return {
+        ...state,
+        secondsLeft: Math.max(state.secondsLeft - 1, 0),
+      };
+    case "switchMode":
+      return {
+        mode: action.mode,
+        secondsLeft: getModeSeconds(action.mode),
+        isRunning: false,
+        notice: null,
+      };
+    case "reset":
+      return {
+        ...state,
+        isRunning: false,
+        secondsLeft: getModeSeconds(state.mode),
+        notice: null,
+      };
+    case "phaseComplete": {
+      const nextMode: TimerMode = state.mode === "focus" ? "break" : "focus";
+
+      return {
+        mode: nextMode,
+        secondsLeft: getModeSeconds(nextMode),
+        isRunning: true,
+        notice:
+          state.mode === "focus"
+            ? "专注时间到啦，休息 5 分钟吧。"
+            : "休息时间结束，开始下一轮专注。",
+      };
+    }
+  }
+}
 
 async function fetchTodayTasks(supabase: SupabaseClient, dueDate: string) {
   return supabase
@@ -61,18 +120,20 @@ function formatTimer(totalSeconds: number) {
 export function ChildDashboard() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [message, setMessage] = useState<string | null>(null);
-  const [timerMode, setTimerMode] = useState<TimerMode>("focus");
-  const [secondsLeft, setSecondsLeft] = useState(FOCUS_MINUTES * 60);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [timerNotice, setTimerNotice] = useState<string | null>(null);
+  const [timerState, dispatchTimer] = useReducer(timerReducer, {
+    mode: "focus",
+    secondsLeft: FOCUS_MINUTES * 60,
+    isRunning: false,
+    notice: null,
+  });
   const supabase = getSupabaseBrowserClient();
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
   const today = useMemo(() => formatLocalDate(), []);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const timerTotalSeconds =
-    timerMode === "focus" ? FOCUS_MINUTES * 60 : BREAK_MINUTES * 60;
-  const timerProgress = ((timerTotalSeconds - secondsLeft) / timerTotalSeconds) * 100;
+  const timerTotalSeconds = getModeSeconds(timerState.mode);
+  const timerProgress =
+    ((timerTotalSeconds - timerState.secondsLeft) / timerTotalSeconds) * 100;
 
   function getAudioContext() {
     const AudioContextConstructor =
@@ -135,37 +196,30 @@ export function ChildDashboard() {
   });
 
   useEffect(() => {
-    if (!isTimerRunning) {
+    if (!timerState.isRunning) {
       return;
     }
 
     const interval = window.setInterval(() => {
-      setSecondsLeft((current) => {
-        if (current <= 1) {
-          window.clearInterval(interval);
-          const nextMode: TimerMode = timerMode === "focus" ? "break" : "focus";
-          const nextSeconds =
-            nextMode === "focus" ? FOCUS_MINUTES * 60 : BREAK_MINUTES * 60;
-
-          setTimerMode(nextMode);
-          setSecondsLeft(nextSeconds);
-          setTimerNotice(
-            timerMode === "focus"
-              ? "专注时间到啦，休息 5 分钟吧。"
-              : "休息时间结束，开始下一轮专注。",
-          );
-          playTimerSound();
-          return nextSeconds;
-        }
-
-        return current - 1;
-      });
+      dispatchTimer({ type: "tick" });
     }, 1000);
 
     return () => {
       window.clearInterval(interval);
     };
-  }, [isTimerRunning, timerMode]);
+  }, [timerState.isRunning]);
+
+  useEffect(() => {
+    if (!timerState.isRunning || timerState.secondsLeft > 0) {
+      return;
+    }
+
+    dispatchTimer({ type: "phaseComplete" });
+
+    try {
+      playTimerSound();
+    } catch {}
+  }, [timerState.isRunning, timerState.secondsLeft]);
 
   useEffect(() => {
     if (!supabase) {
@@ -262,16 +316,11 @@ export function ChildDashboard() {
   }
 
   function switchTimerMode(mode: TimerMode) {
-    setTimerMode(mode);
-    setIsTimerRunning(false);
-    setSecondsLeft(mode === "focus" ? FOCUS_MINUTES * 60 : BREAK_MINUTES * 60);
-    setTimerNotice(null);
+    dispatchTimer({ type: "switchMode", mode });
   }
 
   function resetTimer() {
-    setIsTimerRunning(false);
-    setSecondsLeft(timerTotalSeconds);
-    setTimerNotice(null);
+    dispatchTimer({ type: "reset" });
   }
 
   return (
@@ -296,10 +345,10 @@ export function ChildDashboard() {
                 番茄时钟
               </p>
               <h2 className="font-title mt-3 text-3xl leading-tight text-slate-950 md:text-5xl">
-                {timerMode === "focus" ? "专心学习时间" : "休息一下时间"}
+                {timerState.mode === "focus" ? "专心学习时间" : "休息一下时间"}
               </h2>
               <p className="mt-3 text-lg leading-8 text-slate-600 md:text-2xl">
-                {timerMode === "focus"
+                {timerState.mode === "focus"
                   ? "先专心做一会儿，再休息，会更轻松。"
                   : "喝口水，活动一下，准备下一轮。"}
               </p>
@@ -319,10 +368,12 @@ export function ChildDashboard() {
                 />
                 <div className="relative z-10 text-center">
                   <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-300">
-                    {timerMode === "focus" ? `${FOCUS_MINUTES} 分钟专注` : `${BREAK_MINUTES} 分钟休息`}
+                    {timerState.mode === "focus"
+                      ? `${FOCUS_MINUTES} 分钟专注`
+                      : `${BREAK_MINUTES} 分钟休息`}
                   </p>
                   <p className="font-title mt-3 text-5xl md:text-6xl">
-                    {formatTimer(secondsLeft)}
+                    {formatTimer(timerState.secondsLeft)}
                   </p>
                 </div>
               </div>
@@ -334,7 +385,7 @@ export function ChildDashboard() {
               type="button"
               onClick={() => switchTimerMode("focus")}
               className={`min-h-16 rounded-[1.5rem] px-4 py-4 text-xl font-bold md:text-2xl ${
-                timerMode === "focus"
+                timerState.mode === "focus"
                   ? "bg-slate-950 text-white"
                   : "bg-white text-slate-700"
               }`}
@@ -345,7 +396,7 @@ export function ChildDashboard() {
               type="button"
               onClick={() => switchTimerMode("break")}
               className={`min-h-16 rounded-[1.5rem] px-4 py-4 text-xl font-bold md:text-2xl ${
-                timerMode === "break"
+                timerState.mode === "break"
                   ? "bg-amber-400 text-slate-950"
                   : "bg-white text-slate-700"
               }`}
@@ -356,18 +407,17 @@ export function ChildDashboard() {
               type="button"
               onClick={() => {
                 primeTimerAudio();
-                setTimerNotice(null);
-                setIsTimerRunning(true);
+                dispatchTimer({ type: "start" });
               }}
-              disabled={isTimerRunning}
+              disabled={timerState.isRunning}
               className="min-h-16 rounded-[1.5rem] bg-emerald-400 px-4 py-4 text-xl font-bold text-slate-950 disabled:bg-slate-200 disabled:text-slate-400 md:text-2xl"
             >
               开始循环
             </button>
             <button
               type="button"
-              onClick={() => setIsTimerRunning(false)}
-              disabled={!isTimerRunning}
+              onClick={() => dispatchTimer({ type: "pause" })}
+              disabled={!timerState.isRunning}
               className="min-h-16 rounded-[1.5rem] bg-sky-200 px-4 py-4 text-xl font-bold text-slate-950 disabled:bg-slate-200 disabled:text-slate-400 md:text-2xl"
             >
               暂停
@@ -381,9 +431,9 @@ export function ChildDashboard() {
             </button>
           </div>
 
-          {timerNotice ? (
+          {timerState.notice ? (
             <div className="mt-4 rounded-[1.5rem] bg-amber-300 px-5 py-4 text-center text-xl font-bold text-slate-950 md:text-2xl">
-              {timerNotice}
+              {timerState.notice}
             </div>
           ) : null}
         </section>
