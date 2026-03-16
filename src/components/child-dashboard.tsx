@@ -152,6 +152,33 @@ function groupTasksBySubject(tasks: TaskRecord[]) {
   }));
 }
 
+function subjectSectionState(tasks: TaskRecord[], currentTaskId: string | null) {
+  const hasCurrent = tasks.some((task) => task.id === currentTaskId);
+  const allCompleted = tasks.every((task) => isCompletedStatus(task.status));
+
+  if (hasCurrent) {
+    return {
+      containerClass: "border-slate-300 bg-slate-100",
+      badgeClass: "bg-slate-950 text-white",
+      metaText: "正在做",
+    };
+  }
+
+  if (allCompleted) {
+    return {
+      containerClass: "border-emerald-100 bg-emerald-50/70",
+      badgeClass: "bg-emerald-500 text-white",
+      metaText: "已完成",
+    };
+  }
+
+  return {
+    containerClass: "border-slate-200 bg-white/85",
+    badgeClass: "bg-slate-100 text-slate-700",
+    metaText: "待完成",
+  };
+}
+
 export function ChildDashboard() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -563,9 +590,34 @@ export function ChildDashboard() {
             <div className="grid gap-5 md:gap-6">
             {groupedOrderedTasks.map((group) => (
               <section key={group.subject} className="space-y-3">
-                <div className="px-1">
-                  <h3 className="text-lg font-bold text-slate-700 md:text-xl">{group.subject}</h3>
-                </div>
+                {(() => {
+                  const sectionState = subjectSectionState(group.tasks, currentTaskId);
+
+                  return (
+                    <div
+                      className={`flex items-center justify-between rounded-[1.5rem] border px-5 py-4 ${sectionState.containerClass}`}
+                    >
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                          学科
+                        </p>
+                        <h3 className="mt-1 text-2xl font-bold text-slate-900 md:text-3xl">
+                          {group.subject}
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-600">
+                          {group.tasks.length} 个任务
+                        </span>
+                        <span
+                          className={`rounded-full px-3 py-1.5 text-sm font-bold ${sectionState.badgeClass}`}
+                        >
+                          {sectionState.metaText}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="grid gap-4 md:gap-5">
             {group.tasks.map((task, index) => {
               const labels = actionLabels(task.status);
