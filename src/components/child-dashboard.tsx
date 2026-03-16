@@ -153,22 +153,24 @@ function groupTasksBySubject(tasks: TaskRecord[]) {
 }
 
 function subjectSectionState(tasks: TaskRecord[], currentTaskId: string | null) {
-  const hasCurrent = tasks.some((task) => task.id === currentTaskId);
   const allCompleted = tasks.every((task) => isCompletedStatus(task.status));
-
-  if (hasCurrent) {
-    return {
-      containerClass: "border-slate-300 bg-slate-100",
-      badgeClass: "bg-slate-950 text-white",
-      metaText: "正在做",
-    };
-  }
+  const hasCurrent = tasks.some(
+    (task) => task.id === currentTaskId && !isCompletedStatus(task.status),
+  );
 
   if (allCompleted) {
     return {
       containerClass: "border-emerald-100 bg-emerald-50/70",
       badgeClass: "bg-emerald-500 text-white",
       metaText: "已完成",
+    };
+  }
+
+  if (hasCurrent) {
+    return {
+      containerClass: "border-slate-300 bg-slate-100",
+      badgeClass: "bg-slate-950 text-white",
+      metaText: "正在做",
     };
   }
 
@@ -617,8 +619,8 @@ export function ChildDashboard() {
             {group.tasks.map((task, index) => {
               const labels = actionLabels(task.status);
               const meta = TASK_STATUS_META[task.status];
-              const isCurrent = task.id === currentTaskId;
               const isCompleted = isCompletedStatus(task.status);
+              const isCurrent = task.id === currentTaskId && !isCompleted;
               const primaryButtonClass = isCompleted
                 ? "bg-emerald-100 text-emerald-700"
                 : "bg-emerald-500 text-white shadow-[0_12px_24px_rgba(16,185,129,0.22)]";
