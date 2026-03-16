@@ -214,9 +214,7 @@ export function ChildDashboard() {
     [tasks],
   );
   const currentTaskId =
-    orderedTasks.find((task) => !isCompletedStatus(task.status))?.id ??
-    orderedTasks[0]?.id ??
-    null;
+    orderedTasks.find((task) => !isCompletedStatus(task.status))?.id ?? null;
   const groupedOrderedTasks = useMemo(() => groupTasksBySubject(orderedTasks), [orderedTasks]);
 
   function getAudioContext() {
@@ -581,9 +579,6 @@ export function ChildDashboard() {
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
                   今日任务
                 </p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-950 md:text-3xl">
-                  先做最上面的当前任务
-                </h2>
               </div>
             </div>
 
