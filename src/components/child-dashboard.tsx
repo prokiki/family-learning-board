@@ -116,12 +116,19 @@ export function ChildDashboard() {
       setSecondsLeft((current) => {
         if (current <= 1) {
           window.clearInterval(interval);
-          setIsTimerRunning(false);
+          const nextMode: TimerMode = timerMode === "focus" ? "break" : "focus";
+          const nextSeconds =
+            nextMode === "focus" ? FOCUS_MINUTES * 60 : BREAK_MINUTES * 60;
+
+          setTimerMode(nextMode);
+          setSecondsLeft(nextSeconds);
           setTimerNotice(
-            timerMode === "focus" ? "专注时间到啦，休息一下吧。" : "休息时间结束，准备继续学习。",
+            timerMode === "focus"
+              ? "专注时间到啦，休息 5 分钟吧。"
+              : "休息时间结束，开始下一轮专注。",
           );
           playTimerSound();
-          return 0;
+          return nextSeconds;
         }
 
         return current - 1;
@@ -324,10 +331,10 @@ export function ChildDashboard() {
                 setTimerNotice(null);
                 setIsTimerRunning(true);
               }}
-              disabled={isTimerRunning || secondsLeft === 0}
+              disabled={isTimerRunning}
               className="min-h-16 rounded-[1.5rem] bg-emerald-400 px-4 py-4 text-xl font-bold text-slate-950 disabled:bg-slate-200 disabled:text-slate-400 md:text-2xl"
             >
-              开始
+              开始循环
             </button>
             <button
               type="button"
