@@ -1,10 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fffdf7;
-  --foreground: #172033;
-  --card: rgba(255, 255, 255, 0.84);
-  --line: rgba(148, 163, 184, 0.24);
+  --background: #fafaf7;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-alt: #f5f3ee;
+  --line: #e5e5e0;
+  --line-light: #f0efe9;
+  --primary: #2a9d8f;
+  --primary-hover: #238b7e;
+  --primary-light: #e6f5f3;
+  --success: #4caf50;
+  --warning: #f5a623;
+  --error: #e74c3c;
+  --info: #5b9bd5;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
   --font-body:
     "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
     sans-serif;
@@ -17,7 +28,17 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-card-alt: var(--card-alt);
   --color-line: var(--line);
+  --color-line-light: var(--line-light);
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
   --font-sans: var(--font-body);
   --font-title: var(--font-title);
 }
@@ -50,7 +71,7 @@ select {
 }
 
 ::selection {
-  background: rgba(56, 189, 248, 0.25);
+  background: rgba(42, 157, 143, 0.2);
 }
 
 .font-title {
@@ -60,9 +81,14 @@ select {
 .card-surface {
   background: var(--card);
   border: 1px solid var(--line);
-  backdrop-filter: blur(18px);
 }
 
 .soft-shadow {
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.soft-shadow-hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
