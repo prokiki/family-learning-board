@@ -112,9 +112,11 @@ export function ChildHeader({
   inProgressCount: number;
   completedCount: number;
 }) {
+  const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+
   return (
     <section className="soft-shadow rounded-[1.7rem] border border-[var(--line)] bg-white px-4 py-4 sm:px-5 md:px-8 md:py-6">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-5">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold tracking-[0.18em] text-[var(--primary)] sm:text-sm">
             学习看板
@@ -126,25 +128,30 @@ export function ChildHeader({
             今天是 {formatDisplayDate(today)}
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 md:min-w-[16rem]">
-          <div className="rounded-[1rem] border border-[var(--line)] bg-white px-3 py-2.5 shadow-sm sm:rounded-[1.1rem] sm:px-4 sm:py-3">
-            <div className="border-l-[3px] border-[var(--foreground)] pl-3">
-              <p className="text-[11px] font-medium text-[var(--text-secondary)]">全部</p>
-              <p className="mt-1 text-[1.45rem] font-bold text-[var(--foreground)] sm:text-2xl">{totalCount}</p>
-            </div>
+        <div className="rounded-[1.25rem] border border-[var(--line)] bg-[var(--card-alt)]/55 px-4 py-4 sm:px-5">
+          <div className="flex items-center justify-between gap-3 text-sm font-semibold">
+            <span className="text-[var(--foreground)]">
+              {completedCount}/{totalCount} 完成
+            </span>
+            <span className="text-[var(--text-secondary)]">
+              {totalCount === 0
+                ? "等待家长添加任务"
+                : inProgressCount > 0
+                  ? `正在做 ${inProgressCount} 项`
+                  : progressPercent === 100
+                    ? "今天全部完成"
+                    : "继续完成今天的任务"}
+            </span>
           </div>
-          <div className="rounded-[1rem] border border-[var(--line)] bg-white px-3 py-2.5 shadow-sm sm:rounded-[1.1rem] sm:px-4 sm:py-3">
-            <div className="border-l-[3px] border-[var(--warning)] pl-3">
-              <p className="text-[11px] font-medium text-[var(--text-secondary)]">进行中</p>
-              <p className="mt-1 text-[1.45rem] font-bold text-[var(--foreground)] sm:text-2xl">{inProgressCount}</p>
-            </div>
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[rgba(27,27,24,0.08)]">
+            <div
+              className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-500 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
           </div>
-          <div className="rounded-[1rem] border border-[var(--line)] bg-white px-3 py-2.5 shadow-sm sm:rounded-[1.1rem] sm:px-4 sm:py-3">
-            <div className="border-l-[3px] border-[var(--success)] pl-3">
-              <p className="text-[11px] font-medium text-[var(--text-secondary)]">完成</p>
-              <p className="mt-1 text-[1.45rem] font-bold text-[var(--foreground)] sm:text-2xl">{completedCount}</p>
-            </div>
-          </div>
+          <p className="mt-3 text-xs font-medium tracking-[0.12em] text-[var(--text-secondary)]">
+            {progressPercent}% 已完成
+          </p>
         </div>
       </div>
     </section>
@@ -166,6 +173,14 @@ export function PomodoroSection({
   onPause: () => void;
   onReset: () => void;
 }) {
+  const ringTone =
+    timerState.mode === "focus"
+      ? "var(--primary)"
+      : timerState.isRunning
+        ? "var(--success)"
+        : "rgba(95,94,90,0.75)";
+  const ringBackground = "rgba(232,231,227,0.95)";
+
   return (
     <section className="soft-shadow rounded-[1.7rem] border border-[var(--line)] bg-white px-4 py-4 sm:px-5 md:px-6 md:py-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -185,21 +200,45 @@ export function PomodoroSection({
 
         <div className="flex flex-col items-start gap-4 self-stretch lg:items-end">
           <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center lg:w-auto">
-            <div className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-white text-[var(--foreground)] sm:mx-0 sm:h-28 sm:w-28 md:h-32 md:w-32">
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: `conic-gradient(var(--primary) ${timerProgress * 3.6}deg, rgba(229,229,224,0.92) 0deg)`,
-                  mask: "radial-gradient(circle at center, transparent 68%, black 69%)",
-                  WebkitMask:
-                    "radial-gradient(circle at center, transparent 68%, black 69%)",
-                }}
-              />
+            <div
+              className={`relative mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-white text-[var(--foreground)] sm:mx-0 sm:h-28 sm:w-28 md:h-32 md:w-32 ${
+                timerState.isRunning ? "shadow-[0_0_0_6px_rgba(26,138,125,0.06)]" : ""
+              }`}
+            >
+              <svg
+                viewBox="0 0 120 120"
+                className={`absolute inset-0 h-full w-full -rotate-90 ${
+                  timerState.notice ? "animate-pulse" : ""
+                }`}
+                aria-hidden="true"
+              >
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="52"
+                  fill="none"
+                  stroke={ringBackground}
+                  strokeWidth="8"
+                />
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="52"
+                  fill="none"
+                  stroke={ringTone}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  pathLength="100"
+                  strokeDasharray="100"
+                  strokeDashoffset={100 - timerProgress}
+                  className="transition-[stroke-dashoffset,stroke] duration-700 ease-linear"
+                />
+              </svg>
               <div className="relative z-10 text-center">
                 <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--text-secondary)]">
                   {timerState.mode === "focus" ? "专注" : "休息"}
                 </p>
-                <p className="mt-1.5 text-[1.75rem] font-bold sm:mt-2 sm:text-3xl md:text-[2.2rem]">
+                <p className="mt-1.5 text-[1.75rem] font-bold tracking-tight sm:mt-2 sm:text-3xl md:text-[2.2rem] [font-variant-numeric:tabular-nums]">
                   {formatTimer(timerState.secondsLeft)}
                 </p>
               </div>
@@ -260,7 +299,7 @@ export function PomodoroSection({
           </div>
 
           {timerState.notice ? (
-            <div className="rounded-[1rem] bg-[var(--card-alt)] px-4 py-3 text-sm font-semibold text-[var(--foreground)] md:text-base">
+            <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)] px-4 py-3 text-sm font-semibold text-[var(--foreground)] md:text-base">
               {timerState.notice}
             </div>
           ) : null}
@@ -390,27 +429,35 @@ export function ChildTasksSection({
                               任务 {index + 1}
                             </p>
                             {isCurrent ? (
-                              <span className="rounded-full bg-[var(--foreground)] px-3 py-1 text-xs font-semibold tracking-[0.08em] text-white">
-                                当前任务
+                              <span className="rounded-full bg-[var(--primary)] px-3 py-1 text-xs font-semibold tracking-[0.08em] text-white shadow-[0_6px_16px_rgba(26,138,125,0.18)]">
+                                👉 现在做这个
                               </span>
                             ) : null}
                           </div>
                           <h2
-                            className={`mt-3 text-3xl font-semibold leading-tight text-[var(--foreground)] md:text-[2.2rem] ${
-                              isCompleted ? "line-through decoration-2" : ""
+                            className={`mt-3 text-3xl font-semibold leading-tight md:text-[2.2rem] ${
+                              isCompleted
+                                ? "text-[var(--text-secondary)] line-through decoration-2 decoration-[rgba(95,94,90,0.45)]"
+                                : "text-[var(--foreground)]"
                             }`}
                           >
                             {task.title}
                           </h2>
                           {task.details ? (
-                            <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--text-secondary)] md:text-lg">
+                            <p
+                              className={`mt-3 max-w-3xl text-base leading-7 md:text-lg ${
+                                isCompleted
+                                  ? "text-[var(--text-muted)]"
+                                  : "text-[var(--text-secondary)]"
+                              }`}
+                            >
                               {task.details}
                             </p>
                           ) : null}
                         </div>
                         <div className="flex items-center gap-3">
                           {isCompleted ? (
-                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(228,246,229,0.95)] text-xl">
+                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(230,244,234,0.9)] text-[1.1rem]">
                               ✅
                             </span>
                           ) : null}

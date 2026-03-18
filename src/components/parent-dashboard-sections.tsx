@@ -91,30 +91,27 @@ export function ParentHeader({
         </div>
         <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:min-w-[320px]">
           <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/45 px-3 py-3 sm:px-4 sm:py-4">
-            <div className="flex items-start gap-3">
-              <span className="h-9 w-1 rounded-full bg-[var(--foreground)]" />
-              <div>
-                <p className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">{progress.total}</p>
-                <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">总任务</p>
-              </div>
+            <div>
+              <p className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">
+                {progress.total}
+              </p>
+              <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">总任务</p>
             </div>
           </div>
           <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(76,175,80,0.05)] px-3 py-3 sm:px-4 sm:py-4">
-            <div className="flex items-start gap-3">
-              <span className="h-9 w-1 rounded-full bg-[var(--success)]" />
-              <div>
-                <p className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">{progress.done}</p>
-                <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">已推进</p>
-              </div>
+            <div>
+              <p className="text-2xl font-bold text-[var(--success)] sm:text-3xl">
+                {progress.done}
+              </p>
+              <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">已推进</p>
             </div>
           </div>
           <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(245,166,35,0.06)] px-3 py-3 sm:px-4 sm:py-4">
-            <div className="flex items-start gap-3">
-              <span className="h-9 w-1 rounded-full bg-[var(--warning)]" />
-              <div>
-                <p className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">{progress.help}</p>
-                <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">待协助</p>
-              </div>
+            <div>
+              <p className="text-2xl font-bold text-[var(--warning)] sm:text-3xl">
+                {progress.help}
+              </p>
+              <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">待协助</p>
             </div>
           </div>
         </div>
@@ -142,8 +139,7 @@ export function ManualTaskSection({
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold tracking-[0.16em] text-[var(--primary)]">MANUAL</p>
-          <h2 className="mt-2 text-[1.5rem] font-semibold text-[var(--foreground)]">手动新增</h2>
+          <h2 className="text-[1.5rem] font-semibold text-[var(--foreground)]">手动新增</h2>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
             适合临时增加当天的新任务，孩子端会马上同步显示。
           </p>
@@ -211,7 +207,6 @@ export function TemplatesSection({
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold tracking-[0.16em] text-[var(--primary)]">TEMPLATE</p>
           <h2 className="text-[1.5rem] font-semibold text-[var(--foreground)]">每天固定任务</h2>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
             先维护常用模板，再一键加入今天任务，避免每天重复录入。
@@ -339,8 +334,7 @@ export function ImportPreviewSection({
 }) {
   return (
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-6">
-      <p className="text-xs font-semibold tracking-[0.16em] text-[var(--primary)]">IMPORT</p>
-      <h2 className="mt-2 text-[1.5rem] font-semibold text-[var(--foreground)]">导入预览</h2>
+      <h2 className="text-[1.5rem] font-semibold text-[var(--foreground)]">导入预览</h2>
       <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
         支持把钉钉群里的文字先按学科分组，再拆成孩子可执行的子任务。
       </p>
@@ -456,7 +450,6 @@ export function LiveStatusSection({
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold tracking-[0.16em] text-[var(--primary)]">LIVE STATUS</p>
           <h2 className="text-[1.5rem] font-semibold text-[var(--foreground)]">孩子端实时状态</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
             家长可在这里确认完成，或删除当天任务。

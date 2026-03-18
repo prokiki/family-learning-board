@@ -2,21 +2,52 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafaf7;
-  --foreground: #1a1a1a;
-  --card: #ffffff;
-  --card-alt: #f5f3ee;
-  --line: #e5e5e0;
-  --line-light: #f0efe9;
-  --primary: #2a9d8f;
-  --primary-hover: #238b7e;
-  --primary-light: #e6f5f3;
-  --success: #4caf50;
-  --warning: #f5a623;
-  --error: #e74c3c;
-  --info: #5b9bd5;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
+  --surface-0: #f6f5f1;
+  --surface-1: #ffffff;
+  --surface-2: #fafaf8;
+  --surface-3: #f0efeb;
+  --text-primary: #1b1b18;
+  --text-secondary: #5f5e5a;
+  --text-tertiary: #a3a29d;
+  --border-default: #e8e7e3;
+  --border-subtle: #f0efeb;
+  --accent: #1a8a7d;
+  --accent-hover: #147a6e;
+  --accent-subtle: #e8f5f2;
+  --accent-muted: #b8ddd7;
+  --success: #34a853;
+  --success-subtle: #e6f4ea;
+  --warning: #ea8c00;
+  --warning-subtle: #fef3e2;
+  --error: #d93025;
+  --error-subtle: #fde7e7;
+  --info: #4285f4;
+  --info-subtle: #e8f0fe;
+  --subject-english: #1a8a7d;
+  --subject-english-bg: #e8f5f2;
+  --subject-math: #4285f4;
+  --subject-math-bg: #e8f0fe;
+  --subject-chinese: #ea4335;
+  --subject-chinese-bg: #fde7e7;
+  --subject-other: #9334e6;
+  --subject-other-bg: #f3e8fd;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.07);
+  --shadow-glow: 0 0 0 3px rgba(26, 138, 125, 0.12);
+
+  /* Compatibility layer for current components */
+  --background: var(--surface-0);
+  --foreground: var(--text-primary);
+  --card: var(--surface-1);
+  --card-alt: var(--surface-2);
+  --line: var(--border-default);
+  --line-light: var(--border-subtle);
+  --primary: var(--accent);
+  --primary-hover: var(--accent-hover);
+  --primary-light: var(--accent-subtle);
+  --text-muted: var(--text-tertiary);
   --font-body:
     "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
     sans-serif;
@@ -56,6 +87,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a,
@@ -85,7 +119,7 @@ select:disabled {
 }
 
 ::selection {
-  background: rgba(42, 157, 143, 0.2);
+  background: rgba(26, 138, 125, 0.18);
 }
 
 .font-title {
@@ -98,13 +132,11 @@ select:disabled {
 }
 
 .soft-shadow {
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--shadow-sm);
 }
 
 .soft-shadow-hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
 }
 
 .nav-button {
@@ -118,9 +150,7 @@ select:disabled {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-secondary);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--shadow-sm);
 }
 
 .nav-button:hover {
@@ -148,7 +178,12 @@ select:disabled {
 
 .interactive-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-md);
+}
+
+*:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-glow);
 }
 
 @keyframes fade-slide-up {
@@ -207,4 +242,18 @@ select:disabled {
   border-radius: 3px;
   opacity: 0;
   animation: confetti-float 2.6s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

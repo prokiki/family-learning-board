@@ -40,58 +40,96 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6 md:py-14">
       <div className="mx-auto max-w-[980px]">
-        <section className="soft-shadow rounded-[2rem] border border-[var(--line)] bg-card px-6 py-7 sm:px-8 md:px-10 md:py-9">
-          <div className="max-w-[42rem] space-y-4">
-            <p className="inline-flex rounded-full bg-[var(--primary-light)] px-4 py-2 text-sm font-semibold text-[var(--primary)]">
-              家庭学习看板 MVP
-            </p>
-            <h1 className="max-w-[16ch] text-[2.35rem] font-semibold leading-[1.18] text-[var(--foreground)] sm:text-4xl md:max-w-[15ch] md:text-[2.9rem]">
-              放学后，孩子一眼就知道今天先做什么。
-            </h1>
-            <p className="max-w-[38rem] text-base leading-8 text-[var(--text-secondary)] md:text-lg">
-              家长把老师作业整理成清晰任务，孩子在固定设备上大字查看、点按反馈，家长端实时看到完成情况。
-            </p>
-          </div>
+        <div className="mb-4 flex items-center justify-between px-2">
+          <p className="text-sm font-semibold tracking-[0.14em] text-[var(--text-secondary)]">
+            家庭学习看板
+          </p>
+          <p className="inline-flex rounded-full bg-[var(--primary-light)] px-4 py-2 text-sm font-semibold text-[var(--primary)]">
+            V2 视觉升级
+          </p>
+        </div>
 
-          <div className="mt-7 grid items-stretch gap-4 md:grid-cols-2 md:mt-8 md:gap-5">
+        <section className="soft-shadow rounded-[2rem] border border-[var(--line)] bg-card p-4 sm:p-5 md:p-6">
+          <div className="grid gap-4 md:grid-cols-4 md:gap-5">
+            <div className="rounded-[1.6rem] border border-[var(--line)] bg-white px-6 py-7 md:col-span-2 md:row-span-2 md:min-h-[428px] md:px-8 md:py-8">
+              <div className="flex h-full flex-col justify-between">
+                <div className="space-y-4">
+                  <p className="inline-flex rounded-full bg-[var(--primary-light)] px-4 py-2 text-sm font-semibold text-[var(--primary)]">
+                    放学后更轻松
+                  </p>
+                  <h1 className="max-w-[12ch] text-[2.25rem] font-semibold leading-[1.15] text-[var(--foreground)] sm:text-[2.5rem] md:text-[2.7rem]">
+                    放学后，孩子一眼就知道今天先做什么。
+                  </h1>
+                  <p className="max-w-[30rem] text-base leading-8 text-[var(--text-secondary)] md:text-lg">
+                    家长把老师作业整理成清晰任务，孩子在固定设备上大字查看、点按反馈，家长端实时看到完成情况。
+                  </p>
+                </div>
+
+                <div className="mt-8 rounded-[1.25rem] border border-[var(--line)] bg-[var(--card-alt)]/55 px-4 py-4">
+                  <p className="text-xs font-semibold tracking-[0.14em] text-[var(--text-secondary)]">
+                    TODAY FLOW
+                  </p>
+                  <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                    从老师作业整理，到孩子按步骤完成，再到家长实时确认，整条学习闭环会保持清晰可见。
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <Link
               href="/parent"
-              className="interactive-card soft-shadow group flex min-h-[220px] flex-col rounded-[1.35rem] border border-[var(--line)] bg-card px-6 py-6 md:min-h-[236px] md:px-7"
+              className="interactive-card soft-shadow group flex min-h-[204px] flex-col rounded-[1.45rem] border border-[var(--line)] bg-white px-6 py-6 md:col-span-2 md:px-7"
             >
-              <div className="mb-4 h-11 w-1 rounded-full bg-[var(--primary)]" />
-              <p className="section-kicker">PARENT</p>
-              <h2 className="mt-3 text-[2rem] font-semibold leading-tight text-[var(--foreground)]">
-                家长端
-              </h2>
-              <p className="mt-4 max-w-[18rem] text-base leading-8 text-[var(--text-secondary)]">
-                创建今日任务、导入老师作业、实时查看孩子反馈。
-              </p>
+              <div className="flex h-full flex-col justify-between">
+                <div>
+                  <h2 className="mt-3 text-[1.8rem] font-semibold leading-tight text-[var(--foreground)]">
+                    家长端
+                  </h2>
+                  <p className="mt-3 max-w-[18rem] text-base leading-8 text-[var(--text-secondary)]">
+                    创建今日任务、导入老师作业、实时查看孩子反馈。
+                  </p>
+                </div>
+                <div className="mt-6 flex items-end justify-between">
+                  <p className="rounded-full bg-[var(--primary-light)] px-3 py-1.5 text-sm font-semibold text-[var(--primary)]">
+                    今天任务一目了然
+                  </p>
+                  <span className="text-2xl font-semibold text-[var(--primary)]">→</span>
+                </div>
+              </div>
             </Link>
             <Link
               href="/child"
-              className="interactive-card soft-shadow group flex min-h-[220px] flex-col rounded-[1.35rem] border border-[var(--line)] bg-card px-6 py-6 md:min-h-[236px] md:px-7"
+              className="interactive-card soft-shadow group flex min-h-[204px] flex-col rounded-[1.45rem] border border-[var(--line)] bg-white px-6 py-6 md:col-span-2 md:px-7"
             >
-              <div className="mb-4 h-11 w-1 rounded-full bg-[var(--warning)]" />
-              <p className="text-xs font-semibold tracking-[0.16em] text-[var(--warning)]">CHILD</p>
-              <h2 className="mt-3 text-[2rem] font-semibold leading-tight text-[var(--foreground)]">
-                孩子看板
-              </h2>
-              <p className="mt-4 max-w-[18rem] text-base leading-8 text-[var(--text-secondary)]">
-                大按钮、大字、少导航，专注今天的任务和下一步。
-              </p>
+              <div className="flex h-full flex-col justify-between">
+                <div>
+                  <h2 className="mt-3 text-[1.8rem] font-semibold leading-tight text-[var(--foreground)]">
+                    孩子看板
+                  </h2>
+                  <p className="mt-3 max-w-[18rem] text-base leading-8 text-[var(--text-secondary)]">
+                    大按钮、大字、少导航，专注今天的任务和下一步。
+                  </p>
+                </div>
+                <div className="mt-6 flex items-end justify-between">
+                  <p className="rounded-full bg-[rgba(254,243,226,0.9)] px-3 py-1.5 text-sm font-semibold text-[var(--warning)]">
+                    今天做什么很清楚
+                  </p>
+                  <span className="text-2xl font-semibold text-[var(--warning)]">→</span>
+                </div>
+              </div>
             </Link>
-          </div>
 
-          <div className="mt-7 border-t border-[var(--line-light)] pt-5 md:mt-8 md:pt-7">
-            <div className="grid gap-4 md:grid-cols-3 md:gap-5">
+            <div className="grid gap-4 md:col-span-4 md:grid-cols-4 md:gap-5">
               {[
                 ["file", "老师作业导入", "支持把钉钉群里复制出的文字直接拆成任务。"],
                 ["sync", "实时状态同步", "孩子点击“已完成”或“需要帮助”后，家长端立即刷新。"],
                 ["blocks", "易扩展架构", "为后续 OCR、拍照上传、奖励系统预留清晰结构。"],
-              ].map(([icon, title, desc]) => (
+              ].map(([icon, title, desc], index) => (
                 <div
                   key={title}
-                  className="rounded-[1.25rem] border border-[var(--line)] bg-card p-6 shadow-[0_1px_2px_rgba(0,0,0,0.025)] md:p-7"
+                  className={`rounded-[1.35rem] border border-[var(--line)] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.025)] md:p-7 ${
+                    index === 1 ? "md:col-span-2" : "md:col-span-1"
+                  }`}
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-[0.75rem] bg-[var(--primary-light)]">
                     <FeatureIcon type={icon as "file" | "sync" | "blocks"} />
