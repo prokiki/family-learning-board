@@ -55,12 +55,10 @@ export default function Home() {
           <div className="mt-8 grid items-stretch gap-4 md:grid-cols-2">
             <Link
               href="/parent"
-              className="soft-shadow group rounded-[1.25rem] border border-[var(--line)] bg-card px-7 py-7 transition hover:-translate-y-0.5 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+              className="interactive-card soft-shadow group rounded-[1.25rem] border border-[var(--line)] bg-card px-7 py-7"
             >
               <div className="mb-5 h-10 w-1 rounded-full bg-[var(--primary)]" />
-              <p className="text-sm uppercase tracking-[0.24em] text-[var(--primary)]">
-                Parent
-              </p>
+              <p className="section-kicker">PARENT</p>
               <h2 className="mt-2 text-3xl font-semibold text-[var(--foreground)]">家长端</h2>
               <p className="mt-3 text-base leading-8 text-[var(--text-secondary)]">
                 创建今日任务、导入老师作业、实时查看孩子反馈。
@@ -68,12 +66,10 @@ export default function Home() {
             </Link>
             <Link
               href="/child"
-              className="soft-shadow group rounded-[1.25rem] border border-[var(--line)] bg-card px-7 py-7 transition hover:-translate-y-0.5 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+              className="interactive-card soft-shadow group rounded-[1.25rem] border border-[var(--line)] bg-card px-7 py-7"
             >
               <div className="mb-5 h-10 w-1 rounded-full bg-[var(--warning)]" />
-              <p className="text-sm uppercase tracking-[0.24em] text-[var(--warning)]">
-                Child
-              </p>
+              <p className="text-xs font-semibold tracking-[0.16em] text-[var(--warning)]">CHILD</p>
               <h2 className="mt-2 text-3xl font-semibold text-[var(--foreground)]">孩子看板</h2>
               <p className="mt-3 text-base leading-8 text-[var(--text-secondary)]">
                 大按钮、大字、少导航，专注今天的任务和下一步。
@@ -90,7 +86,7 @@ export default function Home() {
           ].map(([icon, title, desc]) => (
             <div
               key={title}
-              className="soft-shadow rounded-[1.25rem] border border-[var(--line)] bg-card p-7"
+              className="soft-shadow interactive-card rounded-[1.25rem] border border-[var(--line)] bg-card p-7"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-[0.75rem] bg-[var(--primary-light)]">
                 <FeatureIcon type={icon as "file" | "sync" | "blocks"} />

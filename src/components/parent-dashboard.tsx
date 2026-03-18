@@ -62,6 +62,19 @@ function sourcePillClass(source: TaskSource) {
   return "bg-slate-100 text-[var(--text-secondary)]";
 }
 
+function subjectAccentClass(subject: string | null) {
+  switch (subject) {
+    case "语文":
+      return "before:bg-[rgba(232,115,90,0.92)]";
+    case "数学":
+      return "before:bg-[rgba(91,155,213,0.92)]";
+    case "英语":
+      return "before:bg-[rgba(42,157,143,0.92)]";
+    default:
+      return "before:bg-[var(--primary)]";
+  }
+}
+
 function summarizeProgress(tasks: TaskRecord[]) {
   return {
     total: tasks.length,
@@ -461,31 +474,31 @@ export function ParentDashboard() {
               {formatDisplayDate(today)}，固定设备会实时同步这里的内容。
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-[1rem] border border-[var(--line)] bg-card px-4 py-4">
+          <div className="grid grid-cols-3 gap-3 lg:min-w-[320px]">
+            <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/45 px-4 py-4">
               <div className="flex items-start gap-3">
-                <span className="h-10 w-1 rounded-full bg-[var(--foreground)]" />
+                <span className="h-9 w-1 rounded-full bg-[var(--foreground)]" />
                 <div>
                   <p className="text-3xl font-bold text-[var(--foreground)]">{progress.total}</p>
-                  <p className="mt-1 text-xs text-[var(--text-secondary)]">总任务</p>
+                  <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">总任务</p>
                 </div>
               </div>
             </div>
-            <div className="rounded-[1rem] border border-[var(--line)] bg-card px-4 py-4">
+            <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(76,175,80,0.05)] px-4 py-4">
               <div className="flex items-start gap-3">
-                <span className="h-10 w-1 rounded-full bg-[var(--success)]" />
+                <span className="h-9 w-1 rounded-full bg-[var(--success)]" />
                 <div>
                   <p className="text-3xl font-bold text-[var(--foreground)]">{progress.done}</p>
-                  <p className="mt-1 text-xs text-[var(--text-secondary)]">已推进</p>
+                  <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">已推进</p>
                 </div>
               </div>
             </div>
-            <div className="rounded-[1rem] border border-[var(--line)] bg-card px-4 py-4">
+            <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(245,166,35,0.06)] px-4 py-4">
               <div className="flex items-start gap-3">
-                <span className="h-10 w-1 rounded-full bg-[var(--warning)]" />
+                <span className="h-9 w-1 rounded-full bg-[var(--warning)]" />
                 <div>
                   <p className="text-3xl font-bold text-[var(--foreground)]">{progress.help}</p>
-                  <p className="mt-1 text-xs text-[var(--text-secondary)]">待协助</p>
+                  <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">待协助</p>
                 </div>
               </div>
             </div>
@@ -507,7 +520,8 @@ export function ParentDashboard() {
                 </p>
               </div>
             </div>
-            <div className="mt-5 space-y-3">
+            <div className="mt-5 rounded-[1.15rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4 md:p-5">
+              <div className="space-y-3">
               <input
                 value={manualTitle}
                 onChange={(event) => setManualTitle(event.target.value)}
@@ -529,6 +543,7 @@ export function ParentDashboard() {
               >
                 添加到今日任务
               </button>
+              </div>
             </div>
           </div>
 
@@ -551,31 +566,33 @@ export function ParentDashboard() {
               </button>
             </div>
 
-            <div className="mt-4 grid gap-3">
-              <input
-                value={templateTitle}
-                onChange={(event) => setTemplateTitle(event.target.value)}
-                placeholder="固定任务标题，例如：英语听读 15 分钟"
-                className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-base outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
-              />
-              <input
-                value={templateSubject}
-                onChange={(event) => setTemplateSubject(event.target.value)}
-                placeholder="学科，可选，例如：英语"
-                className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-base outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
-              />
+            <div className="mt-4 rounded-[1.15rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4 md:p-5">
+              <div className="grid gap-3 md:grid-cols-[1.5fr_0.9fr]">
+                <input
+                  value={templateTitle}
+                  onChange={(event) => setTemplateTitle(event.target.value)}
+                  placeholder="固定任务标题，例如：英语听读 15 分钟"
+                  className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-base outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+                />
+                <input
+                  value={templateSubject}
+                  onChange={(event) => setTemplateSubject(event.target.value)}
+                  placeholder="学科，可选，例如：英语"
+                  className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-base outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+                />
+              </div>
               <textarea
                 value={templateDetails}
                 onChange={(event) => setTemplateDetails(event.target.value)}
                 placeholder="备注，可选"
                 rows={2}
-                className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-base outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+                className="mt-3 w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-base outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
               />
               <button
                 type="button"
                 disabled={!supabase || !templateTitle.trim() || isPending}
                 onClick={createTemplate}
-                className="w-full rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] px-5 py-3 text-base font-semibold text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-3 w-full rounded-[12px] border border-[var(--line)] bg-white px-5 py-3 text-base font-semibold text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 保存为固定任务
               </button>
@@ -590,9 +607,9 @@ export function ParentDashboard() {
                 templates.map((template) => (
                   <article
                     key={template.id}
-                    className="rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/40 p-4"
+                    className={`relative overflow-hidden rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/40 p-4 before:absolute before:inset-y-0 before:left-0 before:w-1 ${subjectAccentClass(template.subject)}`}
                   >
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="flex flex-col gap-4 pl-2 md:flex-row md:items-start md:justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           {template.subject ? (
@@ -642,13 +659,15 @@ export function ParentDashboard() {
             <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
               支持把钉钉群里的文字先按学科分组，再拆成孩子可执行的子任务。
             </p>
-            <textarea
-              value={rawText}
-              onChange={(event) => setRawText(event.target.value)}
-              placeholder="例如：语文：预习第5课，抄写生字两遍。数学：完成口算2页，订正错题。"
-              rows={8}
-              className="mt-4 min-h-[120px] w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-4 text-base outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
-            />
+            <div className="mt-4 rounded-[1.15rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4 md:p-5">
+              <textarea
+                value={rawText}
+                onChange={(event) => setRawText(event.target.value)}
+                placeholder="例如：语文：预习第5课，抄写生字两遍。数学：完成口算2页，订正错题。"
+                rows={8}
+                className="min-h-[120px] w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-4 text-base outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+              />
+            </div>
             <div className="mt-5 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/50 p-4 md:p-5">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -657,7 +676,7 @@ export function ParentDashboard() {
                     上方保留原始文本，下面按学科展示并支持逐条校对。
                   </p>
                 </div>
-                <p className="text-sm font-semibold text-[var(--text-secondary)]">
+                <p className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-[var(--text-secondary)]">
                   共 {importDrafts.filter((draft) => draft.title.trim()).length} 条子任务
                 </p>
               </div>
@@ -773,53 +792,68 @@ export function ParentDashboard() {
               {tasks.map((task) => (
                 <article
                   key={task.id}
-                  className={`soft-shadow rounded-[1.15rem] border border-[var(--line)] bg-card p-5 ${
-                    task.status === "confirmed_by_parent" ? "opacity-50" : ""
+                  className={`soft-shadow relative overflow-hidden rounded-[1.15rem] border border-[var(--line)] p-5 before:absolute before:inset-y-0 before:left-0 before:w-1 ${
+                    subjectAccentClass(task.subject)
+                  } ${
+                    task.status === "confirmed_by_parent"
+                      ? "bg-[var(--card-alt)] opacity-75"
+                      : "bg-card"
                   }`}
                 >
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-4 pl-2">
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <StatusPill status={task.status} />
-                        {task.subject ? (
-                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${subjectPillClass(task.subject)}`}>
-                            {task.subject}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <StatusPill status={task.status} />
+                          {task.subject ? (
+                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${subjectPillClass(task.subject)}`}>
+                              {task.subject}
+                            </span>
+                          ) : null}
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${sourcePillClass(task.source)}`}>
+                            {sourceLabel(task.source)}
                           </span>
+                        </div>
+                        <h3
+                          className={`mt-3 text-lg font-medium text-[var(--foreground)] md:text-[1.125rem] ${
+                            task.status === "confirmed_by_parent"
+                              ? "line-through decoration-2"
+                              : ""
+                          }`}
+                        >
+                          {task.title}
+                        </h3>
+                        {task.details ? (
+                          <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                            {task.details}
+                          </p>
                         ) : null}
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${sourcePillClass(task.source)}`}>
-                          {sourceLabel(task.source)}
+                      </div>
+                      {task.status === "confirmed_by_parent" ? (
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(228,246,229,0.95)] text-xl">
+                          ✅
                         </span>
-                      </div>
-                      <h3 className="mt-3 text-lg font-medium text-[var(--foreground)] md:text-[1.125rem]">
-                        {task.title}
-                      </h3>
-                      {task.details ? (
-                        <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-                          {task.details}
-                        </p>
                       ) : null}
-                      </div>
                     </div>
                     <div className="flex flex-wrap gap-2 border-t border-[var(--line-light)] pt-4 md:justify-start">
                       <button
                         type="button"
                         onClick={() => updateTaskStatus(task.id, "confirmed_by_parent")}
-                        className="rounded-[12px] border border-[var(--success)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--success)]"
+                        className="rounded-[12px] border border-[var(--success)] bg-[rgba(76,175,80,0.06)] px-4 py-2.5 text-sm font-semibold text-[var(--success)]"
                       >
                         ✓ 家长确认完成
                       </button>
                       <button
                         type="button"
                         onClick={() => updateTaskStatus(task.id, "pending")}
-                        className="rounded-[12px] border border-[var(--line)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"
+                        className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)]/45 px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"
                       >
                         ↺ 重置为待开始
                       </button>
                       <button
                         type="button"
                         onClick={() => deleteTask(task.id)}
-                        className="rounded-[12px] px-2 py-2.5 text-sm font-semibold text-[var(--error)]"
+                        className="rounded-[12px] border border-transparent px-3 py-2.5 text-sm font-semibold text-[var(--error)]"
                       >
                         🗑 删除任务
                       </button>
