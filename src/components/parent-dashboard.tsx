@@ -65,6 +65,7 @@ export function ParentDashboard() {
   const [templateSubject, setTemplateSubject] = useState("");
   const [templateDetails, setTemplateDetails] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
   const supabase = getSupabaseBrowserClient();
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
@@ -149,6 +150,20 @@ export function ParentDashboard() {
       void client.removeChannel(channel);
     };
   }, [supabase, today]);
+
+  useEffect(() => {
+    if (!highlightedTaskId) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setHighlightedTaskId((current) => (current === highlightedTaskId ? null : current));
+    }, 520);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [highlightedTaskId]);
 
   async function insertTasks(drafts: TaskDraft[], source: TaskSource) {
     if (!supabase || drafts.length === 0) {
@@ -380,6 +395,7 @@ export function ParentDashboard() {
 
         const { data } = await fetchTodayTasks(client, today);
         setTasks((data as TaskRecord[]) ?? []);
+        setHighlightedTaskId(id);
       })();
     });
   }
@@ -463,6 +479,7 @@ export function ParentDashboard() {
           tasks={tasks}
           loading={loading}
           message={message}
+          highlightedTaskId={highlightedTaskId}
           onStatusChange={updateTaskStatus}
           onDelete={deleteTask}
         />

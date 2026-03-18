@@ -441,12 +441,14 @@ export function LiveStatusSection({
   tasks,
   loading,
   message,
+  highlightedTaskId,
   onStatusChange,
   onDelete,
 }: {
   tasks: TaskRecord[];
   loading: boolean;
   message: string | null;
+  highlightedTaskId: string | null;
   onStatusChange: (id: string, status: TaskRecord["status"]) => void;
   onDelete: (id: string) => void;
 }) {
@@ -489,7 +491,7 @@ export function LiveStatusSection({
                 task.status === "confirmed_by_parent"
                   ? "bg-[var(--card-alt)] opacity-75"
                   : "bg-card"
-              }`}
+              } ${highlightedTaskId === task.id ? "status-change-pulse" : ""}`}
             >
               <div className="flex flex-col gap-4 pl-2">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
