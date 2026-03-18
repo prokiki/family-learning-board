@@ -40,7 +40,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background px-6 py-12 text-foreground">
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
-        <section className="soft-shadow rounded-[1.75rem] border border-[var(--line)] bg-card px-8 py-8 md:px-12 md:py-10">
+        <section className="soft-shadow mx-auto w-full max-w-[720px] rounded-[1.75rem] border border-[var(--line)] bg-card px-8 py-8 md:px-12 md:py-10">
           <div className="max-w-3xl space-y-5">
             <p className="inline-flex rounded-full bg-[var(--primary-light)] px-4 py-2 text-sm font-semibold text-[var(--primary)]">
               家庭学习看板 MVP

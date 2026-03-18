@@ -629,7 +629,7 @@ export function ChildDashboard() {
             </div>
 
             <div className="grid gap-5 md:gap-6">
-              {groupedOrderedTasks.map((group) => (
+              {groupedOrderedTasks.map((group, groupIndex) => (
                 <section key={group.subject} className="space-y-3">
                   {(() => {
                     const sectionState = subjectSectionState(group.tasks, currentTaskId);
@@ -680,13 +680,14 @@ export function ChildDashboard() {
                       return (
                         <article
                           key={task.id}
-                          className={`soft-shadow relative overflow-hidden rounded-[1.5rem] border p-5 md:p-6 ${
+                          className={`fade-slide-up soft-shadow relative overflow-hidden rounded-[1.5rem] border p-5 md:p-6 ${
                             isCurrent
                               ? `border-[rgba(26,26,26,0.18)] bg-white shadow-[0_16px_36px_rgba(26,26,26,0.08)] ${theme.cardGlow}`
                               : isCompleted
                                 ? `border-[var(--line)] bg-[var(--card-alt)] opacity-80 ${theme.cardGlow}`
                                 : `border-[var(--line)] bg-white ${theme.cardGlow}`
                           }`}
+                          style={{ animationDelay: `${groupIndex * 60 + index * 60}ms` }}
                         >
                           <span className={`absolute inset-y-0 left-0 w-1 ${theme.stripe}`} />
                           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
@@ -771,7 +772,7 @@ export function ChildDashboard() {
             </div>
 
             {allTasksCompleted ? (
-              <section className="soft-shadow rounded-[1.9rem] border border-[var(--line)] bg-white px-6 py-10 text-center md:px-8">
+              <section className="soft-shadow fade-slide-up rounded-[1.9rem] border border-[var(--line)] bg-white px-6 py-10 text-center md:px-8">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(255,244,214,0.96)] text-3xl shadow-[0_10px_24px_rgba(245,166,35,0.12)]">
                   🎉
                 </div>
@@ -779,7 +780,7 @@ export function ChildDashboard() {
                   太棒了，今天的任务全部搞定！
                 </h2>
                 <p className="mt-3 text-base text-[var(--text-secondary)]">
-                  休息一下吧，明天继续加油。
+                  休息一下吧 😊
                 </p>
               </section>
             ) : null}

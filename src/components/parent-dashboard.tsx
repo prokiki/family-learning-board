@@ -466,7 +466,7 @@ export function ParentDashboard() {
       <section className="soft-shadow rounded-[1.75rem] border border-[var(--line)] bg-card px-6 py-6 md:px-8 md:py-7">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold tracking-[0.18em] text-[var(--primary)]">PARENT</p>
+            <p className="text-sm font-semibold tracking-[0.18em] text-[var(--primary)]">家长端</p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight text-[var(--foreground)] md:text-[2rem]">
               今天的学习任务
             </h1>
