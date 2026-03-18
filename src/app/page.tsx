@@ -52,27 +52,16 @@ export default function Home() {
         <section className="soft-shadow rounded-[2rem] border border-[var(--line)] bg-card p-4 sm:p-5 md:p-6">
           <div className="grid gap-4 md:grid-cols-4 md:gap-5">
             <div className="rounded-[1.6rem] border border-[var(--line)] bg-white px-6 py-7 md:col-span-2 md:row-span-2 md:min-h-[428px] md:px-8 md:py-8">
-              <div className="flex h-full flex-col justify-between">
-                <div className="space-y-4">
-                  <p className="inline-flex rounded-full bg-[var(--primary-light)] px-4 py-2 text-sm font-semibold text-[var(--primary)]">
-                    放学后更轻松
-                  </p>
-                  <h1 className="max-w-[12ch] text-[2.25rem] font-semibold leading-[1.15] text-[var(--foreground)] sm:text-[2.5rem] md:text-[2.7rem]">
-                    放学后，孩子一眼就知道今天先做什么。
-                  </h1>
-                  <p className="max-w-[30rem] text-base leading-8 text-[var(--text-secondary)] md:text-lg">
-                    家长把老师作业整理成清晰任务，孩子在固定设备上大字查看、点按反馈，家长端实时看到完成情况。
-                  </p>
-                </div>
-
-                <div className="mt-8 rounded-[1.25rem] border border-[var(--line)] bg-[var(--card-alt)]/55 px-4 py-4">
-                  <p className="text-xs font-semibold tracking-[0.14em] text-[var(--text-secondary)]">
-                    TODAY FLOW
-                  </p>
-                  <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-                    从老师作业整理，到孩子按步骤完成，再到家长实时确认，整条学习闭环会保持清晰可见。
-                  </p>
-                </div>
+              <div className="space-y-4">
+                <p className="inline-flex rounded-full bg-[var(--primary-light)] px-4 py-2 text-sm font-semibold text-[var(--primary)]">
+                  放学后更轻松
+                </p>
+                <h1 className="max-w-[12ch] text-[2.25rem] font-semibold leading-[1.15] text-[var(--foreground)] sm:text-[2.5rem] md:text-[2.7rem]">
+                  放学后，孩子一眼就知道今天先做什么。
+                </h1>
+                <p className="max-w-[30rem] text-base leading-8 text-[var(--text-secondary)] md:text-lg">
+                  家长把老师作业整理成清晰任务，孩子在固定设备上大字查看、点按反馈，家长端实时看到完成情况。
+                </p>
               </div>
             </div>
 
