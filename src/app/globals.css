@@ -64,11 +64,24 @@ input,
 textarea,
 select {
   transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease;
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+button:not(:disabled):active,
+a:active {
+  transform: scale(0.98);
+}
+
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+  cursor: not-allowed;
 }
 
 ::selection {
@@ -151,4 +164,47 @@ select {
 
 .fade-slide-up {
   animation: fade-slide-up 300ms ease-out both;
+}
+
+@keyframes status-change-pulse {
+  0% {
+    transform: translateY(8px) scale(0.985);
+    opacity: 0.78;
+  }
+  45% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.status-change-pulse {
+  animation: status-change-pulse 420ms ease-out both;
+}
+
+@keyframes confetti-float {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(42px) rotate(16deg);
+  }
+}
+
+.confetti-piece {
+  position: absolute;
+  top: 18px;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  opacity: 0;
+  animation: confetti-float 2.6s ease-out infinite;
 }
