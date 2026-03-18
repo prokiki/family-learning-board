@@ -113,36 +113,36 @@ export function ChildHeader({
   completedCount: number;
 }) {
   return (
-    <section className="soft-shadow rounded-[1.9rem] border border-[var(--line)] bg-white px-6 py-5 md:px-8 md:py-6">
+    <section className="soft-shadow rounded-[1.7rem] border border-[var(--line)] bg-white px-4 py-4 sm:px-5 md:px-8 md:py-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-3xl">
-          <p className="text-sm font-semibold tracking-[0.18em] text-[var(--primary)]">
+          <p className="text-xs font-semibold tracking-[0.18em] text-[var(--primary)] sm:text-sm">
             学习看板
           </p>
-          <h1 className="mt-2 text-3xl font-semibold leading-tight text-[var(--foreground)] md:text-[2.25rem]">
+          <h1 className="mt-2 text-[1.9rem] font-semibold leading-tight text-[var(--foreground)] sm:text-3xl md:text-[2.25rem]">
             今天的学习任务
           </h1>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] md:text-base">
             今天是 {formatDisplayDate(today)}
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-3 md:min-w-[16rem]">
-          <div className="rounded-[1.1rem] border border-[var(--line)] bg-white px-4 py-3 shadow-sm">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 md:min-w-[16rem]">
+          <div className="rounded-[1rem] border border-[var(--line)] bg-white px-3 py-2.5 shadow-sm sm:rounded-[1.1rem] sm:px-4 sm:py-3">
             <div className="border-l-[3px] border-[var(--foreground)] pl-3">
               <p className="text-[11px] font-medium text-[var(--text-secondary)]">全部</p>
-              <p className="mt-1 text-2xl font-bold text-[var(--foreground)]">{totalCount}</p>
+              <p className="mt-1 text-[1.45rem] font-bold text-[var(--foreground)] sm:text-2xl">{totalCount}</p>
             </div>
           </div>
-          <div className="rounded-[1.1rem] border border-[var(--line)] bg-white px-4 py-3 shadow-sm">
+          <div className="rounded-[1rem] border border-[var(--line)] bg-white px-3 py-2.5 shadow-sm sm:rounded-[1.1rem] sm:px-4 sm:py-3">
             <div className="border-l-[3px] border-[var(--warning)] pl-3">
               <p className="text-[11px] font-medium text-[var(--text-secondary)]">进行中</p>
-              <p className="mt-1 text-2xl font-bold text-[var(--foreground)]">{inProgressCount}</p>
+              <p className="mt-1 text-[1.45rem] font-bold text-[var(--foreground)] sm:text-2xl">{inProgressCount}</p>
             </div>
           </div>
-          <div className="rounded-[1.1rem] border border-[var(--line)] bg-white px-4 py-3 shadow-sm">
+          <div className="rounded-[1rem] border border-[var(--line)] bg-white px-3 py-2.5 shadow-sm sm:rounded-[1.1rem] sm:px-4 sm:py-3">
             <div className="border-l-[3px] border-[var(--success)] pl-3">
               <p className="text-[11px] font-medium text-[var(--text-secondary)]">完成</p>
-              <p className="mt-1 text-2xl font-bold text-[var(--foreground)]">{completedCount}</p>
+              <p className="mt-1 text-[1.45rem] font-bold text-[var(--foreground)] sm:text-2xl">{completedCount}</p>
             </div>
           </div>
         </div>
@@ -167,13 +167,13 @@ export function PomodoroSection({
   onReset: () => void;
 }) {
   return (
-    <section className="soft-shadow rounded-[1.9rem] border border-[var(--line)] bg-white px-5 py-5 md:px-6 md:py-6">
+    <section className="soft-shadow rounded-[1.7rem] border border-[var(--line)] bg-white px-4 py-4 sm:px-5 md:px-6 md:py-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-lg">
-          <p className="text-sm font-semibold tracking-[0.18em] text-[var(--primary)]">
+          <p className="text-xs font-semibold tracking-[0.18em] text-[var(--primary)] sm:text-sm">
             番茄时钟
           </p>
-          <h2 className="mt-2 text-2xl font-semibold leading-tight text-[var(--foreground)] md:text-[2rem]">
+          <h2 className="mt-2 text-[1.65rem] font-semibold leading-tight text-[var(--foreground)] sm:text-2xl md:text-[2rem]">
             {timerState.mode === "focus" ? "专注 20 分钟" : "休息 5 分钟"}
           </h2>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] md:text-base">
@@ -183,9 +183,9 @@ export function PomodoroSection({
           </p>
         </div>
 
-        <div className="flex flex-col items-start gap-4 lg:items-end">
-          <div className="flex items-center gap-4">
-            <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-white text-[var(--foreground)] md:h-32 md:w-32">
+        <div className="flex flex-col items-start gap-4 self-stretch lg:items-end">
+          <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center lg:w-auto">
+            <div className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-white text-[var(--foreground)] sm:mx-0 sm:h-28 sm:w-28 md:h-32 md:w-32">
               <div
                 className="absolute inset-0 rounded-full"
                 style={{
@@ -199,18 +199,18 @@ export function PomodoroSection({
                 <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--text-secondary)]">
                   {timerState.mode === "focus" ? "专注" : "休息"}
                 </p>
-                <p className="mt-2 text-3xl font-bold md:text-[2.2rem]">
+                <p className="mt-1.5 text-[1.75rem] font-bold sm:mt-2 sm:text-3xl md:text-[2.2rem]">
                   {formatTimer(timerState.secondsLeft)}
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <div className="flex rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)] p-1">
+            <div className="flex w-full flex-col gap-2 sm:w-auto">
+              <div className="flex w-full rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)] p-1 sm:w-auto">
                 <button
                   type="button"
                   onClick={() => onSwitchMode("focus")}
-                  className={`rounded-[0.8rem] px-4 py-2 text-sm font-semibold md:text-base ${
+                  className={`flex-1 rounded-[0.8rem] px-4 py-2 text-sm font-semibold md:text-base ${
                     timerState.mode === "focus"
                       ? "bg-[var(--primary)] text-white"
                       : "text-[var(--text-secondary)]"
@@ -221,7 +221,7 @@ export function PomodoroSection({
                 <button
                   type="button"
                   onClick={() => onSwitchMode("break")}
-                  className={`rounded-[0.8rem] px-4 py-2 text-sm font-semibold md:text-base ${
+                  className={`flex-1 rounded-[0.8rem] px-4 py-2 text-sm font-semibold md:text-base ${
                     timerState.mode === "break"
                       ? "bg-[var(--primary)] text-white"
                       : "text-[var(--text-secondary)]"
@@ -236,7 +236,7 @@ export function PomodoroSection({
                   type="button"
                   onClick={onStart}
                   disabled={timerState.isRunning}
-                  className="rounded-[1rem] bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400 md:text-base"
+                  className="rounded-[1rem] bg-[var(--primary)] px-3 py-3 text-sm font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400 md:px-4 md:text-base"
                 >
                   开始
                 </button>
@@ -244,14 +244,14 @@ export function PomodoroSection({
                   type="button"
                   onClick={onPause}
                   disabled={!timerState.isRunning}
-                  className="rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm font-semibold text-[var(--text-secondary)] disabled:bg-slate-100/80 disabled:text-slate-400 md:text-base"
+                  className="rounded-[1rem] border border-[var(--line)] bg-white px-3 py-3 text-sm font-semibold text-[var(--text-secondary)] disabled:bg-slate-100/80 disabled:text-slate-400 md:px-4 md:text-base"
                 >
                   暂停
                 </button>
                 <button
                   type="button"
                   onClick={onReset}
-                  className="rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm font-semibold text-[var(--text-secondary)] md:text-base"
+                  className="rounded-[1rem] border border-[var(--line)] bg-white px-3 py-3 text-sm font-semibold text-[var(--text-secondary)] md:px-4 md:text-base"
                 >
                   重置
                 </button>
@@ -273,6 +273,7 @@ export function PomodoroSection({
 export function ChildTasksSection({
   groups,
   currentTaskId,
+  highlightedTaskId,
   isPending,
   onUpdateTask,
   allTasksCompleted,
@@ -281,6 +282,7 @@ export function ChildTasksSection({
 }: {
   groups: GroupedTasks[];
   currentTaskId: string | null;
+  highlightedTaskId: string | null;
   isPending: boolean;
   onUpdateTask: (id: string, status: TaskStatus) => void;
   allTasksCompleted: boolean;
@@ -377,7 +379,7 @@ export function ChildTasksSection({
                           : isCompleted
                             ? `border-[var(--line)] bg-[var(--card-alt)] opacity-80 ${theme.cardGlow}`
                             : `border-[var(--line)] bg-white ${theme.cardGlow}`
-                      }`}
+                      } ${highlightedTaskId === task.id ? "status-change-pulse" : ""}`}
                       style={{ animationDelay: `${groupIndex * 60 + index * 60}ms` }}
                     >
                       <span className={`absolute inset-y-0 left-0 w-1 ${theme.stripe}`} />
@@ -464,7 +466,27 @@ export function ChildTasksSection({
       </div>
 
       {allTasksCompleted ? (
-        <section className="soft-shadow fade-slide-up rounded-[1.9rem] border border-[var(--line)] bg-white px-6 py-10 text-center md:px-8">
+        <section className="soft-shadow fade-slide-up relative overflow-hidden rounded-[1.9rem] border border-[var(--line)] bg-white px-6 py-10 text-center md:px-8">
+          <span
+            className="confetti-piece left-[14%] bg-[rgba(232,115,90,0.55)]"
+            style={{ animationDelay: "0ms" }}
+          />
+          <span
+            className="confetti-piece left-[28%] bg-[rgba(245,166,35,0.5)]"
+            style={{ animationDelay: "260ms" }}
+          />
+          <span
+            className="confetti-piece left-[44%] bg-[rgba(91,155,213,0.45)]"
+            style={{ animationDelay: "520ms" }}
+          />
+          <span
+            className="confetti-piece left-[63%] bg-[rgba(42,157,143,0.45)]"
+            style={{ animationDelay: "140ms" }}
+          />
+          <span
+            className="confetti-piece left-[79%] bg-[rgba(155,142,196,0.4)]"
+            style={{ animationDelay: "420ms" }}
+          />
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(255,244,214,0.96)] text-3xl shadow-[0_10px_24px_rgba(245,166,35,0.12)]">
             🎉
           </div>

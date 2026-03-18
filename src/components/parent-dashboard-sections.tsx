@@ -78,41 +78,41 @@ export function ParentHeader({
   progress: ProgressSummary;
 }) {
   return (
-    <section className="soft-shadow rounded-[1.75rem] border border-[var(--line)] bg-card px-6 py-6 md:px-8 md:py-7">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <section className="soft-shadow rounded-[1.75rem] border border-[var(--line)] bg-card px-5 py-5 md:px-8 md:py-7">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-semibold tracking-[0.18em] text-[var(--primary)]">家长端</p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-[var(--foreground)] md:text-[2rem]">
+          <h1 className="mt-3 text-[2rem] font-semibold tracking-tight text-[var(--foreground)] md:text-[2rem]">
             今天的学习任务
           </h1>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] md:text-base">
             {todayLabel}，固定设备会实时同步这里的内容。
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-3 lg:min-w-[320px]">
-          <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/45 px-4 py-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:min-w-[320px]">
+          <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/45 px-3 py-3 sm:px-4 sm:py-4">
             <div className="flex items-start gap-3">
               <span className="h-9 w-1 rounded-full bg-[var(--foreground)]" />
               <div>
-                <p className="text-3xl font-bold text-[var(--foreground)]">{progress.total}</p>
+                <p className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">{progress.total}</p>
                 <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">总任务</p>
               </div>
             </div>
           </div>
-          <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(76,175,80,0.05)] px-4 py-4">
+          <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(76,175,80,0.05)] px-3 py-3 sm:px-4 sm:py-4">
             <div className="flex items-start gap-3">
               <span className="h-9 w-1 rounded-full bg-[var(--success)]" />
               <div>
-                <p className="text-3xl font-bold text-[var(--foreground)]">{progress.done}</p>
+                <p className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">{progress.done}</p>
                 <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">已推进</p>
               </div>
             </div>
           </div>
-          <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(245,166,35,0.06)] px-4 py-4">
+          <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(245,166,35,0.06)] px-3 py-3 sm:px-4 sm:py-4">
             <div className="flex items-start gap-3">
               <span className="h-9 w-1 rounded-full bg-[var(--warning)]" />
               <div>
-                <p className="text-3xl font-bold text-[var(--foreground)]">{progress.help}</p>
+                <p className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">{progress.help}</p>
                 <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">待协助</p>
               </div>
             </div>

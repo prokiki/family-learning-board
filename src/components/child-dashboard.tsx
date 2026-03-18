@@ -137,6 +137,7 @@ function groupTasksBySubject(tasks: TaskRecord[]) {
 export function ChildDashboard() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
   const [timerState, dispatchTimer] = useReducer(timerReducer, {
     mode: "focus",
     secondsLeft: FOCUS_MINUTES * 60,
@@ -358,9 +359,24 @@ export function ChildDashboard() {
 
         const { data } = await fetchTodayTasks(client, today);
         setTasks((data as TaskRecord[]) ?? []);
+        setHighlightedTaskId(id);
       })();
     });
   }
+
+  useEffect(() => {
+    if (!highlightedTaskId) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setHighlightedTaskId(null);
+    }, 520);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [highlightedTaskId]);
 
   function handleTimerStart() {
     primeTimerAudio();
@@ -376,8 +392,8 @@ export function ChildDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6 text-[var(--foreground)] md:px-8 md:py-10">
-      <div className="mx-auto max-w-5xl space-y-5 md:space-y-6">
+    <div className="min-h-screen bg-background px-3 py-5 text-[var(--foreground)] sm:px-4 md:px-8 md:py-10">
+      <div className="mx-auto max-w-5xl space-y-4 md:space-y-6">
         <ChildHeader
           today={today}
           totalCount={tasks.length}
@@ -403,6 +419,7 @@ export function ChildDashboard() {
         <ChildTasksSection
           groups={groupedOrderedTasks}
           currentTaskId={currentTaskId}
+          highlightedTaskId={highlightedTaskId}
           isPending={isPending}
           onUpdateTask={updateTask}
           allTasksCompleted={allTasksCompleted}

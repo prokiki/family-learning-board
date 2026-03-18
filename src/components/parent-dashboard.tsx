@@ -428,7 +428,7 @@ export function ParentDashboard() {
 
       {!supabase ? <SetupNotice /> : null}
 
-      <section className="grid gap-6 xl:grid-cols-[1.05fr_1.3fr]">
+      <section className="grid gap-6 lg:grid-cols-[0.98fr_1.22fr] xl:grid-cols-[1.05fr_1.3fr]">
         <div className="space-y-6">
           <ManualTaskSection
             title={manualTitle}
