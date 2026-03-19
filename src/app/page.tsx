@@ -99,7 +99,7 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="mt-6 flex items-end justify-between">
-                  <p className="rounded-full bg-[rgba(254,243,226,0.9)] px-3 py-1.5 text-sm font-semibold text-[var(--warning)]">
+                  <p className="rounded-full bg-[var(--warning-subtle)] px-3 py-1.5 text-sm font-semibold text-[var(--warning)]">
                     今天做什么很清楚
                   </p>
                   <span className="text-2xl font-semibold text-[var(--warning)]">→</span>

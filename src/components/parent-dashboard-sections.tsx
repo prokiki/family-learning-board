@@ -11,13 +11,13 @@ import type {
 function subjectPillClass(subject: string | null) {
   switch (subject) {
     case "语文":
-      return "bg-[rgba(232,115,90,0.12)] text-[rgba(175,78,57,1)]";
+      return "bg-[var(--subject-chinese-bg)] text-[var(--subject-chinese)]";
     case "数学":
-      return "bg-[rgba(91,155,213,0.12)] text-[rgba(58,107,160,1)]";
+      return "bg-[var(--subject-math-bg)] text-[var(--subject-math)]";
     case "英语":
-      return "bg-[rgba(42,157,143,0.12)] text-[rgba(31,118,108,1)]";
+      return "bg-[var(--subject-english-bg)] text-[var(--subject-english)]";
     default:
-      return "bg-slate-100 text-slate-600";
+      return "bg-[var(--card-alt)] text-[var(--text-secondary)]";
   }
 }
 
@@ -35,30 +35,30 @@ function sourceLabel(source: TaskSource) {
 
 function templateStateClass(isActive: boolean) {
   return isActive
-    ? "bg-[rgba(76,175,80,0.12)] text-[rgba(53,133,57,1)]"
-    : "bg-slate-100 text-[var(--text-secondary)]";
+    ? "bg-[var(--success-subtle)] text-[var(--success)]"
+    : "bg-[var(--card-alt)] text-[var(--text-secondary)]";
 }
 
 function sourcePillClass(source: TaskSource) {
   if (source === "imported") {
-    return "bg-[rgba(91,155,213,0.12)] text-[rgba(58,107,160,1)]";
+    return "bg-[var(--info-subtle)] text-[var(--info)]";
   }
 
   if (source === "template") {
-    return "bg-[rgba(42,157,143,0.12)] text-[rgba(31,118,108,1)]";
+    return "bg-[var(--subject-english-bg)] text-[var(--subject-english)]";
   }
 
-  return "bg-slate-100 text-[var(--text-secondary)]";
+  return "bg-[var(--card-alt)] text-[var(--text-secondary)]";
 }
 
 function subjectAccentClass(subject: string | null) {
   switch (subject) {
     case "语文":
-      return "before:bg-[rgba(232,115,90,0.92)]";
+      return "before:bg-[var(--subject-chinese)]";
     case "数学":
-      return "before:bg-[rgba(91,155,213,0.92)]";
+      return "before:bg-[var(--subject-math)]";
     case "英语":
-      return "before:bg-[rgba(42,157,143,0.92)]";
+      return "before:bg-[var(--subject-english)]";
     default:
       return "before:bg-[var(--primary)]";
   }
@@ -98,7 +98,7 @@ export function ParentHeader({
               <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">总任务</p>
             </div>
           </div>
-          <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(76,175,80,0.05)] px-3 py-3 sm:px-4 sm:py-4">
+          <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--success-subtle)] px-3 py-3 sm:px-4 sm:py-4">
             <div>
               <p className="text-2xl font-bold text-[var(--success)] sm:text-3xl">
                 {progress.done}
@@ -106,7 +106,7 @@ export function ParentHeader({
               <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">已推进</p>
             </div>
           </div>
-          <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(245,166,35,0.06)] px-3 py-3 sm:px-4 sm:py-4">
+          <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--warning-subtle)] px-3 py-3 sm:px-4 sm:py-4">
             <div>
               <p className="text-2xl font-bold text-[var(--warning)] sm:text-3xl">
                 {progress.help}

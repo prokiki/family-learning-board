@@ -76,12 +76,9 @@ export function ThemeToggle() {
   };
 
   const toneClassMap: Record<ThemePreference, string> = {
-    light:
-      "bg-[var(--primary-light)] text-[var(--primary)] border-[color:rgba(26,138,125,0.22)]",
-    dark:
-      "bg-[var(--info-subtle)] text-[var(--info)] border-[color:rgba(125,178,255,0.3)]",
-    system:
-      "bg-[var(--warning-subtle)] text-[var(--warning)] border-[color:rgba(234,140,0,0.24)]",
+    light: "bg-[var(--primary-light)] text-[var(--primary)] border-[var(--line)]",
+    dark: "bg-[var(--info-subtle)] text-[var(--info)] border-[var(--line)]",
+    system: "bg-[var(--warning-subtle)] text-[var(--warning)] border-[var(--line)]",
   };
 
   return (

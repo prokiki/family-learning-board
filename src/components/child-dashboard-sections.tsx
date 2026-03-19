@@ -50,27 +50,27 @@ function subjectTheme(subject: string) {
   switch (subject) {
     case "英语":
       return {
-        section: "border-[rgba(42,157,143,0.22)] bg-[rgba(227,245,242,0.92)]",
-        stripe: "bg-[rgba(42,157,143,0.95)]",
-        cardGlow: "shadow-[0_10px_24px_rgba(42,157,143,0.06)]",
+        section: "border-[var(--line)] bg-[var(--subject-english-bg)]",
+        stripe: "bg-[var(--subject-english)]",
+        cardGlow: "",
       };
     case "数学":
       return {
-        section: "border-[rgba(91,155,213,0.22)] bg-[rgba(232,242,251,0.96)]",
-        stripe: "bg-[rgba(91,155,213,0.95)]",
-        cardGlow: "shadow-[0_10px_24px_rgba(91,155,213,0.06)]",
+        section: "border-[var(--line)] bg-[var(--subject-math-bg)]",
+        stripe: "bg-[var(--subject-math)]",
+        cardGlow: "",
       };
     case "语文":
       return {
-        section: "border-[rgba(232,115,90,0.22)] bg-[rgba(253,238,233,0.96)]",
-        stripe: "bg-[rgba(232,115,90,0.95)]",
-        cardGlow: "shadow-[0_10px_24px_rgba(232,115,90,0.06)]",
+        section: "border-[var(--line)] bg-[var(--subject-chinese-bg)]",
+        stripe: "bg-[var(--subject-chinese)]",
+        cardGlow: "",
       };
     default:
       return {
-        section: "border-[rgba(42,157,143,0.18)] bg-[rgba(242,246,248,0.96)]",
+        section: "border-[var(--line)] bg-[var(--card-alt)]",
         stripe: "bg-[var(--primary)]",
-        cardGlow: "shadow-[0_10px_24px_rgba(42,157,143,0.04)]",
+        cardGlow: "",
       };
   }
 }
@@ -83,20 +83,20 @@ function subjectSectionState(tasks: TaskRecord[], currentTaskId: string | null) 
 
   if (allCompleted) {
     return {
-      badgeClass: "bg-[rgba(76,175,80,0.12)] text-[rgba(53,133,57,1)]",
+      badgeClass: "bg-[var(--success-subtle)] text-[var(--success)]",
       metaText: "已完成",
     };
   }
 
   if (hasCurrent) {
     return {
-      badgeClass: "bg-[rgba(255,169,74,0.14)] text-[rgba(217,117,12,1)]",
+      badgeClass: "bg-[var(--warning-subtle)] text-[var(--warning)]",
       metaText: "进行中",
     };
   }
 
   return {
-    badgeClass: "bg-slate-100 text-slate-700",
+    badgeClass: "bg-[var(--card)] text-[var(--text-secondary)]",
     metaText: "待完成",
   };
 }
@@ -143,7 +143,7 @@ export function ChildHeader({
                     : "继续完成今天的任务"}
             </span>
           </div>
-          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[rgba(27,27,24,0.08)]">
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[var(--line-light)]">
             <div
               className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-500 ease-out"
               style={{ width: `${progressPercent}%` }}
@@ -178,8 +178,8 @@ export function PomodoroSection({
       ? "var(--primary)"
       : timerState.isRunning
         ? "var(--success)"
-        : "rgba(95,94,90,0.75)";
-  const ringBackground = "rgba(232,231,227,0.95)";
+        : "var(--text-secondary)";
+  const ringBackground = "var(--line)";
 
   return (
     <section className="soft-shadow rounded-[1.7rem] border border-[var(--line)] bg-card px-4 py-4 sm:px-5 md:px-6 md:py-6">
@@ -202,7 +202,7 @@ export function PomodoroSection({
           <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center lg:w-auto">
             <div
               className={`relative mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-card text-[var(--foreground)] sm:mx-0 sm:h-28 sm:w-28 md:h-32 md:w-32 ${
-                timerState.isRunning ? "shadow-[0_0_0_6px_rgba(26,138,125,0.06)]" : ""
+                timerState.isRunning ? "shadow-[var(--shadow-glow)]" : ""
               }`}
             >
               <svg
@@ -275,7 +275,7 @@ export function PomodoroSection({
                   type="button"
                   onClick={onStart}
                   disabled={timerState.isRunning}
-                  className="rounded-[1rem] bg-[var(--primary)] px-3 py-3 text-sm font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400 md:px-4 md:text-base"
+                  className="rounded-[1rem] bg-[var(--primary)] px-3 py-3 text-sm font-semibold text-white disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:px-4 md:text-base"
                 >
                   开始
                 </button>
@@ -283,7 +283,7 @@ export function PomodoroSection({
                   type="button"
                   onClick={onPause}
                   disabled={!timerState.isRunning}
-                  className="rounded-[1rem] border border-[var(--line)] bg-card px-3 py-3 text-sm font-semibold text-[var(--text-secondary)] disabled:bg-slate-100/80 disabled:text-slate-400 md:px-4 md:text-base"
+                  className="rounded-[1rem] border border-[var(--line)] bg-card px-3 py-3 text-sm font-semibold text-[var(--text-secondary)] disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:px-4 md:text-base"
                 >
                   暂停
                 </button>
@@ -330,7 +330,7 @@ export function ChildTasksSection({
 }) {
   if (message) {
     return (
-      <div className="mt-4 rounded-[1.25rem] bg-rose-100 px-5 py-4 text-base font-semibold text-rose-900">
+      <div className="mt-4 rounded-[1.25rem] border border-[var(--line)] bg-[var(--error-subtle)] px-5 py-4 text-base font-semibold text-[var(--error)]">
         {message}
       </div>
     );
@@ -400,12 +400,12 @@ export function ChildTasksSection({
                   const isCompleted = isCompletedStatus(task.status);
                   const isCurrent = task.id === currentTaskId && !isCompleted;
                   const primaryButtonClass = isCompleted
-                    ? "border border-[rgba(76,175,80,0.18)] bg-[rgba(228,246,229,0.95)] text-[rgba(53,133,57,1)]"
-                    : "border border-[rgba(76,175,80,0.18)] bg-[rgba(228,246,229,0.95)] text-[rgba(53,133,57,1)] shadow-[0_8px_18px_rgba(76,175,80,0.08)]";
+                    ? "border border-[var(--line)] bg-[var(--success-subtle)] text-[var(--success)]"
+                    : "border border-[var(--line)] bg-[var(--success-subtle)] text-[var(--success)] shadow-[var(--shadow-sm)]";
                   const helpButtonClass =
                     task.status === "needs_help"
-                      ? "border border-[rgba(245,166,35,0.28)] bg-[rgba(255,239,208,0.98)] text-[rgba(201,107,8,1)]"
-                      : "border border-[rgba(245,166,35,0.28)] bg-[rgba(255,247,229,0.98)] text-[rgba(201,107,8,1)]";
+                      ? "border border-[var(--line)] bg-[var(--warning-subtle)] text-[var(--warning)]"
+                      : "border border-[var(--line)] bg-[var(--warning-subtle)] text-[var(--warning)]";
                   const weakButtonClass =
                     "border border-[var(--line)] bg-card text-[var(--text-secondary)]";
 
@@ -414,7 +414,7 @@ export function ChildTasksSection({
                       key={task.id}
                       className={`fade-slide-up soft-shadow relative overflow-hidden rounded-[1.5rem] border p-5 md:p-6 ${
                         isCurrent
-                          ? `border-[rgba(26,26,26,0.18)] bg-card shadow-[0_16px_36px_rgba(26,26,26,0.08)] ${theme.cardGlow}`
+                          ? `border-[var(--accent-muted)] bg-card shadow-[var(--shadow-md)] ${theme.cardGlow}`
                           : isCompleted
                             ? `border-[var(--line)] bg-[var(--card-alt)] opacity-80 ${theme.cardGlow}`
                             : `border-[var(--line)] bg-card ${theme.cardGlow}`
@@ -425,11 +425,11 @@ export function ChildTasksSection({
                       <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                         <div className="pl-2">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-xs font-semibold tracking-[0.14em] text-slate-400">
+                            <p className="text-xs font-semibold tracking-[0.14em] text-[var(--text-tertiary)]">
                               任务 {index + 1}
                             </p>
                             {isCurrent ? (
-                              <span className="rounded-full bg-[var(--primary)] px-3 py-1 text-xs font-semibold tracking-[0.08em] text-white shadow-[0_6px_16px_rgba(26,138,125,0.18)]">
+                              <span className="rounded-full bg-[var(--primary)] px-3 py-1 text-xs font-semibold tracking-[0.08em] text-white shadow-[var(--shadow-sm)]">
                                 👉 现在做这个
                               </span>
                             ) : null}
@@ -437,7 +437,7 @@ export function ChildTasksSection({
                           <h2
                             className={`mt-3 text-3xl font-semibold leading-tight md:text-[2.2rem] ${
                               isCompleted
-                                ? "text-[var(--text-secondary)] line-through decoration-2 decoration-[rgba(95,94,90,0.45)]"
+                                ? "text-[var(--text-secondary)] line-through decoration-2 decoration-[var(--text-tertiary)]"
                                 : "text-[var(--foreground)]"
                             }`}
                           >
@@ -457,16 +457,16 @@ export function ChildTasksSection({
                         </div>
                         <div className="flex items-center gap-3">
                           {isCompleted ? (
-                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(230,244,234,0.9)] text-[1.1rem]">
+                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--success-subtle)] text-[1.1rem]">
                               ✅
                             </span>
                           ) : null}
                           <div
                             className={`rounded-full px-4 py-2 text-sm font-semibold md:text-base ${
                               isCompletedStatus(task.status)
-                                ? "bg-[rgba(228,246,229,0.95)] text-[rgba(53,133,57,1)]"
+                                ? "bg-[var(--success-subtle)] text-[var(--success)]"
                                 : task.status === "needs_help"
-                                  ? "bg-[rgba(255,247,229,0.98)] text-[rgba(201,107,8,1)]"
+                                  ? "bg-[var(--warning-subtle)] text-[var(--warning)]"
                                   : meta.tone
                             }`}
                           >
@@ -480,7 +480,7 @@ export function ChildTasksSection({
                           type="button"
                           disabled={isPending}
                           onClick={() => onUpdateTask(task.id, "in_progress")}
-                          className={`min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-lg font-semibold disabled:bg-slate-200 disabled:text-slate-400 md:text-[1.15rem] ${weakButtonClass} ${
+                          className={`min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-lg font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.15rem] ${weakButtonClass} ${
                             isCompleted ? "opacity-70" : ""
                           }`}
                         >
@@ -490,7 +490,7 @@ export function ChildTasksSection({
                           type="button"
                           disabled={isPending}
                           onClick={() => onUpdateTask(task.id, "done_by_child")}
-                          className={`min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-xl font-semibold disabled:bg-slate-200 disabled:text-slate-400 md:text-[1.2rem] ${primaryButtonClass}`}
+                          className={`min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-xl font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.2rem] ${primaryButtonClass}`}
                         >
                           {labels[1]}
                         </button>
@@ -498,7 +498,7 @@ export function ChildTasksSection({
                           type="button"
                           disabled={isPending}
                           onClick={() => onUpdateTask(task.id, "needs_help")}
-                          className={`min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-lg font-semibold disabled:bg-slate-200 disabled:text-slate-400 md:text-[1.15rem] ${helpButtonClass}`}
+                          className={`min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-lg font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.15rem] ${helpButtonClass}`}
                         >
                           {labels[2]}
                         </button>
@@ -534,7 +534,7 @@ export function ChildTasksSection({
             className="confetti-piece left-[79%] bg-[rgba(155,142,196,0.4)]"
             style={{ animationDelay: "420ms" }}
           />
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(255,244,214,0.96)] text-3xl shadow-[0_10px_24px_rgba(245,166,35,0.12)]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--warning-subtle)] text-3xl shadow-[var(--shadow-sm)]">
             🎉
           </div>
           <h2 className="mt-5 text-3xl font-semibold text-[var(--foreground)]">
