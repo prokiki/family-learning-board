@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
   title: "家庭学习看板",
@@ -34,9 +33,6 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <body className="antialiased">
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <div className="fixed right-3 top-3 z-30 sm:right-4 sm:top-4 md:right-6 md:top-6">
-          <ThemeToggle />
-        </div>
         {children}
       </body>
     </html>

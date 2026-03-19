@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function FeatureIcon({ type }: { type: "file" | "sync" | "blocks" }) {
   const common = "h-6 w-6 text-[var(--primary)]";
@@ -44,9 +45,7 @@ export default function Home() {
           <p className="text-sm font-semibold tracking-[0.14em] text-[var(--text-secondary)]">
             家庭学习看板
           </p>
-          <p className="inline-flex rounded-full bg-[var(--primary-light)] px-4 py-2 text-sm font-semibold text-[var(--primary)]">
-            V2 视觉升级
-          </p>
+          <ThemeToggle />
         </div>
 
         <section className="soft-shadow rounded-[2rem] border border-[var(--line)] bg-card p-4 sm:p-5 md:p-6">
