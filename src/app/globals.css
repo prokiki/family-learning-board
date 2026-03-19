@@ -54,6 +54,45 @@
   --font-title:
     "Arial Rounded MT Bold", "Trebuchet MS", "Avenir Next", "PingFang SC",
     sans-serif;
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  --surface-0: #171816;
+  --surface-1: #1f201d;
+  --surface-2: #262824;
+  --surface-3: #2e312c;
+  --text-primary: #f3f2ed;
+  --text-secondary: #c2c0b8;
+  --text-tertiary: #8d8b84;
+  --border-default: #343832;
+  --border-subtle: #2a2d28;
+  --accent: #5db5aa;
+  --accent-hover: #78c7bd;
+  --accent-subtle: rgba(93, 181, 170, 0.16);
+  --accent-muted: rgba(93, 181, 170, 0.34);
+  --success: #7bd58a;
+  --success-subtle: rgba(123, 213, 138, 0.14);
+  --warning: #ffb34d;
+  --warning-subtle: rgba(255, 179, 77, 0.14);
+  --error: #ff7a70;
+  --error-subtle: rgba(255, 122, 112, 0.14);
+  --info: #7db2ff;
+  --info-subtle: rgba(125, 178, 255, 0.14);
+  --subject-english: #60c0b4;
+  --subject-english-bg: rgba(96, 192, 180, 0.14);
+  --subject-math: #7db2ff;
+  --subject-math-bg: rgba(125, 178, 255, 0.14);
+  --subject-chinese: #ff8f83;
+  --subject-chinese-bg: rgba(255, 143, 131, 0.14);
+  --subject-other: #bb8cff;
+  --subject-other-bg: rgba(187, 140, 255, 0.14);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.34), 0 1px 2px rgba(0, 0, 0, 0.22);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.38);
+  --shadow-glow: 0 0 0 3px rgba(93, 181, 170, 0.18);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -90,6 +129,10 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
 }
 
 a,
@@ -166,6 +209,33 @@ select:disabled {
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.16em;
+  color: var(--primary);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  padding: 0.25rem;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+}
+
+.theme-toggle__button {
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 9999px;
+  padding: 0.45rem 0.72rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.theme-toggle__button[data-active="true"] {
+  background: var(--primary-light);
   color: var(--primary);
 }
 

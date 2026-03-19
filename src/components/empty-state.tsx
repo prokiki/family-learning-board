@@ -5,7 +5,7 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, description }: EmptyStateProps) {
   return (
-    <div className="soft-shadow rounded-[1.6rem] border border-[var(--line)] bg-white p-7 text-center md:p-8">
+    <div className="soft-shadow rounded-[1.6rem] border border-[var(--line)] bg-card p-7 text-center md:p-8">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[var(--line-light)] bg-[var(--card-alt)] text-[1.7rem] text-[var(--primary)]">
         ✦
       </div>

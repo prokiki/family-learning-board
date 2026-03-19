@@ -51,7 +51,7 @@ export default function Home() {
 
         <section className="soft-shadow rounded-[2rem] border border-[var(--line)] bg-card p-4 sm:p-5 md:p-6">
           <div className="grid gap-4 md:grid-cols-4 md:gap-5">
-            <div className="rounded-[1.6rem] border border-[var(--line)] bg-white px-6 py-7 md:col-span-2 md:row-span-2 md:min-h-[428px] md:px-8 md:py-8">
+            <div className="rounded-[1.6rem] border border-[var(--line)] bg-card px-6 py-7 md:col-span-2 md:row-span-2 md:min-h-[428px] md:px-8 md:py-8">
               <div className="space-y-4">
                 <p className="inline-flex rounded-full bg-[var(--primary-light)] px-4 py-2 text-sm font-semibold text-[var(--primary)]">
                   放学后更轻松
@@ -67,7 +67,7 @@ export default function Home() {
 
             <Link
               href="/parent"
-              className="interactive-card soft-shadow group flex min-h-[204px] flex-col rounded-[1.45rem] border border-[var(--line)] bg-white px-6 py-6 md:col-span-2 md:px-7"
+              className="interactive-card soft-shadow group flex min-h-[204px] flex-col rounded-[1.45rem] border border-[var(--line)] bg-card px-6 py-6 md:col-span-2 md:px-7"
             >
               <div className="flex h-full flex-col justify-between">
                 <div>
@@ -88,7 +88,7 @@ export default function Home() {
             </Link>
             <Link
               href="/child"
-              className="interactive-card soft-shadow group flex min-h-[204px] flex-col rounded-[1.45rem] border border-[var(--line)] bg-white px-6 py-6 md:col-span-2 md:px-7"
+              className="interactive-card soft-shadow group flex min-h-[204px] flex-col rounded-[1.45rem] border border-[var(--line)] bg-card px-6 py-6 md:col-span-2 md:px-7"
             >
               <div className="flex h-full flex-col justify-between">
                 <div>
@@ -116,7 +116,7 @@ export default function Home() {
               ].map(([icon, title, desc], index) => (
                 <div
                   key={title}
-                  className={`rounded-[1.35rem] border border-[var(--line)] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.025)] md:p-7 ${
+                  className={`rounded-[1.35rem] border border-[var(--line)] bg-card p-6 shadow-[0_1px_2px_rgba(0,0,0,0.025)] md:p-7 ${
                     index === 1 ? "md:col-span-2" : "md:col-span-1"
                   }`}
                 >

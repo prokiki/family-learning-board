@@ -216,7 +216,7 @@ export function TemplatesSection({
           type="button"
           disabled={addDisabled}
           onClick={onAddToToday}
-          className="rounded-[12px] border border-[var(--primary)] bg-white px-5 py-3 text-sm font-semibold text-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-[12px] border border-[var(--primary)] bg-card px-5 py-3 text-sm font-semibold text-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           一键加入
         </button>
@@ -248,7 +248,7 @@ export function TemplatesSection({
           type="button"
           disabled={createDisabled}
           onClick={onCreate}
-          className="mt-3 w-full rounded-[12px] border border-[var(--line)] bg-white px-5 py-3 text-base font-semibold text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-3 w-full rounded-[12px] border border-[var(--line)] bg-card px-5 py-3 text-base font-semibold text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           保存为固定任务
         </button>
@@ -290,7 +290,7 @@ export function TemplatesSection({
                   <button
                     type="button"
                     onClick={() => onToggle(template.id, template.is_active)}
-                    className="rounded-[12px] border border-[var(--line)] bg-white px-3 py-2 text-sm font-semibold text-[var(--text-secondary)]"
+                    className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2 text-sm font-semibold text-[var(--text-secondary)]"
                   >
                     {template.is_active ? "停用" : "启用"}
                   </button>
@@ -355,7 +355,7 @@ export function ImportPreviewSection({
               上方保留原始文本，下面按学科展示并支持逐条校对。
             </p>
           </div>
-          <p className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-[var(--text-secondary)]">
+          <p className="rounded-full bg-card px-3 py-1 text-sm font-semibold text-[var(--text-secondary)]">
             共 {drafts.filter((draft) => draft.title.trim()).length} 条子任务
           </p>
         </div>
@@ -369,7 +369,7 @@ export function ImportPreviewSection({
             {groups.map((group, subjectIndex) => (
               <section
                 key={`${group.subject}-${subjectIndex}`}
-                className="overflow-hidden rounded-[1rem] border border-[var(--line)] bg-white"
+                className="overflow-hidden rounded-[1rem] border border-[var(--line)] bg-card"
               >
                 <div className="flex items-center justify-between gap-3 border-b border-[var(--line-light)] bg-[var(--card-alt)]/70 px-4 py-3">
                   <div className="min-w-0">
@@ -381,7 +381,7 @@ export function ImportPreviewSection({
                   <button
                     type="button"
                     onClick={() => onTaskAdd(subjectIndex)}
-                    className="rounded-[12px] border border-[var(--line)] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--text-secondary)]"
+                    className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-1.5 text-sm font-semibold text-[var(--text-secondary)]"
                   >
                     补一条
                   </button>
@@ -421,7 +421,7 @@ export function ImportPreviewSection({
             type="button"
             disabled={importDisabled}
             onClick={onImport}
-            className="rounded-[12px] border border-[var(--primary)] bg-white px-5 py-3 text-base font-semibold text-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-[12px] border border-[var(--primary)] bg-card px-5 py-3 text-base font-semibold text-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             确认导入
           </button>

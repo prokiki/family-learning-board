@@ -115,7 +115,7 @@ export function ChildHeader({
   const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
   return (
-    <section className="soft-shadow rounded-[1.7rem] border border-[var(--line)] bg-white px-4 py-4 sm:px-5 md:px-8 md:py-6">
+    <section className="soft-shadow rounded-[1.7rem] border border-[var(--line)] bg-card px-4 py-4 sm:px-5 md:px-8 md:py-6">
       <div className="flex flex-col gap-5">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold tracking-[0.18em] text-[var(--primary)] sm:text-sm">
@@ -182,7 +182,7 @@ export function PomodoroSection({
   const ringBackground = "rgba(232,231,227,0.95)";
 
   return (
-    <section className="soft-shadow rounded-[1.7rem] border border-[var(--line)] bg-white px-4 py-4 sm:px-5 md:px-6 md:py-6">
+    <section className="soft-shadow rounded-[1.7rem] border border-[var(--line)] bg-card px-4 py-4 sm:px-5 md:px-6 md:py-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-lg">
           <p className="text-xs font-semibold tracking-[0.18em] text-[var(--primary)] sm:text-sm">
@@ -201,7 +201,7 @@ export function PomodoroSection({
         <div className="flex flex-col items-start gap-4 self-stretch lg:items-end">
           <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center lg:w-auto">
             <div
-              className={`relative mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-white text-[var(--foreground)] sm:mx-0 sm:h-28 sm:w-28 md:h-32 md:w-32 ${
+              className={`relative mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-card text-[var(--foreground)] sm:mx-0 sm:h-28 sm:w-28 md:h-32 md:w-32 ${
                 timerState.isRunning ? "shadow-[0_0_0_6px_rgba(26,138,125,0.06)]" : ""
               }`}
             >
@@ -283,14 +283,14 @@ export function PomodoroSection({
                   type="button"
                   onClick={onPause}
                   disabled={!timerState.isRunning}
-                  className="rounded-[1rem] border border-[var(--line)] bg-white px-3 py-3 text-sm font-semibold text-[var(--text-secondary)] disabled:bg-slate-100/80 disabled:text-slate-400 md:px-4 md:text-base"
+                  className="rounded-[1rem] border border-[var(--line)] bg-card px-3 py-3 text-sm font-semibold text-[var(--text-secondary)] disabled:bg-slate-100/80 disabled:text-slate-400 md:px-4 md:text-base"
                 >
                   暂停
                 </button>
                 <button
                   type="button"
                   onClick={onReset}
-                  className="rounded-[1rem] border border-[var(--line)] bg-white px-3 py-3 text-sm font-semibold text-[var(--text-secondary)] md:px-4 md:text-base"
+                  className="rounded-[1rem] border border-[var(--line)] bg-card px-3 py-3 text-sm font-semibold text-[var(--text-secondary)] md:px-4 md:text-base"
                 >
                   重置
                 </button>
@@ -338,7 +338,7 @@ export function ChildTasksSection({
 
   if (loading) {
     return (
-      <div className="mt-6 rounded-[1.8rem] bg-white p-8 text-center text-xl text-slate-500 shadow-lg">
+      <div className="mt-6 rounded-[1.8rem] bg-card p-8 text-center text-xl text-[var(--text-secondary)] shadow-lg">
         正在加载今天的任务...
       </div>
     );
@@ -381,7 +381,7 @@ export function ChildTasksSection({
                     </h3>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-[var(--text-secondary)]">
+                    <span className="rounded-full bg-card px-3 py-1.5 text-sm font-semibold text-[var(--text-secondary)]">
                       {group.tasks.length} 个任务
                     </span>
                     <span
@@ -407,17 +407,17 @@ export function ChildTasksSection({
                       ? "border border-[rgba(245,166,35,0.28)] bg-[rgba(255,239,208,0.98)] text-[rgba(201,107,8,1)]"
                       : "border border-[rgba(245,166,35,0.28)] bg-[rgba(255,247,229,0.98)] text-[rgba(201,107,8,1)]";
                   const weakButtonClass =
-                    "border border-[var(--line)] bg-white text-[var(--text-secondary)]";
+                    "border border-[var(--line)] bg-card text-[var(--text-secondary)]";
 
                   return (
                     <article
                       key={task.id}
                       className={`fade-slide-up soft-shadow relative overflow-hidden rounded-[1.5rem] border p-5 md:p-6 ${
                         isCurrent
-                          ? `border-[rgba(26,26,26,0.18)] bg-white shadow-[0_16px_36px_rgba(26,26,26,0.08)] ${theme.cardGlow}`
+                          ? `border-[rgba(26,26,26,0.18)] bg-card shadow-[0_16px_36px_rgba(26,26,26,0.08)] ${theme.cardGlow}`
                           : isCompleted
                             ? `border-[var(--line)] bg-[var(--card-alt)] opacity-80 ${theme.cardGlow}`
-                            : `border-[var(--line)] bg-white ${theme.cardGlow}`
+                            : `border-[var(--line)] bg-card ${theme.cardGlow}`
                       } ${highlightedTaskId === task.id ? "status-change-pulse" : ""}`}
                       style={{ animationDelay: `${groupIndex * 60 + index * 60}ms` }}
                     >
@@ -513,7 +513,7 @@ export function ChildTasksSection({
       </div>
 
       {allTasksCompleted ? (
-        <section className="soft-shadow fade-slide-up relative overflow-hidden rounded-[1.9rem] border border-[var(--line)] bg-white px-6 py-10 text-center md:px-8">
+        <section className="soft-shadow fade-slide-up relative overflow-hidden rounded-[1.9rem] border border-[var(--line)] bg-card px-6 py-10 text-center md:px-8">
           <span
             className="confetti-piece left-[14%] bg-[rgba(232,115,90,0.55)]"
             style={{ animationDelay: "0ms" }}
