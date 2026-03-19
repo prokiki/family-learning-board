@@ -52,10 +52,7 @@ export default function Home() {
           <div className="grid gap-4 md:grid-cols-4 md:gap-5">
             <div className="rounded-[1.6rem] border border-[var(--line)] bg-card px-6 py-7 md:col-span-2 md:row-span-2 md:min-h-[428px] md:px-8 md:py-8">
               <div className="space-y-4">
-                <p className="inline-flex rounded-full bg-[var(--primary-light)] px-4 py-2 text-sm font-semibold text-[var(--primary)]">
-                  放学后更轻松
-                </p>
-                <h1 className="max-w-[12ch] text-[2.25rem] font-semibold leading-[1.15] text-[var(--foreground)] sm:text-[2.5rem] md:text-[2.7rem]">
+                <h1 className="max-w-[14ch] text-[2rem] font-semibold leading-[1.15] text-[var(--foreground)] sm:max-w-[12ch] sm:text-[2.5rem] md:text-[2.7rem]">
                   放学后，孩子一眼就知道今天先做什么。
                 </h1>
                 <p className="max-w-[30rem] text-base leading-8 text-[var(--text-secondary)] md:text-lg">
