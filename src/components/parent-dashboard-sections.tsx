@@ -73,10 +73,24 @@ type ProgressSummary = {
 export function ParentHeader({
   todayLabel,
   progress,
+  selectedDate,
+  yesterdayDate,
+  onDateChange,
+  onJumpToToday,
+  onJumpToYesterday,
+  isToday,
 }: {
   todayLabel: string;
   progress: ProgressSummary;
+  selectedDate: string;
+  yesterdayDate: string;
+  onDateChange: (value: string) => void;
+  onJumpToToday: () => void;
+  onJumpToYesterday: () => void;
+  isToday: boolean;
 }) {
+  const isYesterday = selectedDate === yesterdayDate;
+
   return (
     <section className="soft-shadow rounded-[1.75rem] border border-[var(--line)] bg-card px-5 py-5 md:px-8 md:py-7">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -86,8 +100,39 @@ export function ParentHeader({
             今天的学习任务
           </h1>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] md:text-base">
-            {todayLabel}，固定设备会实时同步这里的内容。
+            {todayLabel}
+            {isToday ? "，固定设备会实时同步这里的内容。" : "，这里展示这一天的历史任务。"}
           </p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={onJumpToToday}
+              className={`rounded-[12px] border px-3 py-2 text-sm font-semibold ${
+                isToday
+                  ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
+                  : "border-[var(--line)] bg-[var(--card-alt)] text-[var(--text-secondary)]"
+              }`}
+            >
+              今天
+            </button>
+            <button
+              type="button"
+              onClick={onJumpToYesterday}
+              className={`rounded-[12px] border px-3 py-2 text-sm font-semibold ${
+                isYesterday
+                  ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
+                  : "border-[var(--line)] bg-[var(--card-alt)] text-[var(--text-secondary)]"
+              }`}
+            >
+              昨天
+            </button>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(event) => onDateChange(event.target.value)}
+              className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)]"
+            />
+          </div>
         </div>
         <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:min-w-[320px]">
           <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/45 px-3 py-3 sm:px-4 sm:py-4">
@@ -117,6 +162,24 @@ export function ParentHeader({
         </div>
       </div>
     </section>
+  );
+}
+
+export function HistoricalTasksNotice({
+  selectedDateLabel,
+}: {
+  selectedDateLabel: string;
+}) {
+  return (
+    <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-6">
+      <h2 className="text-[1.5rem] font-semibold text-[var(--foreground)]">历史任务查看</h2>
+      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+        当前正在查看 {selectedDateLabel} 的任务记录。历史日期先保持只读，避免误改以前的完成情况。
+      </p>
+      <div className="mt-4 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)] px-4 py-4 text-sm text-[var(--text-secondary)]">
+        如果要新增、导入或加入固定任务，请先切回今天。
+      </div>
+    </div>
   );
 }
 
@@ -438,6 +501,8 @@ export function LiveStatusSection({
   highlightedTaskId,
   onStatusChange,
   onDelete,
+  readOnly,
+  emptyDescription,
 }: {
   tasks: TaskRecord[];
   loading: boolean;
@@ -445,6 +510,8 @@ export function LiveStatusSection({
   highlightedTaskId: string | null;
   onStatusChange: (id: string, status: TaskRecord["status"]) => void;
   onDelete: (id: string) => void;
+  readOnly: boolean;
+  emptyDescription: string;
 }) {
   return (
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-6">
@@ -452,7 +519,7 @@ export function LiveStatusSection({
         <div>
           <h2 className="text-[1.5rem] font-semibold text-[var(--foreground)]">孩子端实时状态</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            家长可在这里确认完成，或删除当天任务。
+            {readOnly ? "这里展示所选日期的任务结果。" : "家长可在这里确认完成，或删除当天任务。"}
           </p>
         </div>
         {message ? (
@@ -470,7 +537,7 @@ export function LiveStatusSection({
         <div className="mt-6">
           <EmptyState
             title="今天还没有任务"
-            description="先在左侧添加任务，孩子端会立即出现大字卡片。"
+            description={emptyDescription}
           />
         </div>
       ) : (
@@ -519,29 +586,35 @@ export function LiveStatusSection({
                     </span>
                   ) : null}
                 </div>
-                <div className="flex flex-wrap gap-2 border-t border-[var(--line-light)] pt-4 md:justify-start">
-                  <button
-                    type="button"
-                    onClick={() => onStatusChange(task.id, "confirmed_by_parent")}
-                    className="rounded-[12px] border border-[var(--success)] bg-[rgba(76,175,80,0.06)] px-4 py-2.5 text-sm font-semibold text-[var(--success)]"
-                  >
-                    ✓ 家长确认完成
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onStatusChange(task.id, "pending")}
-                    className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)]/45 px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"
-                  >
-                    ↺ 重置为待开始
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onDelete(task.id)}
-                    className="rounded-[12px] border border-transparent px-3 py-2.5 text-sm font-semibold text-[var(--error)]"
-                  >
-                    🗑 删除任务
-                  </button>
-                </div>
+                {readOnly ? (
+                  <div className="border-t border-[var(--line-light)] pt-4 text-sm text-[var(--text-secondary)]">
+                    历史日期当前为只读查看模式。
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2 border-t border-[var(--line-light)] pt-4 md:justify-start">
+                    <button
+                      type="button"
+                      onClick={() => onStatusChange(task.id, "confirmed_by_parent")}
+                      className="rounded-[12px] border border-[var(--success)] bg-[rgba(76,175,80,0.06)] px-4 py-2.5 text-sm font-semibold text-[var(--success)]"
+                    >
+                      ✓ 家长确认完成
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onStatusChange(task.id, "pending")}
+                      className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)]/45 px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"
+                    >
+                      ↺ 重置为待开始
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(task.id)}
+                      className="rounded-[12px] border border-transparent px-3 py-2.5 text-sm font-semibold text-[var(--error)]"
+                    >
+                      🗑 删除任务
+                    </button>
+                  </div>
+                )}
               </div>
             </article>
           ))}

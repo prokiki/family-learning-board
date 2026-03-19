@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { SetupNotice } from "@/components/setup-notice";
 import {
+  HistoricalTasksNotice,
   ImportPreviewSection,
   LiveStatusSection,
   ManualTaskSection,
   ParentHeader,
   TemplatesSection,
 } from "@/components/parent-dashboard-sections";
-import { formatDisplayDate, formatLocalDate } from "@/lib/date";
+import { formatDisplayDate, formatLocalDate, shiftLocalDate } from "@/lib/date";
 import { flattenHomeworkGroups, parseHomeworkGroups } from "@/lib/task-parser";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type {
@@ -70,8 +71,11 @@ export function ParentDashboard() {
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
   const today = useMemo(() => formatLocalDate(), []);
+  const yesterday = useMemo(() => shiftLocalDate(today, -1), [today]);
+  const [selectedDate, setSelectedDate] = useState(today);
   const importDrafts = useMemo(() => flattenHomeworkGroups(importGroups), [importGroups]);
   const progress = useMemo(() => summarizeProgress(tasks), [tasks]);
+  const isTodaySelected = selectedDate === today;
 
   useEffect(() => {
     if (!supabase) {
@@ -84,7 +88,7 @@ export function ParentDashboard() {
     async function run() {
       setLoading(true);
       const [{ data, error }, templatesResult] = await Promise.all([
-        fetchTodayTasks(client, today),
+        fetchTodayTasks(client, selectedDate),
         fetchTaskTemplates(client),
       ]);
 
@@ -108,7 +112,7 @@ export function ParentDashboard() {
     return () => {
       active = false;
     };
-  }, [supabase, today]);
+  }, [supabase, selectedDate]);
 
   useEffect(() => {
     setImportGroups(parseHomeworkGroups(rawText));
@@ -122,7 +126,7 @@ export function ParentDashboard() {
     const client: SupabaseClient = supabase;
 
     const channel = client
-      .channel(`tasks-parent-${boardId}-${today}`)
+      .channel(`tasks-parent-${boardId}-${selectedDate}`)
       .on(
         "postgres_changes",
         {
@@ -132,7 +136,7 @@ export function ParentDashboard() {
           filter: `board_id=eq.${boardId}`,
         },
         async () => {
-          const { data, error } = await fetchTodayTasks(client, today);
+          const { data, error } = await fetchTodayTasks(client, selectedDate);
           const { data: templateData } = await fetchTaskTemplates(client);
 
           if (error) {
@@ -149,7 +153,7 @@ export function ParentDashboard() {
     return () => {
       void client.removeChannel(channel);
     };
-  }, [supabase, today]);
+  }, [supabase, selectedDate]);
 
   useEffect(() => {
     if (!highlightedTaskId) {
@@ -173,7 +177,7 @@ export function ParentDashboard() {
     const client: SupabaseClient = supabase;
     const payload = drafts.map((draft, index) => ({
       board_id: boardId,
-      due_date: today,
+      due_date: selectedDate,
       subject: draft.subject ?? null,
       title: draft.title,
       details: draft.details ?? null,
@@ -199,7 +203,7 @@ export function ParentDashboard() {
     setManualTitle("");
     setManualDetails("");
     setRawText("");
-    const { data } = await fetchTodayTasks(client, today);
+    const { data } = await fetchTodayTasks(client, selectedDate);
     setTasks((data as TaskRecord[]) ?? []);
   }
 
@@ -393,7 +397,7 @@ export function ParentDashboard() {
           return;
         }
 
-        const { data } = await fetchTodayTasks(client, today);
+        const { data } = await fetchTodayTasks(client, selectedDate);
         setTasks((data as TaskRecord[]) ?? []);
         setHighlightedTaskId(id);
       })();
@@ -416,7 +420,7 @@ export function ParentDashboard() {
           return;
         }
 
-        const { data } = await fetchTodayTasks(client, today);
+        const { data } = await fetchTodayTasks(client, selectedDate);
         setTasks((data as TaskRecord[]) ?? []);
       })();
     });
@@ -424,55 +428,70 @@ export function ParentDashboard() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
-      <ParentHeader todayLabel={formatDisplayDate(today)} progress={progress} />
+      <ParentHeader
+        todayLabel={formatDisplayDate(selectedDate)}
+        progress={progress}
+        selectedDate={selectedDate}
+        yesterdayDate={yesterday}
+        onDateChange={setSelectedDate}
+        onJumpToToday={() => setSelectedDate(today)}
+        onJumpToYesterday={() => setSelectedDate(yesterday)}
+        isToday={isTodaySelected}
+      />
 
       {!supabase ? <SetupNotice /> : null}
 
       <section className="grid gap-6 lg:grid-cols-[0.98fr_1.22fr] xl:grid-cols-[1.05fr_1.3fr]">
         <div className="space-y-6">
-          <ManualTaskSection
-            title={manualTitle}
-            details={manualDetails}
-            onTitleChange={setManualTitle}
-            onDetailsChange={setManualDetails}
-            onCreate={handleManualCreate}
-            disabled={!manualTitle.trim() || !supabase || isPending}
-          />
+          {isTodaySelected ? (
+            <>
+              <ManualTaskSection
+                title={manualTitle}
+                details={manualDetails}
+                onTitleChange={setManualTitle}
+                onDetailsChange={setManualDetails}
+                onCreate={handleManualCreate}
+                disabled={!manualTitle.trim() || !supabase || isPending}
+              />
 
-          <TemplatesSection
-            templates={templates}
-            title={templateTitle}
-            subject={templateSubject}
-            details={templateDetails}
-            onTitleChange={setTemplateTitle}
-            onSubjectChange={setTemplateSubject}
-            onDetailsChange={setTemplateDetails}
-            onCreate={createTemplate}
-            onAddToToday={addTemplatesToToday}
-            onToggle={toggleTemplate}
-            onDelete={deleteTemplate}
-            createDisabled={!supabase || !templateTitle.trim() || isPending}
-            addDisabled={
-              !supabase || isPending || templates.filter((item) => item.is_active).length === 0
-            }
-          />
+              <TemplatesSection
+                templates={templates}
+                title={templateTitle}
+                subject={templateSubject}
+                details={templateDetails}
+                onTitleChange={setTemplateTitle}
+                onSubjectChange={setTemplateSubject}
+                onDetailsChange={setTemplateDetails}
+                onCreate={createTemplate}
+                onAddToToday={addTemplatesToToday}
+                onToggle={toggleTemplate}
+                onDelete={deleteTemplate}
+                createDisabled={!supabase || !templateTitle.trim() || isPending}
+                addDisabled={
+                  !supabase || isPending || templates.filter((item) => item.is_active).length === 0
+                }
+              />
 
-          <ImportPreviewSection
-            rawText={rawText}
-            groups={importGroups}
-            drafts={importDrafts}
-            onRawTextChange={setRawText}
-            onTaskUpdate={updateImportedTask}
-            onTaskDelete={deleteImportedTask}
-            onTaskAdd={addImportedTask}
-            onImport={handleImport}
-            importDisabled={
-              !rawText.trim() ||
-              !supabase ||
-              isPending ||
-              importDrafts.filter((draft) => draft.title.trim()).length === 0
-            }
-          />
+              <ImportPreviewSection
+                rawText={rawText}
+                groups={importGroups}
+                drafts={importDrafts}
+                onRawTextChange={setRawText}
+                onTaskUpdate={updateImportedTask}
+                onTaskDelete={deleteImportedTask}
+                onTaskAdd={addImportedTask}
+                onImport={handleImport}
+                importDisabled={
+                  !rawText.trim() ||
+                  !supabase ||
+                  isPending ||
+                  importDrafts.filter((draft) => draft.title.trim()).length === 0
+                }
+              />
+            </>
+          ) : (
+            <HistoricalTasksNotice selectedDateLabel={formatDisplayDate(selectedDate)} />
+          )}
         </div>
 
         <LiveStatusSection
@@ -482,6 +501,12 @@ export function ParentDashboard() {
           highlightedTaskId={highlightedTaskId}
           onStatusChange={updateTaskStatus}
           onDelete={deleteTask}
+          readOnly={!isTodaySelected}
+          emptyDescription={
+            isTodaySelected
+              ? "先在左侧添加任务，孩子端会立即出现大字卡片。"
+              : "这一天还没有保存任务记录。"
+          }
         />
       </section>
     </div>

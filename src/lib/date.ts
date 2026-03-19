@@ -6,6 +6,12 @@ export function formatLocalDate(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+export function shiftLocalDate(dateString: string, offsetDays: number) {
+  const date = new Date(`${dateString}T00:00:00`);
+  date.setDate(date.getDate() + offsetDays);
+  return formatLocalDate(date);
+}
+
 export function formatDisplayDate(dateString: string) {
   const date = new Date(`${dateString}T00:00:00`);
 
