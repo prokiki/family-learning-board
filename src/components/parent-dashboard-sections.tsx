@@ -1,7 +1,10 @@
+import Image from "next/image";
 import { EmptyState } from "@/components/empty-state";
 import { StatusPill } from "@/components/status-pill";
 import type {
+  AttachmentRole,
   SubjectTaskGroup,
+  TaskAttachmentRecord,
   TaskDraft,
   TaskRecord,
   TaskSource,
@@ -61,6 +64,28 @@ function subjectAccentClass(subject: string | null) {
       return "before:bg-[var(--subject-english)]";
     default:
       return "before:bg-[var(--primary)]";
+  }
+}
+
+function attachmentRoleLabel(role: AttachmentRole) {
+  switch (role) {
+    case "reference":
+      return "参考图片";
+    case "instruction":
+      return "老师说明";
+    case "parent_only":
+      return "仅家长可见";
+  }
+}
+
+function attachmentRoleClass(role: AttachmentRole) {
+  switch (role) {
+    case "reference":
+      return "bg-[var(--info-subtle)] text-[var(--info)]";
+    case "instruction":
+      return "bg-[var(--warning-subtle)] text-[var(--warning)]";
+    case "parent_only":
+      return "bg-[var(--card-alt)] text-[var(--text-secondary)]";
   }
 }
 
@@ -489,6 +514,192 @@ export function ImportPreviewSection({
             确认导入
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+export function AttachmentSection({
+  attachments,
+  subject,
+  note,
+  role,
+  visibleToChild,
+  uploading,
+  disabled,
+  onSubjectChange,
+  onNoteChange,
+  onRoleChange,
+  onVisibleToChildChange,
+  onUpload,
+  onDelete,
+  onMove,
+}: {
+  attachments: TaskAttachmentRecord[];
+  subject: string;
+  note: string;
+  role: AttachmentRole;
+  visibleToChild: boolean;
+  uploading: boolean;
+  disabled: boolean;
+  onSubjectChange: (value: string) => void;
+  onNoteChange: (value: string) => void;
+  onRoleChange: (value: AttachmentRole) => void;
+  onVisibleToChildChange: (value: boolean) => void;
+  onUpload: (file: File | null) => void;
+  onDelete: (attachment: TaskAttachmentRecord) => void;
+  onMove: (attachment: TaskAttachmentRecord, direction: "up" | "down") => void;
+}) {
+  const groupedAttachments = attachments.reduce<Record<string, TaskAttachmentRecord[]>>((acc, attachment) => {
+    const key = attachment.subject?.trim() || "其他";
+    acc[key] ??= [];
+    acc[key].push(attachment);
+    return acc;
+  }, {});
+
+  return (
+    <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-6">
+      <div>
+        <h2 className="text-[1.5rem] font-semibold text-[var(--foreground)]">老师图片资料</h2>
+        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+          图片作为参考资料保存，不会自动生成任务。先按学科归组，孩子需要时再点开查看。
+        </p>
+      </div>
+
+      <div className="mt-5 rounded-[1.15rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4 md:p-5">
+        <div className="grid gap-3 md:grid-cols-2">
+          <input
+            value={subject}
+            onChange={(event) => onSubjectChange(event.target.value)}
+            placeholder="归属学科，例如：英语"
+            className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-base outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+          />
+          <select
+            value={role}
+            onChange={(event) => onRoleChange(event.target.value as AttachmentRole)}
+            className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-base outline-none focus:border-[var(--primary)]"
+          >
+            <option value="reference">参考图片</option>
+            <option value="instruction">老师说明</option>
+            <option value="parent_only">仅家长可见</option>
+          </select>
+        </div>
+        <textarea
+          value={note}
+          onChange={(event) => onNoteChange(event.target.value)}
+          placeholder="补充一句孩子能理解的说明，例如：先看老师要求，再做下面练习。"
+          rows={2}
+          className="mt-3 w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-base outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+        />
+        <label className="mt-3 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+          <input
+            type="checkbox"
+            checked={visibleToChild}
+            disabled={role === "parent_only"}
+            onChange={(event) => onVisibleToChildChange(event.target.checked)}
+          />
+          显示给孩子端
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          disabled={disabled}
+          onChange={(event) => {
+            onUpload(event.target.files?.[0] ?? null);
+            event.currentTarget.value = "";
+          }}
+          className="mt-3 block w-full text-sm text-[var(--text-secondary)] file:mr-4 file:rounded-[12px] file:border file:border-[var(--line)] file:bg-card file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-[var(--foreground)]"
+        />
+        <p className="mt-2 text-xs text-[var(--text-muted)]">
+          {uploading ? "正在上传图片..." : "上传后会按当前学科归类，孩子端通过“查看参考图片”打开。"}
+        </p>
+      </div>
+
+      <div className="mt-5 space-y-4">
+        {Object.keys(groupedAttachments).length === 0 ? (
+          <div className="rounded-[1rem] bg-[var(--card-alt)] px-4 py-5 text-sm text-[var(--text-secondary)]">
+            还没有老师图片资料，上传后会按学科分组展示在这里。
+          </div>
+        ) : (
+          Object.entries(groupedAttachments).map(([groupSubject, groupItems]) => (
+            <section
+              key={groupSubject}
+              className="overflow-hidden rounded-[1rem] border border-[var(--line)] bg-card"
+            >
+              <div className="flex items-center justify-between gap-3 border-b border-[var(--line-light)] bg-[var(--card-alt)]/70 px-4 py-3">
+                <div className="min-w-0">
+                  <h3 className="text-base font-semibold text-[var(--foreground)]">{groupSubject}</h3>
+                  <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                    {groupItems.length} 张图片资料
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-3 p-4">
+                {groupItems.map((attachment, index) => (
+                  <article
+                    key={attachment.id}
+                    className={`relative overflow-hidden rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/40 p-4 before:absolute before:inset-y-0 before:left-0 before:w-1 ${subjectAccentClass(attachment.subject)}`}
+                  >
+                    <div className="flex flex-col gap-4 pl-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${attachmentRoleClass(attachment.role)}`}>
+                          {attachmentRoleLabel(attachment.role)}
+                        </span>
+                        <span className="rounded-full bg-card px-3 py-1 text-xs font-semibold text-[var(--text-secondary)]">
+                          {attachment.visible_to_child ? "孩子可见" : "仅家长查看"}
+                        </span>
+                      </div>
+                      <div className="grid gap-4 md:grid-cols-[132px_1fr]">
+                        <div className="relative h-32 w-full overflow-hidden rounded-[0.9rem] border border-[var(--line)]">
+                          <Image
+                            src={attachment.public_url}
+                            alt={attachment.note ?? `${groupSubject} 参考图片`}
+                            fill
+                            sizes="132px"
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[var(--foreground)]">
+                            图片 {index + 1}
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                            {attachment.note || "还没有补充说明。"}
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              disabled={index === 0}
+                              onClick={() => onMove(attachment, "up")}
+                              className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-40"
+                            >
+                              上移
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index === groupItems.length - 1}
+                              onClick={() => onMove(attachment, "down")}
+                              className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-40"
+                            >
+                              下移
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onDelete(attachment)}
+                              className="rounded-[12px] px-3 py-2 text-sm font-semibold text-[var(--error)]"
+                            >
+                              删除
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,14 @@
 export function formatLocalDate(date = new Date()) {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
+  const parts = new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Shanghai",
+  }).formatToParts(date);
+
+  const year = parts.find((part) => part.type === "year")?.value ?? "";
+  const month = parts.find((part) => part.type === "month")?.value ?? "";
+  const day = parts.find((part) => part.type === "day")?.value ?? "";
 
   return `${year}-${month}-${day}`;
 }
@@ -19,5 +26,6 @@ export function formatDisplayDate(dateString: string) {
     month: "long",
     day: "numeric",
     weekday: "long",
+    timeZone: "Asia/Shanghai",
   }).format(date);
 }

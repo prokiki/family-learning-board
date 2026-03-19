@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { SetupNotice } from "@/components/setup-notice";
 import {
+  AttachmentSection,
   HistoricalTasksNotice,
   ImportPreviewSection,
   LiveStatusSection,
@@ -10,11 +11,14 @@ import {
   ParentHeader,
   TemplatesSection,
 } from "@/components/parent-dashboard-sections";
-import { formatDisplayDate, formatLocalDate, shiftLocalDate } from "@/lib/date";
+import { useLocalDate } from "@/hooks/use-local-date";
+import { formatDisplayDate, shiftLocalDate } from "@/lib/date";
 import { flattenHomeworkGroups, parseHomeworkGroups } from "@/lib/task-parser";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type {
+  AttachmentRole,
   SubjectTaskGroup,
+  TaskAttachmentRecord,
   TaskDraft,
   TaskRecord,
   TaskStatus,
@@ -55,9 +59,21 @@ async function fetchTaskTemplates(supabase: SupabaseClient) {
     .order("created_at", { ascending: true });
 }
 
+async function fetchTaskAttachments(supabase: SupabaseClient, dueDate: string) {
+  return supabase
+    .from("task_attachments")
+    .select("*")
+    .eq("board_id", boardId)
+    .eq("due_date", dueDate)
+    .order("subject", { ascending: true })
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+}
+
 export function ParentDashboard() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [templates, setTemplates] = useState<TaskTemplateRecord[]>([]);
+  const [attachments, setAttachments] = useState<TaskAttachmentRecord[]>([]);
   const [rawText, setRawText] = useState("");
   const [importGroups, setImportGroups] = useState<SubjectTaskGroup[]>([]);
   const [manualTitle, setManualTitle] = useState("");
@@ -65,20 +81,26 @@ export function ParentDashboard() {
   const [templateTitle, setTemplateTitle] = useState("");
   const [templateSubject, setTemplateSubject] = useState("");
   const [templateDetails, setTemplateDetails] = useState("");
+  const [attachmentSubject, setAttachmentSubject] = useState("");
+  const [attachmentNote, setAttachmentNote] = useState("");
+  const [attachmentRole, setAttachmentRole] = useState<AttachmentRole>("reference");
+  const [attachmentVisibleToChild, setAttachmentVisibleToChild] = useState(true);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
   const supabase = getSupabaseBrowserClient();
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
-  const today = useMemo(() => formatLocalDate(), []);
-  const yesterday = useMemo(() => shiftLocalDate(today, -1), [today]);
-  const [selectedDate, setSelectedDate] = useState(today);
+  const today = useLocalDate();
+  const [selectedDate, setSelectedDate] = useState("");
+  const yesterday = useMemo(() => (today ? shiftLocalDate(today, -1) : ""), [today]);
   const importDrafts = useMemo(() => flattenHomeworkGroups(importGroups), [importGroups]);
   const progress = useMemo(() => summarizeProgress(tasks), [tasks]);
-  const isTodaySelected = selectedDate === today;
+  const effectiveSelectedDate = selectedDate || today;
+  const isTodaySelected = effectiveSelectedDate === today;
 
   useEffect(() => {
-    if (!supabase) {
+    if (!supabase || !effectiveSelectedDate) {
       return;
     }
 
@@ -87,9 +109,10 @@ export function ParentDashboard() {
 
     async function run() {
       setLoading(true);
-      const [{ data, error }, templatesResult] = await Promise.all([
-        fetchTodayTasks(client, selectedDate),
+      const [{ data, error }, templatesResult, attachmentsResult] = await Promise.all([
+        fetchTodayTasks(client, effectiveSelectedDate),
         fetchTaskTemplates(client),
+        fetchTaskAttachments(client, effectiveSelectedDate),
       ]);
 
       if (!active) {
@@ -101,6 +124,7 @@ export function ParentDashboard() {
       } else {
         setTasks((data as TaskRecord[]) ?? []);
         setTemplates((templatesResult.data as TaskTemplateRecord[]) ?? []);
+        setAttachments((attachmentsResult.data as TaskAttachmentRecord[]) ?? []);
         setMessage(null);
       }
 
@@ -112,21 +136,21 @@ export function ParentDashboard() {
     return () => {
       active = false;
     };
-  }, [supabase, selectedDate]);
+  }, [supabase, effectiveSelectedDate]);
 
   useEffect(() => {
     setImportGroups(parseHomeworkGroups(rawText));
   }, [rawText]);
 
   useEffect(() => {
-    if (!supabase) {
+    if (!supabase || !effectiveSelectedDate) {
       return;
     }
 
     const client: SupabaseClient = supabase;
 
     const channel = client
-      .channel(`tasks-parent-${boardId}-${selectedDate}`)
+      .channel(`tasks-parent-${boardId}-${effectiveSelectedDate}`)
       .on(
         "postgres_changes",
         {
@@ -136,8 +160,11 @@ export function ParentDashboard() {
           filter: `board_id=eq.${boardId}`,
         },
         async () => {
-          const { data, error } = await fetchTodayTasks(client, selectedDate);
-          const { data: templateData } = await fetchTaskTemplates(client);
+          const [{ data, error }, { data: templateData }, { data: attachmentData }] = await Promise.all([
+            fetchTodayTasks(client, effectiveSelectedDate),
+            fetchTaskTemplates(client),
+            fetchTaskAttachments(client, effectiveSelectedDate),
+          ]);
 
           if (error) {
             setMessage(error.message);
@@ -146,6 +173,26 @@ export function ParentDashboard() {
 
           setTasks((data as TaskRecord[]) ?? []);
           setTemplates((templateData as TaskTemplateRecord[]) ?? []);
+          setAttachments((attachmentData as TaskAttachmentRecord[]) ?? []);
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "task_attachments",
+          filter: `board_id=eq.${boardId}`,
+        },
+        async () => {
+          const { data, error } = await fetchTaskAttachments(client, effectiveSelectedDate);
+
+          if (error) {
+            setMessage(error.message);
+            return;
+          }
+
+          setAttachments((data as TaskAttachmentRecord[]) ?? []);
         },
       )
       .subscribe();
@@ -153,7 +200,7 @@ export function ParentDashboard() {
     return () => {
       void client.removeChannel(channel);
     };
-  }, [supabase, selectedDate]);
+  }, [supabase, effectiveSelectedDate]);
 
   useEffect(() => {
     if (!highlightedTaskId) {
@@ -170,14 +217,14 @@ export function ParentDashboard() {
   }, [highlightedTaskId]);
 
   async function insertTasks(drafts: TaskDraft[], source: TaskSource) {
-    if (!supabase || drafts.length === 0) {
+    if (!supabase || drafts.length === 0 || !effectiveSelectedDate) {
       return;
     }
 
     const client: SupabaseClient = supabase;
     const payload = drafts.map((draft, index) => ({
       board_id: boardId,
-      due_date: selectedDate,
+      due_date: effectiveSelectedDate,
       subject: draft.subject ?? null,
       title: draft.title,
       details: draft.details ?? null,
@@ -203,7 +250,7 @@ export function ParentDashboard() {
     setManualTitle("");
     setManualDetails("");
     setRawText("");
-    const { data } = await fetchTodayTasks(client, selectedDate);
+    const { data } = await fetchTodayTasks(client, effectiveSelectedDate);
     setTasks((data as TaskRecord[]) ?? []);
   }
 
@@ -306,7 +353,7 @@ export function ParentDashboard() {
   }
 
   function toggleTemplate(id: string, isActive: boolean) {
-    if (!supabase) {
+    if (!supabase || !effectiveSelectedDate) {
       return;
     }
 
@@ -331,7 +378,7 @@ export function ParentDashboard() {
   }
 
   function deleteTemplate(id: string) {
-    if (!supabase) {
+    if (!supabase || !selectedDate) {
       return;
     }
 
@@ -379,7 +426,7 @@ export function ParentDashboard() {
   }
 
   function updateTaskStatus(id: string, status: TaskStatus) {
-    if (!supabase) {
+    if (!supabase || !selectedDate) {
       return;
     }
 
@@ -397,15 +444,157 @@ export function ParentDashboard() {
           return;
         }
 
-        const { data } = await fetchTodayTasks(client, selectedDate);
+        const { data } = await fetchTodayTasks(client, effectiveSelectedDate);
         setTasks((data as TaskRecord[]) ?? []);
         setHighlightedTaskId(id);
       })();
     });
   }
 
+  async function uploadAttachment(file: File | null) {
+    if (!supabase || !file || !attachmentSubject.trim() || !effectiveSelectedDate) {
+      return;
+    }
+
+    const client: SupabaseClient = supabase;
+    const normalizedRole = attachmentRole;
+    const visibleToChild = normalizedRole === "parent_only" ? false : attachmentVisibleToChild;
+    const fileExt = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
+    const safeName = file.name
+      .replace(/\.[^/.]+$/, "")
+      .trim()
+      .replace(/[^a-zA-Z0-9-_]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase();
+    const storagePath = `${boardId}/${effectiveSelectedDate}/${Date.now()}-${safeName || "teacher-reference"}.${fileExt}`;
+
+    setUploadingAttachment(true);
+
+    const uploadResult = await client.storage
+      .from("teacher-attachments")
+      .upload(storagePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || "image/jpeg",
+      });
+
+    if (uploadResult.error) {
+      setUploadingAttachment(false);
+      setMessage(uploadResult.error.message);
+      return;
+    }
+
+    const publicUrlResult = client.storage.from("teacher-attachments").getPublicUrl(storagePath);
+    const nextSortOrder =
+      attachments.filter(
+        (attachment) => (attachment.subject?.trim() || "其他") === attachmentSubject.trim(),
+      ).length;
+
+    const { error } = await client.from("task_attachments").insert({
+      board_id: boardId,
+      due_date: effectiveSelectedDate,
+      subject: attachmentSubject.trim(),
+      storage_path: storagePath,
+      public_url: publicUrlResult.data.publicUrl,
+      note: attachmentNote.trim() || null,
+      role: normalizedRole,
+      visible_to_child: visibleToChild,
+      sort_order: nextSortOrder,
+    });
+
+    setUploadingAttachment(false);
+
+    if (error) {
+      await client.storage.from("teacher-attachments").remove([storagePath]);
+      setMessage(error.message);
+      return;
+    }
+
+    setAttachmentNote("");
+    setAttachmentSubject("");
+    setAttachmentRole("reference");
+    setAttachmentVisibleToChild(true);
+    setMessage("已保存老师图片资料");
+    const { data } = await fetchTaskAttachments(client, effectiveSelectedDate);
+    setAttachments((data as TaskAttachmentRecord[]) ?? []);
+  }
+
+  function deleteAttachment(attachment: TaskAttachmentRecord) {
+    if (!supabase || !effectiveSelectedDate) {
+      return;
+    }
+
+    const client: SupabaseClient = supabase;
+
+    startTransition(() => {
+      void (async () => {
+        const { error } = await client.from("task_attachments").delete().eq("id", attachment.id);
+
+        if (error) {
+          setMessage(error.message);
+          return;
+        }
+
+        await client.storage.from("teacher-attachments").remove([attachment.storage_path]);
+
+        const sameSubject = attachments.filter(
+          (item) =>
+            item.id !== attachment.id &&
+            (item.subject?.trim() || "其他") === (attachment.subject?.trim() || "其他"),
+        );
+
+        await Promise.all(
+          sameSubject.map((item, index) =>
+            client.from("task_attachments").update({ sort_order: index }).eq("id", item.id),
+          ),
+        );
+
+        const { data } = await fetchTaskAttachments(client, effectiveSelectedDate);
+        setAttachments((data as TaskAttachmentRecord[]) ?? []);
+      })();
+    });
+  }
+
+  function moveAttachment(attachment: TaskAttachmentRecord, direction: "up" | "down") {
+    if (!supabase || !effectiveSelectedDate) {
+      return;
+    }
+
+    const client: SupabaseClient = supabase;
+    const groupItems = attachments
+      .filter(
+        (item) =>
+          (item.subject?.trim() || "其他") === (attachment.subject?.trim() || "其他"),
+      )
+      .sort((left, right) => left.sort_order - right.sort_order);
+    const currentIndex = groupItems.findIndex((item) => item.id === attachment.id);
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= groupItems.length) {
+      return;
+    }
+
+    const reordered = [...groupItems];
+    const [moved] = reordered.splice(currentIndex, 1);
+    reordered.splice(targetIndex, 0, moved);
+
+    startTransition(() => {
+      void (async () => {
+        await Promise.all(
+          reordered.map((item, index) =>
+            client.from("task_attachments").update({ sort_order: index }).eq("id", item.id),
+          ),
+        );
+
+        const { data } = await fetchTaskAttachments(client, effectiveSelectedDate);
+        setAttachments((data as TaskAttachmentRecord[]) ?? []);
+      })();
+    });
+  }
+
   function deleteTask(id: string) {
-    if (!supabase) {
+    if (!supabase || !effectiveSelectedDate) {
       return;
     }
 
@@ -420,7 +609,7 @@ export function ParentDashboard() {
           return;
         }
 
-        const { data } = await fetchTodayTasks(client, selectedDate);
+        const { data } = await fetchTodayTasks(client, effectiveSelectedDate);
         setTasks((data as TaskRecord[]) ?? []);
       })();
     });
@@ -429,9 +618,9 @@ export function ParentDashboard() {
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
       <ParentHeader
-        todayLabel={formatDisplayDate(selectedDate)}
+        todayLabel={effectiveSelectedDate ? formatDisplayDate(effectiveSelectedDate) : "今天"}
         progress={progress}
-        selectedDate={selectedDate}
+        selectedDate={effectiveSelectedDate}
         yesterdayDate={yesterday}
         onDateChange={setSelectedDate}
         onJumpToToday={() => setSelectedDate(today)}
@@ -488,9 +677,35 @@ export function ParentDashboard() {
                   importDrafts.filter((draft) => draft.title.trim()).length === 0
                 }
               />
+
+              <AttachmentSection
+                attachments={attachments}
+                subject={attachmentSubject}
+                note={attachmentNote}
+                role={attachmentRole}
+                visibleToChild={attachmentVisibleToChild}
+                uploading={uploadingAttachment}
+                disabled={!supabase || isPending || uploadingAttachment}
+                onSubjectChange={setAttachmentSubject}
+                onNoteChange={setAttachmentNote}
+                onRoleChange={(value) => {
+                  setAttachmentRole(value);
+                  if (value === "parent_only") {
+                    setAttachmentVisibleToChild(false);
+                  }
+                }}
+                onVisibleToChildChange={setAttachmentVisibleToChild}
+                onUpload={(file) => {
+                  startTransition(() => {
+                    void uploadAttachment(file);
+                  });
+                }}
+                onDelete={deleteAttachment}
+                onMove={moveAttachment}
+              />
             </>
           ) : (
-            <HistoricalTasksNotice selectedDateLabel={formatDisplayDate(selectedDate)} />
+            <HistoricalTasksNotice selectedDateLabel={effectiveSelectedDate ? formatDisplayDate(effectiveSelectedDate) : "这一天"} />
           )}
         </div>
 

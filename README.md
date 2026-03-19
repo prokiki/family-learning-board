@@ -54,17 +54,20 @@ NEXT_PUBLIC_DEFAULT_BOARD_ID=family-demo
 2. [002_add_subject_to_tasks.sql](supabase/migrations/002_add_subject_to_tasks.sql)
 3. [003_add_task_templates.sql](supabase/migrations/003_add_task_templates.sql)
 4. [004_harden_tasks_schema.sql](supabase/migrations/004_harden_tasks_schema.sql)
+5. [005_add_task_attachments.sql](supabase/migrations/005_add_task_attachments.sql)
 
 这些 migration 会创建或补齐：
 
 - `public.tasks`
 - `public.task_templates`
+- `public.task_attachments`
 - `task_status` enum
 - `subject` 字段
 - `template_id` 字段
 - `updated_at` trigger
 - RLS policy
 - 常用索引与基础约束
+- `teacher-attachments` storage bucket 与公开读写策略
 
 ### 3. 建议执行后的快速检查
 
@@ -73,6 +76,7 @@ NEXT_PUBLIC_DEFAULT_BOARD_ID=family-demo
 ```sql
 select * from public.tasks limit 1;
 select * from public.task_templates limit 1;
+select * from public.task_attachments limit 1;
 ```
 
 ## 本地启动
@@ -112,6 +116,9 @@ npm run dev
 5. 刷新 `/parent` 和 `/child` 后数据仍然存在
 6. 家长端导入老师作业文本，确认能按学科拆分
 7. 家长端固定任务模板可保存并一键加入当天任务
+8. 家长端上传老师图片资料，确认不会生成独立任务
+9. 孩子端在对应学科下点击“查看参考图片”可以打开弹层
+10. `parent_only` 或 `visible_to_child = false` 的图片不会出现在孩子端
 
 ## 数据模型概览
 
@@ -140,6 +147,22 @@ npm run dev
 - `is_active`: 是否启用
 - `sort_order`: 模板排序
 
+### task_attachments
+
+老师图片资料附件，独立于任务本体，不参与任务状态流转。
+
+核心字段：
+
+- `board_id`: 看板标识
+- `due_date`: 日期维度
+- `subject`: 学科归属
+- `storage_path`: Supabase Storage 路径
+- `public_url`: 图片公开地址
+- `note`: 家长补充的一句说明
+- `role`: `reference` / `instruction` / `parent_only`
+- `visible_to_child`: 是否显示给孩子端
+- `sort_order`: 同一学科下的图片顺序
+
 ## 部署到 Vercel
 
 1. 将代码推送到 GitHub
@@ -161,6 +184,8 @@ NEXT_PUBLIC_DEFAULT_BOARD_ID=family-demo
 - `/child` 更新状态
 - `/parent` 确认实时同步
 - 刷新后数据持久化正常
+- `/parent` 上传老师图片资料
+- `/child` 在对应学科下查看参考图片弹层
 
 ## 常用命令
 

@@ -12,6 +12,10 @@ export type TaskSource = "manual" | "imported" | "template";
 
 export type Actor = "parent" | "child";
 
+export const ATTACHMENT_ROLES = ["reference", "instruction", "parent_only"] as const;
+
+export type AttachmentRole = (typeof ATTACHMENT_ROLES)[number];
+
 export interface TaskRecord {
   id: string;
   board_id: string;
@@ -33,6 +37,21 @@ export interface TaskDraft {
   subject?: string;
   title: string;
   details?: string;
+}
+
+export interface TaskAttachmentRecord {
+  id: string;
+  board_id: string;
+  due_date: string;
+  subject: string | null;
+  storage_path: string;
+  public_url: string;
+  note: string | null;
+  role: AttachmentRole;
+  visible_to_child: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SubjectTaskGroup {

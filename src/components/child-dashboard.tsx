@@ -12,13 +12,14 @@ import {
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SetupNotice } from "@/components/setup-notice";
 import {
+  AttachmentModal,
   ChildHeader,
   ChildTasksSection,
   PomodoroSection,
 } from "@/components/child-dashboard-sections";
-import { formatLocalDate } from "@/lib/date";
+import { useLocalDate } from "@/hooks/use-local-date";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { TaskRecord, TaskStatus } from "@/types/task";
+import type { TaskAttachmentRecord, TaskRecord, TaskStatus } from "@/types/task";
 
 const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
 const FOCUS_MINUTES = 20;
@@ -99,6 +100,19 @@ async function fetchTodayTasks(supabase: SupabaseClient, dueDate: string) {
     .order("created_at", { ascending: true });
 }
 
+async function fetchTodayAttachments(supabase: SupabaseClient, dueDate: string) {
+  return supabase
+    .from("task_attachments")
+    .select("*")
+    .eq("board_id", boardId)
+    .eq("due_date", dueDate)
+    .eq("visible_to_child", true)
+    .neq("role", "parent_only")
+    .order("subject", { ascending: true })
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+}
+
 function isCompletedStatus(status: TaskStatus) {
   return status === "done_by_child" || status === "confirmed_by_parent";
 }
@@ -135,9 +149,12 @@ function groupTasksBySubject(tasks: TaskRecord[]) {
 }
 
 export function ChildDashboard() {
+  const today = useLocalDate();
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
+  const [attachments, setAttachments] = useState<TaskAttachmentRecord[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
+  const [openAttachmentSubject, setOpenAttachmentSubject] = useState<string | null>(null);
   const [timerState, dispatchTimer] = useReducer(timerReducer, {
     mode: "focus",
     secondsLeft: FOCUS_MINUTES * 60,
@@ -147,7 +164,6 @@ export function ChildDashboard() {
   const supabase = getSupabaseBrowserClient();
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
-  const today = useMemo(() => formatLocalDate(), []);
   const audioContextRef = useRef<AudioContext | null>(null);
   const timerTotalSeconds = getModeSeconds(timerState.mode);
   const timerProgress =
@@ -172,6 +188,27 @@ export function ChildDashboard() {
   const currentTaskId =
     orderedTasks.find((task) => !isCompletedStatus(task.status))?.id ?? null;
   const groupedOrderedTasks = useMemo(() => groupTasksBySubject(orderedTasks), [orderedTasks]);
+  const groupedAttachments = useMemo(
+    () =>
+      [...attachments].reduce<{ subject: string; attachments: TaskAttachmentRecord[] }[]>(
+        (acc, attachment) => {
+          const subject = attachment.subject?.trim() || "今日任务";
+          const current = acc.find((item) => item.subject === subject);
+
+          if (current) {
+            current.attachments.push(attachment);
+          } else {
+            acc.push({ subject, attachments: [attachment] });
+          }
+
+          return acc;
+        },
+        [],
+      ),
+    [attachments],
+  );
+  const openAttachmentGroup =
+    groupedAttachments.find((item) => item.subject === openAttachmentSubject) ?? null;
   const completedTaskCount = tasks.filter((task) => isCompletedStatus(task.status)).length;
   const inProgressCount = tasks.filter((task) => task.status === "in_progress").length;
   const allTasksCompleted = tasks.length > 0 && completedTaskCount === tasks.length;
@@ -262,7 +299,7 @@ export function ChildDashboard() {
   }, [timerState.isRunning, timerState.secondsLeft]);
 
   useEffect(() => {
-    if (!supabase) {
+    if (!supabase || !today) {
       return;
     }
 
@@ -271,7 +308,10 @@ export function ChildDashboard() {
 
     async function run() {
       setLoading(true);
-      const { data, error } = await fetchTodayTasks(client, today);
+      const [{ data, error }, attachmentsResult] = await Promise.all([
+        fetchTodayTasks(client, today),
+        fetchTodayAttachments(client, today),
+      ]);
 
       if (!active) {
         return;
@@ -281,6 +321,7 @@ export function ChildDashboard() {
         setMessage(error.message);
       } else {
         setTasks((data as TaskRecord[]) ?? []);
+        setAttachments((attachmentsResult.data as TaskAttachmentRecord[]) ?? []);
         setMessage(null);
       }
 
@@ -295,7 +336,7 @@ export function ChildDashboard() {
   }, [supabase, today]);
 
   useEffect(() => {
-    if (!supabase) {
+    if (!supabase || !today) {
       return;
     }
 
@@ -312,7 +353,10 @@ export function ChildDashboard() {
           filter: `board_id=eq.${boardId}`,
         },
         async () => {
-          const { data, error } = await fetchTodayTasks(client, today);
+          const [{ data, error }, attachmentsResult] = await Promise.all([
+            fetchTodayTasks(client, today),
+            fetchTodayAttachments(client, today),
+          ]);
 
           if (error) {
             setMessage(error.message);
@@ -320,6 +364,26 @@ export function ChildDashboard() {
           }
 
           setTasks((data as TaskRecord[]) ?? []);
+          setAttachments((attachmentsResult.data as TaskAttachmentRecord[]) ?? []);
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "task_attachments",
+          filter: `board_id=eq.${boardId}`,
+        },
+        async () => {
+          const { data, error } = await fetchTodayAttachments(client, today);
+
+          if (error) {
+            setMessage(error.message);
+            return;
+          }
+
+          setAttachments((data as TaskAttachmentRecord[]) ?? []);
         },
       )
       .subscribe();
@@ -418,13 +482,21 @@ export function ChildDashboard() {
 
         <ChildTasksSection
           groups={groupedOrderedTasks}
+          attachmentGroups={groupedAttachments}
           currentTaskId={currentTaskId}
           highlightedTaskId={highlightedTaskId}
           isPending={isPending}
           onUpdateTask={updateTask}
+          onOpenAttachments={setOpenAttachmentSubject}
           allTasksCompleted={allTasksCompleted}
           loading={loading}
           message={message}
+        />
+
+        <AttachmentModal
+          key={openAttachmentGroup?.subject ?? "attachment-modal"}
+          group={openAttachmentGroup}
+          onClose={() => setOpenAttachmentSubject(null)}
         />
       </div>
     </div>
