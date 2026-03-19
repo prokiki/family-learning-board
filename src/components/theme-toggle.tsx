@@ -57,32 +57,45 @@ export function ThemeToggle() {
     applyTheme(nextPreference);
   }
 
+  const nextPreferenceMap: Record<ThemePreference, ThemePreference> = {
+    light: "system",
+    dark: "light",
+    system: "dark",
+  };
+
+  const labelMap: Record<ThemePreference, string> = {
+    light: "浅色",
+    dark: "深色",
+    system: "跟随系统",
+  };
+
+  const iconMap: Record<ThemePreference, string> = {
+    light: "☀",
+    dark: "☾",
+    system: "◑",
+  };
+
+  const toneClassMap: Record<ThemePreference, string> = {
+    light:
+      "bg-[var(--primary-light)] text-[var(--primary)] border-[color:rgba(26,138,125,0.22)]",
+    dark:
+      "bg-[var(--info-subtle)] text-[var(--info)] border-[color:rgba(125,178,255,0.3)]",
+    system:
+      "bg-[var(--warning-subtle)] text-[var(--warning)] border-[color:rgba(234,140,0,0.24)]",
+  };
+
   return (
-    <div className="theme-toggle" role="group" aria-label="切换主题">
-      <button
-        type="button"
-        className="theme-toggle__button"
-        data-active={preference === "light"}
-        onClick={() => updatePreference("light")}
-      >
-        浅色
-      </button>
-      <button
-        type="button"
-        className="theme-toggle__button"
-        data-active={preference === "dark"}
-        onClick={() => updatePreference("dark")}
-      >
-        深色
-      </button>
-      <button
-        type="button"
-        className="theme-toggle__button"
-        data-active={preference === "system"}
-        onClick={() => updatePreference("system")}
-      >
-        跟随系统
-      </button>
-    </div>
+    <button
+      type="button"
+      className={`theme-toggle ${toneClassMap[preference]}`}
+      onClick={() => updatePreference(nextPreferenceMap[preference])}
+      title={`当前：${labelMap[preference]}，点击切换`}
+      aria-label={`当前主题：${labelMap[preference]}，点击切换`}
+    >
+      <span className="theme-toggle__icon" aria-hidden="true">
+        {iconMap[preference]}
+      </span>
+      <span className="theme-toggle__label">{labelMap[preference]}</span>
+    </button>
   );
 }
