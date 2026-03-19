@@ -53,7 +53,7 @@ export default function Home() {
             <div className="rounded-[1.6rem] border border-[var(--line)] bg-card px-6 py-7 md:col-span-2 md:row-span-2 md:min-h-[428px] md:px-8 md:py-8">
               <div className="space-y-4">
                 <h1 className="max-w-[14ch] text-[2rem] font-semibold leading-[1.15] text-[var(--foreground)] sm:max-w-[12ch] sm:text-[2.5rem] md:text-[2.7rem]">
-                  放学后，孩子一眼就知道今天先做什么。
+                  放学后，孩子一眼就知道该做什么。
                 </h1>
                 <p className="max-w-[30rem] text-base leading-8 text-[var(--text-secondary)] md:text-lg">
                   家长把老师作业整理成清晰任务，孩子在固定设备上大字查看、点按反馈，家长端实时看到完成情况。
