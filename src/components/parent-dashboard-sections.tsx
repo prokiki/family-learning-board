@@ -95,6 +95,21 @@ type ProgressSummary = {
   help: number;
 };
 
+function taskStatusWeight(status: TaskRecord["status"]) {
+  switch (status) {
+    case "needs_help":
+      return 0;
+    case "in_progress":
+      return 1;
+    case "pending":
+      return 2;
+    case "done_by_child":
+      return 3;
+    case "confirmed_by_parent":
+      return 4;
+  }
+}
+
 export function ParentHeader({
   todayLabel,
   progress,
@@ -173,7 +188,7 @@ export function ParentHeader({
               <p className="text-2xl font-bold text-[var(--success)] sm:text-3xl">
                 {progress.done}
               </p>
-              <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">已推进</p>
+              <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">已完成</p>
             </div>
           </div>
           <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--warning-subtle)] px-3 py-3 sm:px-4 sm:py-4">
@@ -707,6 +722,7 @@ export function AttachmentSection({
 
 export function LiveStatusSection({
   tasks,
+  selectedDate,
   loading,
   message,
   highlightedTaskId,
@@ -716,6 +732,7 @@ export function LiveStatusSection({
   emptyDescription,
 }: {
   tasks: TaskRecord[];
+  selectedDate: string;
   loading: boolean;
   message: string | null;
   highlightedTaskId: string | null;
@@ -724,13 +741,47 @@ export function LiveStatusSection({
   readOnly: boolean;
   emptyDescription: string;
 }) {
+  const groupedTasks = tasks.reduce<
+    { subject: string; tasks: TaskRecord[] }[]
+  >((acc, task) => {
+    const subject = task.subject?.trim() || "今日任务";
+    const existing = acc.find((item) => item.subject === subject);
+
+    if (existing) {
+      existing.tasks.push(task);
+    } else {
+      acc.push({ subject, tasks: [task] });
+    }
+
+    return acc;
+  }, []);
+
+  const orderedGroups = groupedTasks.map((group) => ({
+    ...group,
+    tasks: [...group.tasks].sort((left, right) => {
+      const weightDiff = taskStatusWeight(left.status) - taskStatusWeight(right.status);
+
+      if (weightDiff !== 0) {
+        return weightDiff;
+      }
+
+      if (left.sort_order !== right.sort_order) {
+        return left.sort_order - right.sort_order;
+      }
+
+      return left.created_at.localeCompare(right.created_at);
+    }),
+  }));
+
   return (
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-[1.5rem] font-semibold text-[var(--foreground)]">孩子端实时状态</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            {readOnly ? "这里展示所选日期的任务结果。" : "家长可在这里确认完成，或删除当天任务。"}
+            {readOnly
+              ? "历史日期默认不新增任务，但可以把误点完成的任务恢复为待开始。"
+              : "家长可在这里确认完成，或删除当天任务。"}
           </p>
         </div>
         {message ? (
@@ -753,81 +804,110 @@ export function LiveStatusSection({
         </div>
       ) : (
         <div className="mt-6 space-y-4">
-          {tasks.map((task) => (
-            <article
-              key={task.id}
-              className={`soft-shadow relative overflow-hidden rounded-[1.15rem] border border-[var(--line)] p-5 before:absolute before:inset-y-0 before:left-0 before:w-1 ${
-                subjectAccentClass(task.subject)
-              } ${
-                task.status === "confirmed_by_parent"
-                  ? "bg-[var(--card-alt)] opacity-75"
-                  : "bg-card"
-              } ${highlightedTaskId === task.id ? "status-change-pulse" : ""}`}
+          {orderedGroups.map((group) => (
+            <section
+              key={group.subject}
+              className={`relative overflow-hidden rounded-[1.2rem] border border-[var(--line)] bg-[var(--card-alt)]/45 p-3 before:absolute before:inset-y-0 before:left-0 before:w-1 ${
+                subjectAccentClass(group.subject === "今日任务" ? null : group.subject)
+              }`}
             >
-              <div className="flex flex-col gap-4 pl-2">
-                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusPill status={task.status} />
-                      {task.subject ? (
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${subjectPillClass(task.subject)}`}>
-                          {task.subject}
-                        </span>
-                      ) : null}
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${sourcePillClass(task.source)}`}>
-                        {sourceLabel(task.source)}
-                      </span>
-                    </div>
-                    <h3
-                      className={`mt-3 text-lg font-medium text-[var(--foreground)] md:text-[1.125rem] ${
-                        task.status === "confirmed_by_parent" ? "line-through decoration-2" : ""
-                      }`}
-                    >
-                      {task.title}
-                    </h3>
-                    {task.details ? (
-                      <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-                        {task.details}
-                      </p>
-                    ) : null}
-                  </div>
-                  {task.status === "confirmed_by_parent" ? (
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(228,246,229,0.95)] text-xl">
-                      ✅
-                    </span>
-                  ) : null}
+              <div className="rounded-[1rem] bg-card/65 px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="pl-2 text-[1.2rem] font-semibold text-[var(--foreground)] md:text-[1.35rem]">
+                    {group.subject}
+                  </h3>
+                  <span className="rounded-full bg-card px-3 py-1 text-xs font-semibold text-[var(--text-secondary)]">
+                    {group.tasks.length} 条任务
+                  </span>
                 </div>
-                {readOnly ? (
-                  <div className="border-t border-[var(--line-light)] pt-4 text-sm text-[var(--text-secondary)]">
-                    历史日期当前为只读查看模式。
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap gap-2 border-t border-[var(--line-light)] pt-4 md:justify-start">
-                    <button
-                      type="button"
-                      onClick={() => onStatusChange(task.id, "confirmed_by_parent")}
-                      className="rounded-[12px] border border-[var(--success)] bg-[rgba(76,175,80,0.06)] px-4 py-2.5 text-sm font-semibold text-[var(--success)]"
-                    >
-                      ✓ 家长确认完成
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onStatusChange(task.id, "pending")}
-                      className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)]/45 px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"
-                    >
-                      ↺ 重置为待开始
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDelete(task.id)}
-                      className="rounded-[12px] border border-transparent px-3 py-2.5 text-sm font-semibold text-[var(--error)]"
-                    >
-                      🗑 删除任务
-                    </button>
-                  </div>
-                )}
               </div>
-            </article>
+
+              <div className="mt-3 space-y-3">
+                {group.tasks.map((task) => (
+                  <article
+                    key={task.id}
+                    className={`soft-shadow relative overflow-hidden rounded-[1.15rem] border border-[var(--line)] p-5 ${
+                      task.status === "confirmed_by_parent"
+                        ? "bg-[var(--card-alt)] opacity-75"
+                        : "bg-card"
+                    } ${highlightedTaskId === task.id ? "status-change-pulse" : ""}`}
+                  >
+                    <div className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <StatusPill status={task.status} />
+                            {task.due_date !== selectedDate ? (
+                              <span className="rounded-full border border-[var(--line-light)] bg-[var(--card-alt)] px-3 py-1 text-xs font-semibold text-[var(--text-secondary)]">
+                                之前没完成
+                              </span>
+                            ) : null}
+                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${sourcePillClass(task.source)}`}>
+                              {sourceLabel(task.source)}
+                            </span>
+                          </div>
+                          <h4
+                            className={`mt-3 text-lg font-medium text-[var(--foreground)] md:text-[1.125rem] ${
+                              task.status === "confirmed_by_parent" ? "line-through decoration-2" : ""
+                            }`}
+                          >
+                            {task.title}
+                          </h4>
+                          {task.details ? (
+                            <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                              {task.details}
+                            </p>
+                          ) : null}
+                        </div>
+                        {task.status === "confirmed_by_parent" ? (
+                          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(228,246,229,0.95)] text-xl">
+                            ✅
+                          </span>
+                        ) : null}
+                      </div>
+                      {readOnly ? (
+                        <div className="flex flex-wrap gap-2 border-t border-[var(--line-light)] pt-4 md:justify-start">
+                          <button
+                            type="button"
+                            onClick={() => onStatusChange(task.id, "pending")}
+                            className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)]/45 px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"
+                          >
+                            ↺ 重置为待开始
+                          </button>
+                          <div className="flex items-center text-sm text-[var(--text-secondary)]">
+                            历史日期当前仅支持恢复误点状态。
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2 border-t border-[var(--line-light)] pt-4 md:justify-start">
+                          <button
+                            type="button"
+                            onClick={() => onStatusChange(task.id, "confirmed_by_parent")}
+                            className="rounded-[12px] border border-[var(--success)] bg-[rgba(76,175,80,0.06)] px-4 py-2.5 text-sm font-semibold text-[var(--success)]"
+                          >
+                            ✓ 家长确认完成
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onStatusChange(task.id, "pending")}
+                            className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)]/45 px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"
+                          >
+                            ↺ 重置为待开始
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onDelete(task.id)}
+                            className="rounded-[12px] border border-transparent px-3 py-2.5 text-sm font-semibold text-[var(--error)]"
+                          >
+                            🗑 删除任务
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

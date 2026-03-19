@@ -21,16 +21,19 @@ function applyTheme(preference: ThemePreference) {
 }
 
 export function ThemeToggle() {
-  const [preference, setPreference] = useState<ThemePreference>(() => {
-    if (typeof window === "undefined") {
-      return "system";
-    }
-
-    const saved = window.localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
-    return saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
-  });
+  const [preference, setPreference] = useState<ThemePreference>("system");
 
   useEffect(() => {
+    const saved = window.localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
+    const nextPreference =
+      saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+
+    if (nextPreference !== preference) {
+      setPreference(nextPreference);
+      applyTheme(nextPreference);
+      return;
+    }
+
     applyTheme(preference);
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");

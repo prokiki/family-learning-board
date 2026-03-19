@@ -59,55 +59,33 @@ function subjectTheme(subject: string) {
   switch (subject) {
     case "英语":
       return {
-        section: "border-[var(--line)] bg-[var(--subject-english-bg)]",
+        section: "border-[var(--line)] bg-[var(--subject-english-bg)]/48",
         stripe: "bg-[var(--subject-english)]",
+        inner: "",
         cardGlow: "",
       };
     case "数学":
       return {
-        section: "border-[var(--line)] bg-[var(--subject-math-bg)]",
+        section: "border-[var(--line)] bg-[var(--subject-math-bg)]/48",
         stripe: "bg-[var(--subject-math)]",
+        inner: "",
         cardGlow: "",
       };
     case "语文":
       return {
-        section: "border-[var(--line)] bg-[var(--subject-chinese-bg)]",
+        section: "border-[var(--line)] bg-[var(--subject-chinese-bg)]/48",
         stripe: "bg-[var(--subject-chinese)]",
+        inner: "",
         cardGlow: "",
       };
     default:
       return {
         section: "border-[var(--line)] bg-[var(--card-alt)]",
         stripe: "bg-[var(--primary)]",
+        inner: "",
         cardGlow: "",
       };
   }
-}
-
-function subjectSectionState(tasks: TaskRecord[], currentTaskId: string | null) {
-  const allCompleted = tasks.every((task) => isCompletedStatus(task.status));
-  const hasCurrent = tasks.some(
-    (task) => task.id === currentTaskId && !isCompletedStatus(task.status),
-  );
-
-  if (allCompleted) {
-    return {
-      badgeClass: "bg-[var(--success-subtle)] text-[var(--success)]",
-      metaText: "已完成",
-    };
-  }
-
-  if (hasCurrent) {
-    return {
-      badgeClass: "bg-[var(--warning-subtle)] text-[var(--warning)]",
-      metaText: "进行中",
-    };
-  }
-
-  return {
-    badgeClass: "bg-[var(--card)] text-[var(--text-secondary)]",
-    metaText: "待完成",
-  };
 }
 
 function attachmentRoleLabel(role: TaskAttachmentRecord["role"]) {
@@ -332,6 +310,7 @@ export function PomodoroSection({
 export function ChildTasksSection({
   groups,
   attachmentGroups,
+  today,
   currentTaskId,
   highlightedTaskId,
   isPending,
@@ -343,6 +322,7 @@ export function ChildTasksSection({
 }: {
   groups: GroupedTasks[];
   attachmentGroups: AttachmentGroup[];
+  today: string;
   currentTaskId: string | null;
   highlightedTaskId: string | null;
   isPending: boolean;
@@ -389,19 +369,19 @@ export function ChildTasksSection({
 
       <div className="grid gap-5 md:gap-6">
         {groups.map((group, groupIndex) => {
-          const sectionState = subjectSectionState(group.tasks, currentTaskId);
           const theme = subjectTheme(group.subject);
           const attachmentGroup = attachmentGroups.find((item) => item.subject === group.subject);
 
           return (
-            <section key={group.subject} className="space-y-3">
-              <div
-                className={`relative overflow-hidden rounded-[1.25rem] border px-5 py-4 ${theme.section}`}
-              >
-                <span className={`absolute inset-y-0 left-0 w-1.5 ${theme.stripe}`} />
+            <section
+              key={group.subject}
+              className={`relative overflow-hidden rounded-[1.45rem] border p-3 ${theme.section}`}
+            >
+              <span className={`absolute inset-y-0 left-0 w-1.5 ${theme.stripe}`} />
+              <div className="rounded-[1.05rem] bg-card/55 px-4 py-3 md:px-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <h3 className="pl-1 text-2xl font-semibold text-[var(--foreground)] md:text-[2rem]">
+                    <h3 className="pl-1 text-[1.55rem] font-semibold text-[var(--foreground)] md:text-[1.85rem]">
                       {group.subject}
                     </h3>
                   </div>
@@ -418,60 +398,57 @@ export function ChildTasksSection({
                     <span className="rounded-full bg-card px-3 py-1.5 text-sm font-semibold text-[var(--text-secondary)]">
                       {group.tasks.length} 个任务
                     </span>
-                    <span
-                      className={`rounded-full px-3 py-1.5 text-sm font-semibold ${sectionState.badgeClass}`}
-                    >
-                      {sectionState.metaText}
-                    </span>
                   </div>
                 </div>
               </div>
 
-              <div className="grid gap-4 md:gap-5">
+              <div className={`mt-2.5 ${theme.inner}`}>
+                <div className="grid gap-4 md:gap-5">
                 {group.tasks.map((task, index) => {
                   const labels = actionLabels(task.status);
                   const meta = TASK_STATUS_META[task.status];
                   const isCompleted = isCompletedStatus(task.status);
                   const isCurrent = task.id === currentTaskId && !isCompleted;
                   const primaryButtonClass = isCompleted
-                    ? "border border-[var(--line)] bg-[var(--success-subtle)] text-[var(--success)]"
-                    : "border border-[var(--line)] bg-[var(--success-subtle)] text-[var(--success)] shadow-[var(--shadow-sm)]";
+                    ? "border border-[var(--line-light)] bg-[var(--card)] text-[var(--text-muted)]"
+                    : "border border-[var(--line)] bg-[color-mix(in_srgb,var(--success-subtle)_78%,transparent)] text-[var(--success)] shadow-[var(--shadow-sm)]";
                   const helpButtonClass =
-                    task.status === "needs_help"
-                      ? "border border-[var(--line)] bg-[var(--warning-subtle)] text-[var(--warning)]"
-                      : "border border-[var(--line)] bg-[var(--warning-subtle)] text-[var(--warning)]";
+                    isCompleted
+                      ? "border border-[var(--line-light)] bg-[var(--card)] text-[var(--text-muted)]"
+                      : task.status === "needs_help"
+                      ? "border border-[color-mix(in_srgb,var(--warning)_24%,var(--line))] bg-[color-mix(in_srgb,var(--warning-subtle)_38%,transparent)] text-[var(--warning)]"
+                      : "border border-[color-mix(in_srgb,var(--warning)_18%,var(--line))] bg-[color-mix(in_srgb,var(--warning-subtle)_20%,transparent)] text-[var(--warning)]";
                   const weakButtonClass =
                     "border border-[var(--line)] bg-card text-[var(--text-secondary)]";
 
                   return (
                     <article
                       key={task.id}
-                      className={`fade-slide-up soft-shadow relative overflow-hidden rounded-[1.5rem] border p-5 md:p-6 ${
+                      className={`fade-slide-up soft-shadow relative overflow-hidden rounded-[1.35rem] border p-5 md:p-6 ${
                         isCurrent
                           ? `border-[var(--accent-muted)] bg-card shadow-[var(--shadow-md)] ${theme.cardGlow}`
                           : isCompleted
-                            ? `border-[var(--line)] bg-[var(--card-alt)] opacity-80 ${theme.cardGlow}`
+                            ? `border-[var(--line-light)] bg-[var(--card-alt)] opacity-70 ${theme.cardGlow}`
                             : `border-[var(--line)] bg-card ${theme.cardGlow}`
                       } ${highlightedTaskId === task.id ? "status-change-pulse" : ""}`}
                       style={{ animationDelay: `${groupIndex * 60 + index * 60}ms` }}
                     >
-                      <span className={`absolute inset-y-0 left-0 w-1 ${theme.stripe}`} />
                       <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-                        <div className="pl-2">
+                        <div>
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="text-xs font-semibold tracking-[0.14em] text-[var(--text-tertiary)]">
                               任务 {index + 1}
                             </p>
-                            {isCurrent ? (
-                              <span className="rounded-full bg-[var(--primary)] px-3 py-1 text-xs font-semibold tracking-[0.08em] text-white shadow-[var(--shadow-sm)]">
-                                👉 现在做这个
+                            {task.due_date !== today ? (
+                              <span className="rounded-full border border-[var(--line-light)] bg-[var(--card-alt)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
+                                之前没完成
                               </span>
                             ) : null}
                           </div>
                           <h2
                             className={`mt-3 text-3xl font-semibold leading-tight md:text-[2.2rem] ${
                               isCompleted
-                                ? "text-[var(--text-secondary)] line-through decoration-2 decoration-[var(--text-tertiary)]"
+                                ? "text-[var(--text-tertiary)] line-through decoration-2 decoration-[var(--text-tertiary)]"
                                 : "text-[var(--foreground)]"
                             }`}
                           >
@@ -481,7 +458,7 @@ export function ChildTasksSection({
                             <p
                               className={`mt-3 max-w-3xl text-base leading-7 md:text-lg ${
                                 isCompleted
-                                  ? "text-[var(--text-muted)]"
+                                  ? "text-[var(--text-tertiary)]"
                                   : "text-[var(--text-secondary)]"
                               }`}
                             >
@@ -491,14 +468,14 @@ export function ChildTasksSection({
                         </div>
                         <div className="flex items-center gap-3">
                           {isCompleted ? (
-                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--success-subtle)] text-[1.1rem]">
+                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--card)] text-[1.1rem] opacity-65">
                               ✅
                             </span>
                           ) : null}
                           <div
                             className={`rounded-full px-4 py-2 text-sm font-semibold md:text-base ${
                               isCompletedStatus(task.status)
-                                ? "bg-[var(--success-subtle)] text-[var(--success)]"
+                                ? "border border-[var(--line-light)] bg-[var(--card-alt)] text-[var(--text-tertiary)]"
                                 : task.status === "needs_help"
                                   ? "bg-[var(--warning-subtle)] text-[var(--warning)]"
                                   : meta.tone
@@ -514,7 +491,7 @@ export function ChildTasksSection({
                           type="button"
                           disabled={isPending}
                           onClick={() => onUpdateTask(task.id, "in_progress")}
-                          className={`min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-lg font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.15rem] ${weakButtonClass} ${
+                          className={`task-action-button min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-lg font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.15rem] ${weakButtonClass} ${
                             isCompleted ? "opacity-70" : ""
                           }`}
                         >
@@ -524,7 +501,7 @@ export function ChildTasksSection({
                           type="button"
                           disabled={isPending}
                           onClick={() => onUpdateTask(task.id, "done_by_child")}
-                          className={`min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-xl font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.2rem] ${primaryButtonClass}`}
+                          className={`task-action-button min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-xl font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.2rem] ${primaryButtonClass}`}
                         >
                           {labels[1]}
                         </button>
@@ -532,7 +509,7 @@ export function ChildTasksSection({
                           type="button"
                           disabled={isPending}
                           onClick={() => onUpdateTask(task.id, "needs_help")}
-                          className={`min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-lg font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.15rem] ${helpButtonClass}`}
+                          className={`task-action-button min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-lg font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.15rem] ${helpButtonClass}`}
                         >
                           {labels[2]}
                         </button>
@@ -540,6 +517,7 @@ export function ChildTasksSection({
                     </article>
                   );
                 })}
+                </div>
               </div>
             </section>
           );

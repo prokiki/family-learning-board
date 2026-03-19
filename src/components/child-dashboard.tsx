@@ -91,13 +91,23 @@ function timerReducer(state: TimerState, action: TimerAction): TimerState {
 }
 
 async function fetchTodayTasks(supabase: SupabaseClient, dueDate: string) {
-  return supabase
+  const result = await supabase
     .from("tasks")
     .select("*")
     .eq("board_id", boardId)
-    .eq("due_date", dueDate)
+    .lte("due_date", dueDate)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
+
+  if (result.error) {
+    return result;
+  }
+
+  const visibleTasks = ((result.data as TaskRecord[]) ?? []).filter(
+    (task) => task.due_date === dueDate || !isCompletedStatus(task.status),
+  );
+
+  return { ...result, data: visibleTasks };
 }
 
 async function fetchTodayAttachments(supabase: SupabaseClient, dueDate: string) {
@@ -105,10 +115,11 @@ async function fetchTodayAttachments(supabase: SupabaseClient, dueDate: string) 
     .from("task_attachments")
     .select("*")
     .eq("board_id", boardId)
-    .eq("due_date", dueDate)
+    .lte("due_date", dueDate)
     .eq("visible_to_child", true)
     .neq("role", "parent_only")
     .order("subject", { ascending: true })
+    .order("due_date", { ascending: false })
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
 }
@@ -148,6 +159,19 @@ function groupTasksBySubject(tasks: TaskRecord[]) {
   }));
 }
 
+function filterAttachmentsForVisibleTasks(
+  attachments: TaskAttachmentRecord[],
+  tasks: TaskRecord[],
+) {
+  const visibleKeys = new Set(
+    tasks.map((task) => `${task.due_date}::${task.subject?.trim() || "今日任务"}`),
+  );
+
+  return attachments.filter((attachment) =>
+    visibleKeys.has(`${attachment.due_date}::${attachment.subject?.trim() || "今日任务"}`),
+  );
+}
+
 export function ChildDashboard() {
   const today = useLocalDate();
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
@@ -165,6 +189,7 @@ export function ChildDashboard() {
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
   const audioContextRef = useRef<AudioContext | null>(null);
+  const tasksRef = useRef<TaskRecord[]>([]);
   const timerTotalSeconds = getModeSeconds(timerState.mode);
   const timerProgress =
     ((timerTotalSeconds - timerState.secondsLeft) / timerTotalSeconds) * 100;
@@ -186,7 +211,7 @@ export function ChildDashboard() {
     [tasks],
   );
   const currentTaskId =
-    orderedTasks.find((task) => !isCompletedStatus(task.status))?.id ?? null;
+    orderedTasks.find((task) => task.status === "in_progress")?.id ?? null;
   const groupedOrderedTasks = useMemo(() => groupTasksBySubject(orderedTasks), [orderedTasks]);
   const groupedAttachments = useMemo(
     () =>
@@ -212,6 +237,10 @@ export function ChildDashboard() {
   const completedTaskCount = tasks.filter((task) => isCompletedStatus(task.status)).length;
   const inProgressCount = tasks.filter((task) => task.status === "in_progress").length;
   const allTasksCompleted = tasks.length > 0 && completedTaskCount === tasks.length;
+
+  useEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
 
   function getAudioContext() {
     const AudioContextConstructor =
@@ -320,8 +349,13 @@ export function ChildDashboard() {
       if (error) {
         setMessage(error.message);
       } else {
-        setTasks((data as TaskRecord[]) ?? []);
-        setAttachments((attachmentsResult.data as TaskAttachmentRecord[]) ?? []);
+        const nextTasks = (data as TaskRecord[]) ?? [];
+        const nextAttachments = filterAttachmentsForVisibleTasks(
+          (attachmentsResult.data as TaskAttachmentRecord[]) ?? [],
+          nextTasks,
+        );
+        setTasks(nextTasks);
+        setAttachments(nextAttachments);
         setMessage(null);
       }
 
@@ -363,8 +397,13 @@ export function ChildDashboard() {
             return;
           }
 
-          setTasks((data as TaskRecord[]) ?? []);
-          setAttachments((attachmentsResult.data as TaskAttachmentRecord[]) ?? []);
+          const nextTasks = (data as TaskRecord[]) ?? [];
+          const nextAttachments = filterAttachmentsForVisibleTasks(
+            (attachmentsResult.data as TaskAttachmentRecord[]) ?? [],
+            nextTasks,
+          );
+          setTasks(nextTasks);
+          setAttachments(nextAttachments);
         },
       )
       .on(
@@ -383,7 +422,12 @@ export function ChildDashboard() {
             return;
           }
 
-          setAttachments((data as TaskAttachmentRecord[]) ?? []);
+          setAttachments(
+            filterAttachmentsForVisibleTasks(
+              (data as TaskAttachmentRecord[]) ?? [],
+              tasksRef.current,
+            ),
+          );
         },
       )
       .subscribe();
@@ -421,8 +465,18 @@ export function ChildDashboard() {
           return;
         }
 
-        const { data } = await fetchTodayTasks(client, today);
-        setTasks((data as TaskRecord[]) ?? []);
+        const [{ data }, attachmentsResult] = await Promise.all([
+          fetchTodayTasks(client, today),
+          fetchTodayAttachments(client, today),
+        ]);
+        const nextTasks = (data as TaskRecord[]) ?? [];
+        setTasks(nextTasks);
+        setAttachments(
+          filterAttachmentsForVisibleTasks(
+            (attachmentsResult.data as TaskAttachmentRecord[]) ?? [],
+            nextTasks,
+          ),
+        );
         setHighlightedTaskId(id);
       })();
     });
@@ -483,6 +537,7 @@ export function ChildDashboard() {
         <ChildTasksSection
           groups={groupedOrderedTasks}
           attachmentGroups={groupedAttachments}
+          today={today}
           currentTaskId={currentTaskId}
           highlightedTaskId={highlightedTaskId}
           isPending={isPending}

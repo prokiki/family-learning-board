@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { SetupNotice } from "@/components/setup-notice";
 import {
   AttachmentSection,
@@ -45,7 +45,7 @@ async function fetchTodayTasks(supabase: SupabaseClient, dueDate: string) {
     .from("tasks")
     .select("*")
     .eq("board_id", boardId)
-    .eq("due_date", dueDate)
+    .lte("due_date", dueDate)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
 }
@@ -64,10 +64,38 @@ async function fetchTaskAttachments(supabase: SupabaseClient, dueDate: string) {
     .from("task_attachments")
     .select("*")
     .eq("board_id", boardId)
-    .eq("due_date", dueDate)
+    .lte("due_date", dueDate)
     .order("subject", { ascending: true })
+    .order("due_date", { ascending: false })
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
+}
+
+function isCompletedStatus(status: TaskStatus) {
+  return status === "done_by_child" || status === "confirmed_by_parent";
+}
+
+function filterVisibleTasks(tasks: TaskRecord[], selectedDate: string, includeCarryover: boolean) {
+  if (!includeCarryover) {
+    return tasks.filter((task) => task.due_date === selectedDate);
+  }
+
+  return tasks.filter(
+    (task) => task.due_date === selectedDate || !isCompletedStatus(task.status),
+  );
+}
+
+function filterAttachmentsForVisibleTasks(
+  attachments: TaskAttachmentRecord[],
+  tasks: TaskRecord[],
+) {
+  const visibleKeys = new Set(
+    tasks.map((task) => `${task.due_date}::${task.subject?.trim() || "今日任务"}`),
+  );
+
+  return attachments.filter((attachment) =>
+    visibleKeys.has(`${attachment.due_date}::${attachment.subject?.trim() || "今日任务"}`),
+  );
 }
 
 export function ParentDashboard() {
@@ -98,6 +126,11 @@ export function ParentDashboard() {
   const progress = useMemo(() => summarizeProgress(tasks), [tasks]);
   const effectiveSelectedDate = selectedDate || today;
   const isTodaySelected = effectiveSelectedDate === today;
+  const tasksRef = useRef<TaskRecord[]>([]);
+
+  useEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
 
   useEffect(() => {
     if (!supabase || !effectiveSelectedDate) {
@@ -122,9 +155,19 @@ export function ParentDashboard() {
       if (error) {
         setMessage(error.message);
       } else {
-        setTasks((data as TaskRecord[]) ?? []);
+        const nextTasks = filterVisibleTasks(
+          (data as TaskRecord[]) ?? [],
+          effectiveSelectedDate,
+          isTodaySelected,
+        );
         setTemplates((templatesResult.data as TaskTemplateRecord[]) ?? []);
-        setAttachments((attachmentsResult.data as TaskAttachmentRecord[]) ?? []);
+        setTasks(nextTasks);
+        setAttachments(
+          filterAttachmentsForVisibleTasks(
+            (attachmentsResult.data as TaskAttachmentRecord[]) ?? [],
+            nextTasks,
+          ),
+        );
         setMessage(null);
       }
 
@@ -136,7 +179,7 @@ export function ParentDashboard() {
     return () => {
       active = false;
     };
-  }, [supabase, effectiveSelectedDate]);
+  }, [supabase, effectiveSelectedDate, isTodaySelected]);
 
   useEffect(() => {
     setImportGroups(parseHomeworkGroups(rawText));
@@ -171,9 +214,19 @@ export function ParentDashboard() {
             return;
           }
 
-          setTasks((data as TaskRecord[]) ?? []);
+          const nextTasks = filterVisibleTasks(
+            (data as TaskRecord[]) ?? [],
+            effectiveSelectedDate,
+            isTodaySelected,
+          );
           setTemplates((templateData as TaskTemplateRecord[]) ?? []);
-          setAttachments((attachmentData as TaskAttachmentRecord[]) ?? []);
+          setTasks(nextTasks);
+          setAttachments(
+            filterAttachmentsForVisibleTasks(
+              (attachmentData as TaskAttachmentRecord[]) ?? [],
+              nextTasks,
+            ),
+          );
         },
       )
       .on(
@@ -192,7 +245,12 @@ export function ParentDashboard() {
             return;
           }
 
-          setAttachments((data as TaskAttachmentRecord[]) ?? []);
+          setAttachments(
+            filterAttachmentsForVisibleTasks(
+              (data as TaskAttachmentRecord[]) ?? [],
+              tasksRef.current,
+            ),
+          );
         },
       )
       .subscribe();
@@ -200,7 +258,7 @@ export function ParentDashboard() {
     return () => {
       void client.removeChannel(channel);
     };
-  }, [supabase, effectiveSelectedDate]);
+  }, [supabase, effectiveSelectedDate, isTodaySelected]);
 
   useEffect(() => {
     if (!highlightedTaskId) {
@@ -250,8 +308,22 @@ export function ParentDashboard() {
     setManualTitle("");
     setManualDetails("");
     setRawText("");
-    const { data } = await fetchTodayTasks(client, effectiveSelectedDate);
-    setTasks((data as TaskRecord[]) ?? []);
+    const [{ data }, attachmentsResult] = await Promise.all([
+      fetchTodayTasks(client, effectiveSelectedDate),
+      fetchTaskAttachments(client, effectiveSelectedDate),
+    ]);
+    const nextTasks = filterVisibleTasks(
+      (data as TaskRecord[]) ?? [],
+      effectiveSelectedDate,
+      isTodaySelected,
+    );
+    setTasks(nextTasks);
+    setAttachments(
+      filterAttachmentsForVisibleTasks(
+        (attachmentsResult.data as TaskAttachmentRecord[]) ?? [],
+        nextTasks,
+      ),
+    );
   }
 
   function handleManualCreate() {
@@ -378,7 +450,7 @@ export function ParentDashboard() {
   }
 
   function deleteTemplate(id: string) {
-    if (!supabase || !selectedDate) {
+    if (!supabase) {
       return;
     }
 
@@ -426,7 +498,7 @@ export function ParentDashboard() {
   }
 
   function updateTaskStatus(id: string, status: TaskStatus) {
-    if (!supabase || !selectedDate) {
+    if (!supabase || !effectiveSelectedDate) {
       return;
     }
 
@@ -444,8 +516,22 @@ export function ParentDashboard() {
           return;
         }
 
-        const { data } = await fetchTodayTasks(client, effectiveSelectedDate);
-        setTasks((data as TaskRecord[]) ?? []);
+        const [{ data }, attachmentsResult] = await Promise.all([
+          fetchTodayTasks(client, effectiveSelectedDate),
+          fetchTaskAttachments(client, effectiveSelectedDate),
+        ]);
+        const nextTasks = filterVisibleTasks(
+          (data as TaskRecord[]) ?? [],
+          effectiveSelectedDate,
+          isTodaySelected,
+        );
+        setTasks(nextTasks);
+        setAttachments(
+          filterAttachmentsForVisibleTasks(
+            (attachmentsResult.data as TaskAttachmentRecord[]) ?? [],
+            nextTasks,
+          ),
+        );
         setHighlightedTaskId(id);
       })();
     });
@@ -517,7 +603,12 @@ export function ParentDashboard() {
     setAttachmentVisibleToChild(true);
     setMessage("已保存老师图片资料");
     const { data } = await fetchTaskAttachments(client, effectiveSelectedDate);
-    setAttachments((data as TaskAttachmentRecord[]) ?? []);
+    setAttachments(
+      filterAttachmentsForVisibleTasks(
+        (data as TaskAttachmentRecord[]) ?? [],
+        tasksRef.current,
+      ),
+    );
   }
 
   function deleteAttachment(attachment: TaskAttachmentRecord) {
@@ -551,7 +642,12 @@ export function ParentDashboard() {
         );
 
         const { data } = await fetchTaskAttachments(client, effectiveSelectedDate);
-        setAttachments((data as TaskAttachmentRecord[]) ?? []);
+        setAttachments(
+          filterAttachmentsForVisibleTasks(
+            (data as TaskAttachmentRecord[]) ?? [],
+            tasksRef.current,
+          ),
+        );
       })();
     });
   }
@@ -588,7 +684,12 @@ export function ParentDashboard() {
         );
 
         const { data } = await fetchTaskAttachments(client, effectiveSelectedDate);
-        setAttachments((data as TaskAttachmentRecord[]) ?? []);
+        setAttachments(
+          filterAttachmentsForVisibleTasks(
+            (data as TaskAttachmentRecord[]) ?? [],
+            tasksRef.current,
+          ),
+        );
       })();
     });
   }
@@ -609,8 +710,22 @@ export function ParentDashboard() {
           return;
         }
 
-        const { data } = await fetchTodayTasks(client, effectiveSelectedDate);
-        setTasks((data as TaskRecord[]) ?? []);
+        const [{ data }, attachmentsResult] = await Promise.all([
+          fetchTodayTasks(client, effectiveSelectedDate),
+          fetchTaskAttachments(client, effectiveSelectedDate),
+        ]);
+        const nextTasks = filterVisibleTasks(
+          (data as TaskRecord[]) ?? [],
+          effectiveSelectedDate,
+          isTodaySelected,
+        );
+        setTasks(nextTasks);
+        setAttachments(
+          filterAttachmentsForVisibleTasks(
+            (attachmentsResult.data as TaskAttachmentRecord[]) ?? [],
+            nextTasks,
+          ),
+        );
       })();
     });
   }
@@ -711,6 +826,7 @@ export function ParentDashboard() {
 
         <LiveStatusSection
           tasks={tasks}
+          selectedDate={effectiveSelectedDate}
           loading={loading}
           message={message}
           highlightedTaskId={highlightedTaskId}

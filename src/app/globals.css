@@ -149,6 +149,15 @@ select {
     opacity 180ms ease;
 }
 
+a[href],
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
 button:not(:disabled):active,
 a:active {
   transform: scale(0.98);
@@ -199,6 +208,8 @@ select:disabled {
 .nav-button:hover {
   border-color: var(--primary);
   color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .nav-button:active {
@@ -224,6 +235,11 @@ select:disabled {
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
   color: var(--text-secondary);
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .theme-toggle__icon {
@@ -274,21 +290,28 @@ select:disabled {
 
 @keyframes status-change-pulse {
   0% {
-    transform: translateY(8px) scale(0.985);
-    opacity: 0.78;
-  }
-  45% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
+    transform: scale(0.992);
+    opacity: 0.9;
+    box-shadow: 0 0 0 0 rgba(26, 138, 125, 0.16);
   }
   100% {
-    transform: translateY(0) scale(1);
+    transform: scale(1);
     opacity: 1;
+    box-shadow: 0 0 0 0 rgba(26, 138, 125, 0);
   }
 }
 
 .status-change-pulse {
-  animation: status-change-pulse 420ms ease-out both;
+  animation: status-change-pulse 260ms ease-out both;
+}
+
+.task-action-button:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.task-action-button:active {
+  transform: scale(0.992);
 }
 
 @keyframes confetti-float {
