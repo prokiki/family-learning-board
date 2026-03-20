@@ -762,7 +762,7 @@ export function ParentDashboard() {
                     key={key}
                     type="button"
                     onClick={() => setActiveTab(key)}
-                    className={`flex-1 rounded-[0.65rem] px-2 py-2.5 text-sm font-semibold transition-colors ${
+                    className={`flex-1 rounded-[12px] px-2 py-2.5 text-sm font-semibold transition-colors ${
                       activeTab === key
                         ? "bg-card text-[var(--foreground)] shadow-[var(--shadow-sm)]"
                         : "text-[var(--text-secondary)] hover:text-[var(--foreground)]"
