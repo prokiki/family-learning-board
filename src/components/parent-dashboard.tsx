@@ -119,6 +119,7 @@ export function ParentDashboard() {
   const supabase = getSupabaseBrowserClient();
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
+  const [activeTab, setActiveTab] = useState<"import" | "manual" | "template" | "attachment">("import");
   const today = useLocalDate();
   const [selectedDate, setSelectedDate] = useState("");
   const yesterday = useMemo(() => (today ? shiftLocalDate(today, -1) : ""), [today]);
@@ -748,77 +749,109 @@ export function ParentDashboard() {
       <section className="grid gap-6 lg:grid-cols-[0.98fr_1.22fr] xl:grid-cols-[1.05fr_1.3fr]">
         <div className="space-y-6">
           {isTodaySelected ? (
-            <>
-              <ManualTaskSection
-                title={manualTitle}
-                details={manualDetails}
-                onTitleChange={setManualTitle}
-                onDetailsChange={setManualDetails}
-                onCreate={handleManualCreate}
-                disabled={!manualTitle.trim() || !supabase || isPending}
-              />
+            <div>
+              {/* Tab Bar */}
+              <div className="mb-4 flex gap-1.5 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/60 p-1.5">
+                {([
+                  ["import", "作业导入"],
+                  ["manual", "手动新增"],
+                  ["template", "固定模板"],
+                  ["attachment", "图片资料"],
+                ] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setActiveTab(key)}
+                    className={`flex-1 rounded-[0.65rem] px-2 py-2.5 text-sm font-semibold transition-colors ${
+                      activeTab === key
+                        ? "bg-card text-[var(--foreground)] shadow-[var(--shadow-sm)]"
+                        : "text-[var(--text-secondary)] hover:text-[var(--foreground)]"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
 
-              <TemplatesSection
-                templates={templates}
-                title={templateTitle}
-                subject={templateSubject}
-                details={templateDetails}
-                onTitleChange={setTemplateTitle}
-                onSubjectChange={setTemplateSubject}
-                onDetailsChange={setTemplateDetails}
-                onCreate={createTemplate}
-                onAddToToday={addTemplatesToToday}
-                onToggle={toggleTemplate}
-                onDelete={deleteTemplate}
-                createDisabled={!supabase || !templateTitle.trim() || isPending}
-                addDisabled={
-                  !supabase || isPending || templates.filter((item) => item.is_active).length === 0
-                }
-              />
-
-              <ImportPreviewSection
-                rawText={rawText}
-                groups={importGroups}
-                drafts={importDrafts}
-                onRawTextChange={setRawText}
-                onTaskUpdate={updateImportedTask}
-                onTaskDelete={deleteImportedTask}
-                onTaskAdd={addImportedTask}
-                onImport={handleImport}
-                importDisabled={
-                  !rawText.trim() ||
-                  !supabase ||
-                  isPending ||
-                  importDrafts.filter((draft) => draft.title.trim()).length === 0
-                }
-              />
-
-              <AttachmentSection
-                attachments={attachments}
-                subject={attachmentSubject}
-                note={attachmentNote}
-                role={attachmentRole}
-                visibleToChild={attachmentVisibleToChild}
-                uploading={uploadingAttachment}
-                disabled={!supabase || isPending || uploadingAttachment}
-                onSubjectChange={setAttachmentSubject}
-                onNoteChange={setAttachmentNote}
-                onRoleChange={(value) => {
-                  setAttachmentRole(value);
-                  if (value === "parent_only") {
-                    setAttachmentVisibleToChild(false);
+              {/* Tab Content */}
+              {activeTab === "import" ? (
+                <ImportPreviewSection
+                  rawText={rawText}
+                  groups={importGroups}
+                  drafts={importDrafts}
+                  onRawTextChange={setRawText}
+                  onTaskUpdate={updateImportedTask}
+                  onTaskDelete={deleteImportedTask}
+                  onTaskAdd={addImportedTask}
+                  onImport={handleImport}
+                  importDisabled={
+                    !rawText.trim() ||
+                    !supabase ||
+                    isPending ||
+                    importDrafts.filter((draft) => draft.title.trim()).length === 0
                   }
-                }}
-                onVisibleToChildChange={setAttachmentVisibleToChild}
-                onUpload={(file) => {
-                  startTransition(() => {
-                    void uploadAttachment(file);
-                  });
-                }}
-                onDelete={deleteAttachment}
-                onMove={moveAttachment}
-              />
-            </>
+                />
+              ) : null}
+
+              {activeTab === "manual" ? (
+                <ManualTaskSection
+                  title={manualTitle}
+                  details={manualDetails}
+                  onTitleChange={setManualTitle}
+                  onDetailsChange={setManualDetails}
+                  onCreate={handleManualCreate}
+                  disabled={!manualTitle.trim() || !supabase || isPending}
+                />
+              ) : null}
+
+              {activeTab === "template" ? (
+                <TemplatesSection
+                  templates={templates}
+                  title={templateTitle}
+                  subject={templateSubject}
+                  details={templateDetails}
+                  onTitleChange={setTemplateTitle}
+                  onSubjectChange={setTemplateSubject}
+                  onDetailsChange={setTemplateDetails}
+                  onCreate={createTemplate}
+                  onAddToToday={addTemplatesToToday}
+                  onToggle={toggleTemplate}
+                  onDelete={deleteTemplate}
+                  createDisabled={!supabase || !templateTitle.trim() || isPending}
+                  addDisabled={
+                    !supabase || isPending || templates.filter((item) => item.is_active).length === 0
+                  }
+                />
+              ) : null}
+
+              {activeTab === "attachment" ? (
+                <AttachmentSection
+                  attachments={attachments}
+                  subject={attachmentSubject}
+                  note={attachmentNote}
+                  role={attachmentRole}
+                  visibleToChild={attachmentVisibleToChild}
+                  uploading={uploadingAttachment}
+                  disabled={!supabase || isPending || uploadingAttachment}
+                  onSubjectChange={setAttachmentSubject}
+                  onNoteChange={setAttachmentNote}
+                  onRoleChange={(value) => {
+                    setAttachmentRole(value);
+                    if (value === "parent_only") {
+                      setAttachmentVisibleToChild(false);
+                    }
+                  }}
+                  onVisibleToChildChange={setAttachmentVisibleToChild}
+                  onUpload={(file) => {
+                    startTransition(() => {
+                      void uploadAttachment(file);
+                    });
+                  }}
+                  onDelete={deleteAttachment}
+                  onMove={moveAttachment}
+                />
+              ) : null}
+            </div>
           ) : (
             <HistoricalTasksNotice selectedDateLabel={effectiveSelectedDate ? formatDisplayDate(effectiveSelectedDate) : "这一天"} />
           )}
