@@ -57,13 +57,13 @@ function isCompletedStatus(status: TaskStatus) {
 function subjectSectionClass(subject: string) {
   switch (subject) {
     case "语文":
-      return "border-l-[3px] border-l-[var(--subject-chinese)] bg-[rgba(234,67,53,0.04)]";
+      return "border-l-[3px] border-l-[var(--subject-chinese)] bg-[var(--subject-chinese-bg)]";
     case "数学":
-      return "border-l-[3px] border-l-[var(--subject-math)] bg-[rgba(66,133,244,0.04)]";
+      return "border-l-[3px] border-l-[var(--subject-math)] bg-[var(--subject-math-bg)]";
     case "英语":
-      return "border-l-[3px] border-l-[var(--subject-english)] bg-[rgba(26,138,125,0.04)]";
+      return "border-l-[3px] border-l-[var(--subject-english)] bg-[var(--subject-english-bg)]";
     default:
-      return "border-l-[3px] border-l-[var(--primary)] bg-[var(--card-alt)]/30";
+      return "border-l-[3px] border-l-[var(--primary)] bg-[var(--card-alt)]";
   }
 }
 
@@ -83,9 +83,9 @@ function subjectLabelClass(subject: string) {
 function statusPillClass(status: TaskStatus) {
   switch (status) {
     case "in_progress":
-      return "bg-[rgba(26,138,125,0.1)] text-[var(--primary)]";
+      return "bg-[var(--accent-subtle)] text-[var(--primary)]";
     case "pending":
-      return "bg-[rgba(0,0,0,0.04)] text-[var(--text-tertiary)]";
+      return "bg-[var(--card-alt)] text-[var(--text-tertiary)]";
     case "done_by_child":
     case "confirmed_by_parent":
       return "bg-[var(--success-subtle)] text-[var(--success)]";
@@ -253,7 +253,7 @@ export function PomodoroSection({
           <button
             type="button"
             onClick={onReset}
-            className="min-h-[44px] rounded-[12px] border border-[var(--line)] bg-transparent px-5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[rgba(0,0,0,0.03)]"
+            className="min-h-[44px] rounded-[12px] border border-[var(--line)] bg-transparent px-5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--card-alt)]"
           >
             重置
           </button>
@@ -419,7 +419,7 @@ export function ChildTasksSection({
                             type="button"
                             disabled={isPending}
                             onClick={() => onUpdateTask(task.id, "in_progress")}
-                            className="child-btn-start flex-1 min-h-[48px] rounded-[12px] border-[1.5px] border-[rgba(26,138,125,0.3)] bg-transparent px-3 py-3 text-sm font-medium text-[var(--primary)] disabled:opacity-40"
+                            className="child-btn-start flex-1 min-h-[48px] rounded-[12px] border-[1.5px] border-[var(--accent-muted)] bg-transparent px-3 py-3 text-sm font-medium text-[var(--primary)] disabled:opacity-40"
                           >
                             {labels[0]}
                           </button>
@@ -435,7 +435,7 @@ export function ChildTasksSection({
                             type="button"
                             disabled={isPending}
                             onClick={() => onUpdateTask(task.id, "needs_help")}
-                            className="child-btn-help flex-1 min-h-[48px] rounded-[12px] border-[1.5px] border-[rgba(234,140,0,0.3)] bg-transparent px-3 py-3 text-sm font-medium text-[var(--warning)] disabled:opacity-40"
+                            className="child-btn-help flex-1 min-h-[48px] rounded-[12px] border-[1.5px] border-[var(--warning-subtle)] bg-transparent px-3 py-3 text-sm font-medium text-[var(--warning)] disabled:opacity-40"
                           >
                             {labels[2]}
                           </button>

@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function ChildPage() {
   return (
-    <main className="bg-background">
+    <main className="min-h-screen bg-background">
       <div className="flex items-center justify-between px-3 pt-3 sm:px-4 sm:pt-4 md:px-6">
         <Link
           href="/"

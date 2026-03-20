@@ -67,6 +67,41 @@ type SubjectStat = {
   helpCount: number;
 };
 
+/* ───────────────── export helper ───────────────── */
+
+const STATUS_LABEL: Record<TaskStatus, string> = {
+  pending: "待开始",
+  in_progress: "进行中",
+  done_by_child: "孩子已完成",
+  needs_help: "需要帮助",
+  confirmed_by_parent: "家长已确认",
+};
+
+function exportCSV(tasks: TaskRecord[], weekLabel: string) {
+  const BOM = "\uFEFF";
+  const header = ["日期", "学科", "任务", "状态", "来源", "详情"];
+  const rows = tasks.map((t) => [
+    t.due_date,
+    t.subject?.trim() || "其他",
+    t.title,
+    STATUS_LABEL[t.status] ?? t.status,
+    t.source === "imported" ? "导入" : t.source === "template" ? "固定" : "手动",
+    (t.details ?? "").replace(/[\n\r]+/g, " "),
+  ]);
+
+  const csv = BOM + [header, ...rows].map((r) =>
+    r.map((c) => `"${c.replace(/"/g, '""')}"`).join(","),
+  ).join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `周报-${weekLabel.replace(/\s/g, "")}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 /* ───────────────── component ───────────────── */
 
 export function WeeklyReport() {
@@ -197,14 +232,14 @@ export function WeeklyReport() {
       {/* Header */}
       <div className="mb-6">
         <p className="text-sm font-semibold tracking-[0.18em] text-[var(--primary)]">周报统计</p>
-        <h1 className="mt-2 text-[1.75rem] font-semibold text-[var(--foreground)] md:text-[2rem]">
+        <h1 className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
           学习完成情况
         </h1>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setWeekOffset(0)}
-            className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
+            className={`rounded-[12px] border px-3 py-2 text-sm font-semibold ${
               isThisWeek
                 ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
                 : "border-[var(--line)] bg-[var(--card-alt)] text-[var(--text-secondary)]"
@@ -215,7 +250,7 @@ export function WeeklyReport() {
           <button
             type="button"
             onClick={() => setWeekOffset(-1)}
-            className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
+            className={`rounded-[12px] border px-3 py-2 text-sm font-semibold ${
               weekOffset === -1
                 ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
                 : "border-[var(--line)] bg-[var(--card-alt)] text-[var(--text-secondary)]"
@@ -226,7 +261,7 @@ export function WeeklyReport() {
           <button
             type="button"
             onClick={() => setWeekOffset((prev) => prev - 1)}
-            className="rounded-xl border border-[var(--line)] bg-[var(--card-alt)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)]"
+            className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)]"
           >
             ← 更早
           </button>
@@ -234,13 +269,26 @@ export function WeeklyReport() {
             type="button"
             disabled={isThisWeek}
             onClick={() => setWeekOffset((prev) => prev + 1)}
-            className="rounded-xl border border-[var(--line)] bg-[var(--card-alt)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-40"
+            className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-40"
           >
             更近 →
           </button>
           <span className="ml-1 text-sm text-[var(--text-secondary)]">{weekLabel}</span>
         </div>
       </div>
+
+      {/* Export button — only show when there are tasks */}
+      {!loading && totalCount > 0 ? (
+        <div className="mb-5 flex justify-end">
+          <button
+            type="button"
+            onClick={() => exportCSV(tasks, weekLabel)}
+            className="rounded-[12px] border border-[var(--line)] bg-card px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)] shadow-[var(--shadow-xs)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+          >
+            ⬇ 导出 CSV
+          </button>
+        </div>
+      ) : null}
 
       {loading ? (
         <CardSkeleton />
@@ -375,7 +423,7 @@ export function WeeklyReport() {
               <p className="mt-1 text-xs text-[var(--text-tertiary)]">孩子点击"需要帮助"的学科分布，可关注薄弱环节</p>
               <div className="mt-4 space-y-2.5">
                 {helpStats.map((stat) => (
-                  <div key={stat.subject} className="flex items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--card-alt)]/40 px-4 py-3">
+                  <div key={stat.subject} className="flex items-center justify-between rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)]/40 px-4 py-3">
                     <div className="flex items-center gap-2">
                       <span className={`inline-block h-2.5 w-2.5 rounded-full ${subjectDotClass(stat.subject)}`} />
                       <span className="text-sm font-medium text-[var(--foreground)]">{stat.subject}</span>

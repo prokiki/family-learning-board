@@ -136,7 +136,7 @@ export function ParentHeader({
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs font-semibold tracking-[0.18em] text-[var(--primary)]">家长端</p>
-          <h1 className="mt-2 text-[1.75rem] font-semibold tracking-tight text-[var(--foreground)]">
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)]">
             今天的学习任务
           </h1>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
@@ -491,7 +491,7 @@ export function ImportPreviewSection({
                       key={`${group.subject}-${taskIndex}`}
                       className="flex items-center gap-2"
                     >
-                      <span className="w-8 text-center text-sm font-semibold text-slate-400">
+                      <span className="w-8 text-center text-sm font-semibold text-[var(--text-tertiary)]">
                         {taskIndex + 1}
                       </span>
                       <input
@@ -779,7 +779,7 @@ export function LiveStatusSection({
           </p>
         </div>
         {message ? (
-          <div className="rounded-full bg-[rgba(91,155,213,0.12)] px-4 py-2 text-sm font-medium text-[rgba(58,107,160,1)]">
+          <div className="rounded-full bg-[var(--info-subtle)] px-4 py-2 text-sm font-medium text-[var(--info)]">
             {message}
           </div>
         ) : null}
@@ -854,7 +854,7 @@ export function LiveStatusSection({
                           ) : null}
                         </div>
                         {task.status === "confirmed_by_parent" ? (
-                          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(228,246,229,0.95)] text-xl">
+                          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--success-subtle)] text-xl">
                             ✅
                           </span>
                         ) : null}

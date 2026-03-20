@@ -109,7 +109,7 @@ export default function Home() {
               ].map(([icon, title, desc], index) => (
                 <div
                   key={title}
-                  className={`rounded-[1rem] border border-[var(--line)] bg-card p-6 shadow-[0_1px_2px_rgba(0,0,0,0.025)] md:p-7 ${
+                  className={`rounded-[1rem] border border-[var(--line)] bg-card p-6 shadow-[var(--shadow-xs)] md:p-7 ${
                     index === 1 ? "md:col-span-2" : "md:col-span-1"
                   }`}
                 >
