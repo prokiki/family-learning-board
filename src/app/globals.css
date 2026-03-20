@@ -362,6 +362,16 @@ select:disabled {
   animation: confetti-float 2.6s ease-out infinite;
 }
 
+/* Skeleton pulse — gentle opacity shimmer */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeleton-pulse {
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

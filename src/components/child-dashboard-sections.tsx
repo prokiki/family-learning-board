@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState, TaskListSkeleton } from "@/components/empty-state";
 import { formatDisplayDate } from "@/lib/date";
 import type { TaskAttachmentRecord, TaskRecord, TaskStatus } from "@/types/task";
 
@@ -322,11 +322,7 @@ export function ChildTasksSection({
   }
 
   if (loading) {
-    return (
-      <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-8 text-center text-lg text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
-        正在加载今天的任务...
-      </div>
-    );
+    return <TaskListSkeleton rows={4} />;
   }
 
   if (groups.length === 0) {

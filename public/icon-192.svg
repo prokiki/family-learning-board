@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="38" fill="#1a8a7d"/>
+  <g transform="translate(96,96)">
+    <!-- Book shape -->
+    <path d="M-40,-30 L-40,30 Q-40,36 -34,36 L34,36 Q40,36 40,30 L40,-30 Q40,-36 34,-36 L-34,-36 Q-40,-36 -40,-30 Z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+    <!-- Center spine -->
+    <line x1="0" y1="-36" x2="0" y2="36" stroke="#fff" stroke-width="3"/>
+    <!-- Lines left page -->
+    <line x1="-28" y1="-16" x2="-8" y2="-16" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+    <line x1="-28" y1="-4" x2="-8" y2="-4" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+    <line x1="-28" y1="8" x2="-14" y2="8" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+    <!-- Checkmark right page -->
+    <path d="M10,-4 L18,6 L32,-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

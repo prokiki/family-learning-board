@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState, TaskListSkeleton } from "@/components/empty-state";
 import { StatusPill } from "@/components/status-pill";
 import type {
   AttachmentRole,
@@ -786,8 +786,8 @@ export function LiveStatusSection({
       </div>
 
       {loading ? (
-        <div className="mt-4 rounded-[1rem] bg-[var(--card-alt)] p-5 text-[var(--text-secondary)]">
-          正在同步任务...
+        <div className="mt-4">
+          <TaskListSkeleton rows={3} />
         </div>
       ) : tasks.length === 0 ? (
         <div className="mt-6">

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SetupNotice } from "@/components/setup-notice";
+import { CardSkeleton, EmptyState } from "@/components/empty-state";
 import { useLocalDate } from "@/hooks/use-local-date";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { formatLocalDate, shiftLocalDate } from "@/lib/date";
@@ -242,21 +243,19 @@ export function WeeklyReport() {
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-[var(--line)] bg-card p-8 text-center text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
-          正在加载周报数据...
-        </div>
+        <CardSkeleton />
       ) : totalCount === 0 ? (
-        <div className="rounded-2xl border border-[var(--line)] bg-card p-8 text-center shadow-[var(--shadow-sm)]">
-          <p className="text-lg font-semibold text-[var(--foreground)]">这周还没有任务记录</p>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">有任务数据后，这里会展示完成情况统计。</p>
-        </div>
+        <EmptyState
+          title="这周还没有任务记录"
+          description="有任务数据后，这里会展示完成情况统计。"
+        />
       ) : (
         <div className="space-y-5">
 
           {/* ───── Overview Cards ───── */}
           <div className="grid gap-4 sm:grid-cols-3">
             {/* Completion Rate */}
-            <div className="rounded-2xl border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
+            <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
               <p className="text-xs font-medium text-[var(--text-tertiary)]">本周完成率</p>
               <p className="mt-2 text-3xl font-bold text-[var(--foreground)]">{completionRate}%</p>
               <p className="mt-1 text-sm text-[var(--text-secondary)]">
@@ -272,7 +271,7 @@ export function WeeklyReport() {
             </div>
 
             {/* Streak */}
-            <div className="rounded-2xl border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
+            <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
               <p className="text-xs font-medium text-[var(--text-tertiary)]">连续全部完成</p>
               <p className="mt-2 text-3xl font-bold text-[var(--foreground)]">{streak} <span className="text-lg font-semibold text-[var(--text-secondary)]">天</span></p>
               <p className="mt-1 text-sm text-[var(--text-secondary)]">
@@ -281,7 +280,7 @@ export function WeeklyReport() {
             </div>
 
             {/* Help Count */}
-            <div className="rounded-2xl border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
+            <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
               <p className="text-xs font-medium text-[var(--text-tertiary)]">求助次数</p>
               <p className="mt-2 text-3xl font-bold text-[var(--foreground)]">
                 {tasks.filter((t) => t.status === "needs_help").length}
@@ -295,7 +294,7 @@ export function WeeklyReport() {
           </div>
 
           {/* ───── Daily Bar Chart ───── */}
-          <div className="rounded-2xl border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
+          <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
             <h2 className="text-base font-semibold text-[var(--foreground)]">每日完成情况</h2>
             <p className="mt-1 text-xs text-[var(--text-tertiary)]">绿色为已完成，灰色为未完成</p>
             <div className="mt-5 flex items-end gap-2 sm:gap-3" style={{ height: "180px" }}>
@@ -340,7 +339,7 @@ export function WeeklyReport() {
           </div>
 
           {/* ───── Subject Distribution ───── */}
-          <div className="rounded-2xl border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
+          <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
             <h2 className="text-base font-semibold text-[var(--foreground)]">学科分布</h2>
             <p className="mt-1 text-xs text-[var(--text-tertiary)]">各学科任务量和完成率</p>
             <div className="mt-4 space-y-3">
@@ -371,7 +370,7 @@ export function WeeklyReport() {
 
           {/* ───── Help Frequency ───── */}
           {helpStats.length > 0 ? (
-            <div className="rounded-2xl border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
+            <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
               <h2 className="text-base font-semibold text-[var(--foreground)]">求助分析</h2>
               <p className="mt-1 text-xs text-[var(--text-tertiary)]">孩子点击"需要帮助"的学科分布，可关注薄弱环节</p>
               <div className="mt-4 space-y-2.5">
