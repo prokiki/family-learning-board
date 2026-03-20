@@ -314,6 +314,30 @@ select:disabled {
   transform: scale(0.992);
 }
 
+/* Child dashboard action buttons — calm hover states */
+.child-btn-start:hover:not(:disabled) {
+  background: rgba(26, 138, 125, 0.06);
+  border-color: var(--accent);
+  transform: none;
+}
+
+.child-btn-complete:hover:not(:disabled) {
+  background: #2d9249;
+  transform: none;
+}
+
+.child-btn-help:hover:not(:disabled) {
+  background: rgba(234, 140, 0, 0.06);
+  border-color: var(--warning);
+  transform: none;
+}
+
+.child-btn-start:active:not(:disabled),
+.child-btn-complete:active:not(:disabled),
+.child-btn-help:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 @keyframes confetti-float {
   0% {
     opacity: 0;

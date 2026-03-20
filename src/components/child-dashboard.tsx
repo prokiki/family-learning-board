@@ -510,22 +510,13 @@ export function ChildDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background px-3 py-5 text-[var(--foreground)] sm:px-4 md:px-8 md:py-10">
-      <div className="mx-auto max-w-5xl space-y-4 md:space-y-6">
+    <div className="min-h-screen bg-background px-4 py-5 text-[var(--foreground)] sm:px-6 md:px-8 md:py-8">
+      <div className="mx-auto max-w-[960px] space-y-5">
         <ChildHeader
           today={today}
           totalCount={tasks.length}
           inProgressCount={inProgressCount}
           completedCount={completedTaskCount}
-        />
-
-        <PomodoroSection
-          timerState={timerState}
-          timerProgress={timerProgress}
-          onSwitchMode={switchTimerMode}
-          onStart={handleTimerStart}
-          onPause={() => dispatchTimer({ type: "pause" })}
-          onReset={resetTimer}
         />
 
         {!supabase ? (
@@ -534,19 +525,37 @@ export function ChildDashboard() {
           </div>
         ) : null}
 
-        <ChildTasksSection
-          groups={groupedOrderedTasks}
-          attachmentGroups={groupedAttachments}
-          today={today}
-          currentTaskId={currentTaskId}
-          highlightedTaskId={highlightedTaskId}
-          isPending={isPending}
-          onUpdateTask={updateTask}
-          onOpenAttachments={setOpenAttachmentSubject}
-          allTasksCompleted={allTasksCompleted}
-          loading={loading}
-          message={message}
-        />
+        {/* Main Layout: Timer (left) + Tasks (right) on iPad+ */}
+        <div className="flex flex-col gap-6 md:flex-row md:items-start">
+          {/* Timer Column — sticky on iPad+ */}
+          <div className="w-full shrink-0 md:sticky md:top-6 md:w-[260px] lg:w-[280px]">
+            <PomodoroSection
+              timerState={timerState}
+              timerProgress={timerProgress}
+              onSwitchMode={switchTimerMode}
+              onStart={handleTimerStart}
+              onPause={() => dispatchTimer({ type: "pause" })}
+              onReset={resetTimer}
+            />
+          </div>
+
+          {/* Task Area */}
+          <div className="min-w-0 flex-1">
+            <ChildTasksSection
+              groups={groupedOrderedTasks}
+              attachmentGroups={groupedAttachments}
+              today={today}
+              currentTaskId={currentTaskId}
+              highlightedTaskId={highlightedTaskId}
+              isPending={isPending}
+              onUpdateTask={updateTask}
+              onOpenAttachments={setOpenAttachmentSubject}
+              allTasksCompleted={allTasksCompleted}
+              loading={loading}
+              message={message}
+            />
+          </div>
+        </div>
 
         <AttachmentModal
           key={openAttachmentGroup?.subject ?? "attachment-modal"}

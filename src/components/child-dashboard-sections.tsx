@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import { EmptyState } from "@/components/empty-state";
-import { TASK_STATUS_META } from "@/lib/task-status";
 import { formatDisplayDate } from "@/lib/date";
 import type { TaskAttachmentRecord, TaskRecord, TaskStatus } from "@/types/task";
 
@@ -55,36 +54,58 @@ function isCompletedStatus(status: TaskStatus) {
   return status === "done_by_child" || status === "confirmed_by_parent";
 }
 
-function subjectTheme(subject: string) {
+function subjectSectionClass(subject: string) {
   switch (subject) {
-    case "英语":
-      return {
-        section: "border-[var(--line)] bg-[var(--subject-english-bg)]/48",
-        stripe: "bg-[var(--subject-english)]",
-        inner: "",
-        cardGlow: "",
-      };
-    case "数学":
-      return {
-        section: "border-[var(--line)] bg-[var(--subject-math-bg)]/48",
-        stripe: "bg-[var(--subject-math)]",
-        inner: "",
-        cardGlow: "",
-      };
     case "语文":
-      return {
-        section: "border-[var(--line)] bg-[var(--subject-chinese-bg)]/48",
-        stripe: "bg-[var(--subject-chinese)]",
-        inner: "",
-        cardGlow: "",
-      };
+      return "border-l-[3px] border-l-[var(--subject-chinese)] bg-[rgba(234,67,53,0.04)]";
+    case "数学":
+      return "border-l-[3px] border-l-[var(--subject-math)] bg-[rgba(66,133,244,0.04)]";
+    case "英语":
+      return "border-l-[3px] border-l-[var(--subject-english)] bg-[rgba(26,138,125,0.04)]";
     default:
-      return {
-        section: "border-[var(--line)] bg-[var(--card-alt)]",
-        stripe: "bg-[var(--primary)]",
-        inner: "",
-        cardGlow: "",
-      };
+      return "border-l-[3px] border-l-[var(--primary)] bg-[var(--card-alt)]/30";
+  }
+}
+
+function subjectLabelClass(subject: string) {
+  switch (subject) {
+    case "语文":
+      return "text-[var(--subject-chinese)]";
+    case "数学":
+      return "text-[var(--subject-math)]";
+    case "英语":
+      return "text-[var(--subject-english)]";
+    default:
+      return "text-[var(--primary)]";
+  }
+}
+
+function statusPillClass(status: TaskStatus) {
+  switch (status) {
+    case "in_progress":
+      return "bg-[rgba(26,138,125,0.1)] text-[var(--primary)]";
+    case "pending":
+      return "bg-[rgba(0,0,0,0.04)] text-[var(--text-tertiary)]";
+    case "done_by_child":
+    case "confirmed_by_parent":
+      return "bg-[var(--success-subtle)] text-[var(--success)]";
+    case "needs_help":
+      return "bg-[var(--warning-subtle)] text-[var(--warning)]";
+  }
+}
+
+function statusPillLabel(status: TaskStatus) {
+  switch (status) {
+    case "pending":
+      return "待开始";
+    case "in_progress":
+      return "进行中";
+    case "done_by_child":
+      return "✓ 已完成";
+    case "confirmed_by_parent":
+      return "✓ 已确认";
+    case "needs_help":
+      return "需要帮助";
   }
 }
 
@@ -98,6 +119,8 @@ function attachmentRoleLabel(role: TaskAttachmentRecord["role"]) {
       return "仅家长可见";
   }
 }
+
+/* ─────────────────────────── Header ─────────────────────────── */
 
 export function ChildHeader({
   today,
@@ -113,48 +136,32 @@ export function ChildHeader({
   const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
   return (
-    <section className="soft-shadow rounded-[1.7rem] border border-[var(--line)] bg-card px-4 py-4 sm:px-5 md:px-8 md:py-6">
-      <div className="flex flex-col gap-5">
-        <div className="max-w-3xl">
-          <p className="text-xs font-semibold tracking-[0.18em] text-[var(--primary)] sm:text-sm">
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-[22px] font-bold tracking-tight text-[var(--foreground)] sm:text-2xl">
             学习看板
-          </p>
-          <h1 className="mt-2 text-[1.9rem] font-semibold leading-tight text-[var(--foreground)] sm:text-3xl md:text-[2.25rem]">
-            今天的学习任务
           </h1>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] md:text-base">
-            {today ? `今天是 ${formatDisplayDate(today)}` : "今天是"}
-          </p>
+          <span className="text-sm text-[var(--text-tertiary)]">
+            {today ? formatDisplayDate(today) : ""}
+          </span>
         </div>
-        <div className="rounded-[1.25rem] border border-[var(--line)] bg-[var(--card-alt)]/55 px-4 py-4 sm:px-5">
-          <div className="flex items-center justify-between gap-3 text-sm font-semibold">
-            <span className="text-[var(--foreground)]">
-              {completedCount}/{totalCount} 完成
-            </span>
-            <span className="text-[var(--text-secondary)]">
-              {totalCount === 0
-                ? "等待家长添加任务"
-                : inProgressCount > 0
-                  ? `正在做 ${inProgressCount} 项`
-                  : progressPercent === 100
-                    ? "今天全部完成"
-                    : "继续完成今天的任务"}
-            </span>
-          </div>
-          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[var(--line-light)]">
-            <div
-              className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-500 ease-out"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-          <p className="mt-3 text-xs font-medium tracking-[0.12em] text-[var(--text-secondary)]">
-            {progressPercent}% 已完成
-          </p>
-        </div>
+        <span className="text-sm font-medium text-[var(--text-secondary)]">
+          <strong className="font-semibold text-[var(--primary)]">{completedCount}</strong>
+          /{totalCount} 完成
+        </span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-[var(--line-light)]">
+        <div
+          className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-500 ease-out"
+          style={{ width: `${progressPercent}%` }}
+        />
       </div>
     </section>
   );
 }
+
+/* ─────────────────────────── Pomodoro ─────────────────────────── */
 
 export function PomodoroSection({
   timerState,
@@ -171,141 +178,115 @@ export function PomodoroSection({
   onPause: () => void;
   onReset: () => void;
 }) {
-  const ringTone =
-    timerState.mode === "focus"
-      ? "var(--primary)"
-      : timerState.isRunning
-        ? "var(--success)"
-        : "var(--text-secondary)";
-  const ringBackground = "var(--line)";
+  const strokeColor = timerState.mode === "focus" ? "var(--primary)" : "var(--success)";
 
   return (
-    <section className="soft-shadow rounded-[1.7rem] border border-[var(--line)] bg-card px-4 py-4 sm:px-5 md:px-6 md:py-6">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="max-w-lg">
-          <p className="text-xs font-semibold tracking-[0.18em] text-[var(--primary)] sm:text-sm">
-            番茄时钟
-          </p>
-          <h2 className="mt-2 text-[1.65rem] font-semibold leading-tight text-[var(--foreground)] sm:text-2xl md:text-[2rem]">
-            {timerState.mode === "focus" ? "专注 20 分钟" : "休息 5 分钟"}
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] md:text-base">
-            {timerState.mode === "focus"
-              ? "专注做当前任务，到点后会自动提醒休息。"
-              : "休息一下，结束后会自动开始下一轮专注。"}
-          </p>
-        </div>
+    <div className="rounded-2xl border border-[var(--line)] bg-card px-6 py-7 shadow-[var(--shadow-sm)]">
+      <div className="flex flex-col items-center gap-5">
+        <span className="text-[13px] font-medium tracking-[0.06em] text-[var(--text-tertiary)]">
+          专注时钟
+        </span>
 
-        <div className="flex flex-col items-start gap-4 self-stretch lg:items-end">
-          <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center lg:w-auto">
-            <div
-              className={`relative mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-card text-[var(--foreground)] sm:mx-0 sm:h-28 sm:w-28 md:h-32 md:w-32 ${
-                timerState.isRunning ? "shadow-[var(--shadow-glow)]" : ""
-              }`}
-            >
-              <svg
-                viewBox="0 0 120 120"
-                className={`absolute inset-0 h-full w-full -rotate-90 ${
-                  timerState.notice ? "animate-pulse" : ""
-                }`}
-                aria-hidden="true"
-              >
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="52"
-                  fill="none"
-                  stroke={ringBackground}
-                  strokeWidth="8"
-                />
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="52"
-                  fill="none"
-                  stroke={ringTone}
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  pathLength="100"
-                  strokeDasharray="100"
-                  strokeDashoffset={100 - timerProgress}
-                  className="transition-[stroke-dashoffset,stroke] duration-700 ease-linear"
-                />
-              </svg>
-              <div className="relative z-10 text-center">
-                <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--text-secondary)]">
-                  {timerState.mode === "focus" ? "专注" : "休息"}
-                </p>
-                <p className="mt-1.5 text-[1.75rem] font-bold tracking-tight sm:mt-2 sm:text-3xl md:text-[2.2rem] [font-variant-numeric:tabular-nums]">
-                  {formatTimer(timerState.secondsLeft)}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex w-full flex-col gap-2 sm:w-auto">
-              <div className="flex w-full rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)] p-1 sm:w-auto">
-                <button
-                  type="button"
-                  onClick={() => onSwitchMode("focus")}
-                  className={`flex-1 rounded-[0.8rem] px-4 py-2 text-sm font-semibold md:text-base ${
-                    timerState.mode === "focus"
-                      ? "bg-[var(--primary)] text-white"
-                      : "text-[var(--text-secondary)]"
-                  }`}
-                >
-                  专注
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSwitchMode("break")}
-                  className={`flex-1 rounded-[0.8rem] px-4 py-2 text-sm font-semibold md:text-base ${
-                    timerState.mode === "break"
-                      ? "bg-[var(--primary)] text-white"
-                      : "text-[var(--text-secondary)]"
-                  }`}
-                >
-                  休息
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={onStart}
-                  disabled={timerState.isRunning}
-                  className="rounded-[1rem] bg-[var(--primary)] px-3 py-3 text-sm font-semibold text-white disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:px-4 md:text-base"
-                >
-                  开始
-                </button>
-                <button
-                  type="button"
-                  onClick={onPause}
-                  disabled={!timerState.isRunning}
-                  className="rounded-[1rem] border border-[var(--line)] bg-card px-3 py-3 text-sm font-semibold text-[var(--text-secondary)] disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:px-4 md:text-base"
-                >
-                  暂停
-                </button>
-                <button
-                  type="button"
-                  onClick={onReset}
-                  className="rounded-[1rem] border border-[var(--line)] bg-card px-3 py-3 text-sm font-semibold text-[var(--text-secondary)] md:px-4 md:text-base"
-                >
-                  重置
-                </button>
-              </div>
-            </div>
+        {/* Timer Ring */}
+        <div className="relative h-40 w-40">
+          <svg viewBox="0 0 160 160" className="h-full w-full -rotate-90">
+            <circle cx="80" cy="80" r="70" fill="none" stroke="var(--line)" strokeWidth="6" />
+            <circle
+              cx="80"
+              cy="80"
+              r="70"
+              fill="none"
+              stroke={strokeColor}
+              strokeWidth="6"
+              strokeLinecap="round"
+              pathLength="100"
+              strokeDasharray="100"
+              strokeDashoffset={100 - timerProgress}
+              className="transition-[stroke-dashoffset,stroke] duration-700 ease-linear"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-4xl font-bold tracking-tight text-[var(--foreground)] [font-variant-numeric:tabular-nums]">
+              {formatTimer(timerState.secondsLeft)}
+            </span>
           </div>
-
-          {timerState.notice ? (
-            <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)] px-4 py-3 text-sm font-semibold text-[var(--foreground)] md:text-base">
-              {timerState.notice}
-            </div>
-          ) : null}
         </div>
+
+        <span className="text-[13px] font-medium text-[var(--primary)]">
+          {timerState.mode === "focus"
+            ? timerState.isRunning
+              ? "专注中"
+              : "专注模式"
+            : timerState.isRunning
+              ? "休息中"
+              : "休息模式"}
+        </span>
+
+        {/* Mode Switch */}
+        <div className="flex w-full rounded-lg border border-[var(--line)] bg-[var(--card-alt)] p-0.5">
+          <button
+            type="button"
+            onClick={() => onSwitchMode("focus")}
+            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              timerState.mode === "focus"
+                ? "bg-[var(--primary)] text-white"
+                : "text-[var(--text-secondary)]"
+            }`}
+          >
+            专注
+          </button>
+          <button
+            type="button"
+            onClick={() => onSwitchMode("break")}
+            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              timerState.mode === "break"
+                ? "bg-[var(--primary)] text-white"
+                : "text-[var(--text-secondary)]"
+            }`}
+          >
+            休息
+          </button>
+        </div>
+
+        {/* Control Buttons */}
+        <div className="flex gap-2.5">
+          <button
+            type="button"
+            onClick={onReset}
+            className="min-h-[44px] rounded-lg border border-[var(--line)] bg-transparent px-5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[rgba(0,0,0,0.03)]"
+          >
+            重置
+          </button>
+          {timerState.isRunning ? (
+            <button
+              type="button"
+              onClick={onPause}
+              className="min-h-[44px] rounded-lg bg-[var(--primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-hover)]"
+            >
+              暂停
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onStart}
+              className="min-h-[44px] rounded-lg bg-[var(--primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-hover)]"
+            >
+              开始
+            </button>
+          )}
+        </div>
+
+        {timerState.notice ? (
+          <div className="rounded-lg border border-[var(--line)] bg-[var(--card-alt)] px-4 py-2.5 text-sm font-medium text-[var(--foreground)]">
+            {timerState.notice}
+          </div>
+        ) : null}
       </div>
-    </section>
+    </div>
   );
 }
+
+/* ─────────────────────────── Tasks ─────────────────────────── */
 
 export function ChildTasksSection({
   groups,
@@ -334,7 +315,7 @@ export function ChildTasksSection({
 }) {
   if (message) {
     return (
-      <div className="mt-4 rounded-[1.25rem] border border-[var(--line)] bg-[var(--error-subtle)] px-5 py-4 text-base font-semibold text-[var(--error)]">
+      <div className="rounded-xl border border-[var(--line)] bg-[var(--error-subtle)] px-5 py-4 text-base font-semibold text-[var(--error)]">
         {message}
       </div>
     );
@@ -342,7 +323,7 @@ export function ChildTasksSection({
 
   if (loading) {
     return (
-      <div className="mt-6 rounded-[1.8rem] bg-card p-8 text-center text-xl text-[var(--text-secondary)] shadow-lg">
+      <div className="rounded-2xl border border-[var(--line)] bg-card p-8 text-center text-lg text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
         正在加载今天的任务...
       </div>
     );
@@ -350,214 +331,146 @@ export function ChildTasksSection({
 
   if (groups.length === 0) {
     return (
-      <div className="mt-6">
-        <EmptyState
-          title="今天的任务还没到"
-          description="家长一添加任务，这里就会马上出现。"
-        />
-      </div>
+      <EmptyState
+        title="今天的任务还没到"
+        description="家长一添加任务，这里就会马上出现。"
+      />
     );
   }
 
   return (
-    <section className="space-y-4 md:space-y-5">
-      <div className="px-1">
-        <p className="text-sm font-semibold tracking-[0.18em] text-[var(--text-secondary)]">
-          今日任务
-        </p>
-      </div>
+    <div className="flex flex-col gap-6">
+      {groups.map((group) => {
+        const attachmentGroup = attachmentGroups.find((item) => item.subject === group.subject);
 
-      <div className="grid gap-5 md:gap-6">
-        {groups.map((group, groupIndex) => {
-          const theme = subjectTheme(group.subject);
-          const attachmentGroup = attachmentGroups.find((item) => item.subject === group.subject);
+        return (
+          <section
+            key={group.subject}
+            className={`rounded-2xl p-5 ${subjectSectionClass(group.subject)}`}
+          >
+            {/* Subject Header */}
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <span className={`text-[13px] font-semibold tracking-[0.02em] ${subjectLabelClass(group.subject)}`}>
+                {group.subject}
+              </span>
+              {attachmentGroup ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenAttachments(group.subject)}
+                  className="rounded-lg border border-[var(--line)] bg-card px-3 py-1.5 text-xs font-medium text-[var(--primary)]"
+                >
+                  查看参考图片
+                </button>
+              ) : null}
+            </div>
 
-          return (
-            <section
-              key={group.subject}
-              className={`relative overflow-hidden rounded-[1.45rem] border p-3 ${theme.section}`}
-            >
-              <span className={`absolute inset-y-0 left-0 w-1.5 ${theme.stripe}`} />
-              <div className="rounded-[1.05rem] bg-card/55 px-4 py-3 md:px-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="pl-1 text-[1.55rem] font-semibold text-[var(--foreground)] md:text-[1.85rem]">
-                      {group.subject}
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {attachmentGroup ? (
-                      <button
-                        type="button"
-                        onClick={() => onOpenAttachments(group.subject)}
-                        className="rounded-full border border-[var(--line)] bg-card px-3 py-1.5 text-sm font-semibold text-[var(--primary)]"
-                      >
-                        查看参考图片
-                      </button>
-                    ) : null}
-                    <span className="rounded-full bg-card px-3 py-1.5 text-sm font-semibold text-[var(--text-secondary)]">
-                      {group.tasks.length} 个任务
-                    </span>
-                  </div>
-                </div>
-              </div>
+            {/* Task Cards Grid — 2 columns on iPad+ */}
+            <div className="grid gap-3 md:grid-cols-2">
+              {group.tasks.map((task) => {
+                const labels = actionLabels(task.status);
+                const completed = isCompletedStatus(task.status);
 
-              <div className={`mt-2.5 ${theme.inner}`}>
-                <div className="grid gap-4 md:gap-5">
-                {group.tasks.map((task, index) => {
-                  const labels = actionLabels(task.status);
-                  const meta = TASK_STATUS_META[task.status];
-                  const isCompleted = isCompletedStatus(task.status);
-                  const isCurrent = task.id === currentTaskId && !isCompleted;
-                  const primaryButtonClass = isCompleted
-                    ? "border border-[var(--line-light)] bg-[var(--card)] text-[var(--text-muted)]"
-                    : "border border-[var(--line)] bg-[color-mix(in_srgb,var(--success-subtle)_78%,transparent)] text-[var(--success)] shadow-[var(--shadow-sm)]";
-                  const helpButtonClass =
-                    isCompleted
-                      ? "border border-[var(--line-light)] bg-[var(--card)] text-[var(--text-muted)]"
-                      : task.status === "needs_help"
-                      ? "border border-[color-mix(in_srgb,var(--warning)_24%,var(--line))] bg-[color-mix(in_srgb,var(--warning-subtle)_38%,transparent)] text-[var(--warning)]"
-                      : "border border-[color-mix(in_srgb,var(--warning)_18%,var(--line))] bg-[color-mix(in_srgb,var(--warning-subtle)_20%,transparent)] text-[var(--warning)]";
-                  const weakButtonClass =
-                    "border border-[var(--line)] bg-card text-[var(--text-secondary)]";
-
-                  return (
-                    <article
-                      key={task.id}
-                      className={`fade-slide-up soft-shadow relative overflow-hidden rounded-[1.35rem] border p-5 md:p-6 ${
-                        isCurrent
-                          ? `border-[var(--accent-muted)] bg-card shadow-[var(--shadow-md)] ${theme.cardGlow}`
-                          : isCompleted
-                            ? `border-[var(--line-light)] bg-[var(--card-alt)] opacity-70 ${theme.cardGlow}`
-                            : `border-[var(--line)] bg-card ${theme.cardGlow}`
-                      } ${highlightedTaskId === task.id ? "status-change-pulse" : ""}`}
-                      style={{ animationDelay: `${groupIndex * 60 + index * 60}ms` }}
-                    >
-                      <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-xs font-semibold tracking-[0.14em] text-[var(--text-tertiary)]">
-                              任务 {index + 1}
-                            </p>
-                            {task.due_date !== today ? (
-                              <span className="rounded-full border border-[var(--line-light)] bg-[var(--card-alt)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
-                                之前没完成
-                              </span>
-                            ) : null}
-                          </div>
-                          <h2
-                            className={`mt-3 text-3xl font-semibold leading-tight md:text-[2.2rem] ${
-                              isCompleted
-                                ? "text-[var(--text-tertiary)] line-through decoration-2 decoration-[var(--text-tertiary)]"
-                                : "text-[var(--foreground)]"
-                            }`}
-                          >
-                            {task.title}
-                          </h2>
-                          {task.details ? (
-                            <p
-                              className={`mt-3 max-w-3xl text-base leading-7 md:text-lg ${
-                                isCompleted
-                                  ? "text-[var(--text-tertiary)]"
-                                  : "text-[var(--text-secondary)]"
-                              }`}
-                            >
-                              {task.details}
-                            </p>
-                          ) : null}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {isCompleted ? (
-                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--card)] text-[1.1rem] opacity-65">
-                              ✅
-                            </span>
-                          ) : null}
-                          <div
-                            className={`rounded-full px-4 py-2 text-sm font-semibold md:text-base ${
-                              isCompletedStatus(task.status)
-                                ? "border border-[var(--line-light)] bg-[var(--card-alt)] text-[var(--text-tertiary)]"
-                                : task.status === "needs_help"
-                                  ? "bg-[var(--warning-subtle)] text-[var(--warning)]"
-                                  : meta.tone
-                            }`}
-                          >
-                            {meta.childLabel}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 grid gap-3 md:grid-cols-3">
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => onUpdateTask(task.id, "in_progress")}
-                          className={`task-action-button min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-lg font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.15rem] ${weakButtonClass} ${
-                            isCompleted ? "opacity-70" : ""
+                return (
+                  <article
+                    key={task.id}
+                    className={`rounded-xl border border-[var(--line)] bg-card p-4 shadow-[var(--shadow-sm)] ${
+                      completed ? "opacity-60" : ""
+                    } ${highlightedTaskId === task.id ? "status-change-pulse" : ""}`}
+                  >
+                    {/* Card Header: Title + Status */}
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="min-w-0 flex-1">
+                        <h3
+                          className={`text-base font-semibold leading-snug md:text-lg ${
+                            completed
+                              ? "text-[var(--text-tertiary)] line-through decoration-[1.5px]"
+                              : "text-[var(--foreground)]"
                           }`}
                         >
-                          {labels[0]}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => onUpdateTask(task.id, "done_by_child")}
-                          className={`task-action-button min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-xl font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.2rem] ${primaryButtonClass}`}
-                        >
-                          {labels[1]}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => onUpdateTask(task.id, "needs_help")}
-                          className={`task-action-button min-h-[3.75rem] rounded-[1rem] px-4 py-4 text-lg font-semibold disabled:bg-[var(--card-alt)] disabled:text-[var(--text-muted)] md:text-[1.15rem] ${helpButtonClass}`}
-                        >
-                          {labels[2]}
-                        </button>
+                          {task.title}
+                        </h3>
+                        {task.details ? (
+                          <p className={`mt-1 text-[13px] leading-relaxed ${
+                            completed ? "text-[var(--text-tertiary)]" : "text-[var(--text-secondary)]"
+                          }`}>
+                            {task.details}
+                          </p>
+                        ) : null}
+                        {task.due_date !== today ? (
+                          <span className="mt-1.5 inline-block rounded-full bg-[var(--card-alt)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-secondary)]">
+                            之前没完成
+                          </span>
+                        ) : null}
                       </div>
-                    </article>
-                  );
-                })}
-                </div>
-              </div>
-            </section>
-          );
-        })}
-      </div>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusPillClass(task.status)}`}>
+                        {statusPillLabel(task.status)}
+                      </span>
+                    </div>
 
+                    {/* Action Buttons */}
+                    <div className="mt-3 flex gap-2">
+                      {completed ? (
+                        <button
+                          type="button"
+                          disabled
+                          className="flex-1 rounded-lg border-[1.5px] border-transparent bg-[var(--success-subtle)] px-3 py-3 text-sm font-medium text-[var(--success)] min-h-[52px]"
+                        >
+                          ✓ 已完成
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => onUpdateTask(task.id, "in_progress")}
+                            className="child-btn-start flex-1 min-h-[52px] rounded-lg border-[1.5px] border-[rgba(26,138,125,0.3)] bg-transparent px-3 py-3 text-sm font-medium text-[var(--primary)] disabled:opacity-40"
+                          >
+                            {labels[0]}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => onUpdateTask(task.id, "done_by_child")}
+                            className="child-btn-complete flex-1 min-h-[52px] rounded-lg border-[1.5px] border-[var(--success)] bg-[var(--success)] px-3 py-3 text-sm font-medium text-white disabled:opacity-40"
+                          >
+                            {labels[1]}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => onUpdateTask(task.id, "needs_help")}
+                            className="child-btn-help flex-1 min-h-[52px] rounded-lg border-[1.5px] border-[rgba(234,140,0,0.3)] bg-transparent px-3 py-3 text-sm font-medium text-[var(--warning)] disabled:opacity-40"
+                          >
+                            {labels[2]}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+
+      {/* All Done Section */}
       {allTasksCompleted ? (
-        <section className="soft-shadow fade-slide-up relative overflow-hidden rounded-[1.9rem] border border-[var(--line)] bg-card px-6 py-10 text-center md:px-8">
-          <span
-            className="confetti-piece left-[14%] bg-[rgba(232,115,90,0.55)]"
-            style={{ animationDelay: "0ms" }}
-          />
-          <span
-            className="confetti-piece left-[28%] bg-[rgba(245,166,35,0.5)]"
-            style={{ animationDelay: "260ms" }}
-          />
-          <span
-            className="confetti-piece left-[44%] bg-[rgba(91,155,213,0.45)]"
-            style={{ animationDelay: "520ms" }}
-          />
-          <span
-            className="confetti-piece left-[63%] bg-[rgba(42,157,143,0.45)]"
-            style={{ animationDelay: "140ms" }}
-          />
-          <span
-            className="confetti-piece left-[79%] bg-[rgba(155,142,196,0.4)]"
-            style={{ animationDelay: "420ms" }}
-          />
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--warning-subtle)] text-3xl shadow-[var(--shadow-sm)]">
-            🎉
+        <div className="rounded-2xl border border-[var(--line)] bg-card px-6 py-8 text-center shadow-[var(--shadow-sm)]">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--success-subtle)] text-xl font-bold text-[var(--success)]">
+            ✓
           </div>
-          <h2 className="mt-5 text-3xl font-semibold text-[var(--foreground)]">
-            太棒了，今天的任务全部搞定！
-          </h2>
-          <p className="mt-3 text-base text-[var(--text-secondary)]">休息一下吧 😊</p>
-        </section>
+          <p className="mt-3 text-base font-semibold text-[var(--foreground)]">
+            今天的任务全部完成了
+          </p>
+          <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">好好休息一下吧</p>
+        </div>
       ) : null}
-    </section>
+    </div>
   );
 }
+
+/* ─────────────────────────── Attachment Modal ─────────────────────────── */
 
 export function AttachmentModal({
   group,
@@ -580,7 +493,7 @@ export function AttachmentModal({
   return (
     <>
       <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/55 px-3 py-4 md:px-6 md:py-6">
-        <div className="max-h-[94vh] w-full max-w-6xl overflow-hidden rounded-[1.6rem] border border-[var(--line)] bg-card shadow-[var(--shadow-lg)]">
+        <div className="max-h-[94vh] w-full max-w-6xl overflow-hidden rounded-2xl border border-[var(--line)] bg-card shadow-[var(--shadow-lg)]">
           <div className="flex items-center justify-between gap-4 border-b border-[var(--line-light)] px-4 py-4 md:px-6">
             <div>
               <p className="text-sm font-semibold tracking-[0.16em] text-[var(--primary)]">
@@ -593,7 +506,7 @@ export function AttachmentModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)]"
+              className="rounded-xl border border-[var(--line)] bg-[var(--card-alt)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)]"
             >
               关闭
             </button>
@@ -601,7 +514,7 @@ export function AttachmentModal({
           <div className="max-h-[calc(94vh-88px)] overflow-y-auto p-4 md:p-6">
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_320px]">
               <section className="space-y-4">
-                <div className="flex items-center justify-between gap-3 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/55 px-4 py-3">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--card-alt)]/55 px-4 py-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-[var(--info-subtle)] px-3 py-1 text-xs font-semibold text-[var(--info)]">
                       {attachmentRoleLabel(activeAttachment.role)}
@@ -618,7 +531,7 @@ export function AttachmentModal({
                         setSelectedIndex((current) => Math.max(current - 1, 0));
                         setZoomed(false);
                       }}
-                      className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-40"
+                      className="rounded-xl border border-[var(--line)] bg-card px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-40"
                     >
                       上一张
                     </button>
@@ -631,7 +544,7 @@ export function AttachmentModal({
                         );
                         setZoomed(false);
                       }}
-                      className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-40"
+                      className="rounded-xl border border-[var(--line)] bg-card px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-40"
                     >
                       下一张
                     </button>
@@ -641,7 +554,7 @@ export function AttachmentModal({
                 <button
                   type="button"
                   onClick={() => setZoomed(true)}
-                  className="group relative block min-h-[52vh] w-full overflow-hidden rounded-[1.25rem] border border-[var(--line)] bg-[var(--surface-3)] text-left md:min-h-[62vh]"
+                  className="group relative block min-h-[52vh] w-full overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface-3)] text-left md:min-h-[62vh]"
                 >
                   <Image
                     src={activeAttachment.public_url}
@@ -653,9 +566,6 @@ export function AttachmentModal({
                   />
                   <div className="absolute right-3 top-3 rounded-full bg-black/65 px-3 py-1.5 text-xs font-semibold text-white">
                     点一下放大看
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent px-4 py-3 text-sm font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
-                    图片会放大到全屏，更适合看老师整页模版。
                   </div>
                 </button>
 
@@ -669,7 +579,7 @@ export function AttachmentModal({
                           setSelectedIndex(index);
                           setZoomed(false);
                         }}
-                        className={`relative overflow-hidden rounded-[0.95rem] border ${
+                        className={`relative overflow-hidden rounded-xl border ${
                           index === selectedIndex
                             ? "border-[var(--primary)] shadow-[var(--shadow-glow)]"
                             : "border-[var(--line)]"
@@ -691,7 +601,7 @@ export function AttachmentModal({
               </section>
 
               <aside className="space-y-4">
-                <div className="rounded-[1.1rem] border border-[var(--line)] bg-[var(--card-alt)]/55 p-4">
+                <div className="rounded-xl border border-[var(--line)] bg-[var(--card-alt)]/55 p-4">
                   <p className="text-sm font-semibold tracking-[0.14em] text-[var(--primary)]">
                     老师提示
                   </p>
@@ -699,7 +609,7 @@ export function AttachmentModal({
                     {activeAttachment.note || "先认真看这张参考图片，再继续完成下面的任务。"}
                   </p>
                 </div>
-                <div className="rounded-[1.1rem] border border-[var(--line)] bg-card p-4">
+                <div className="rounded-xl border border-[var(--line)] bg-card p-4">
                   <p className="text-sm font-semibold text-[var(--foreground)]">怎么看更清楚</p>
                   <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
                     横屏看会更清楚。点中间大图可以再放大一层，更适合看整页单词、抄写模版和页码要求。
@@ -721,12 +631,12 @@ export function AttachmentModal({
               <button
                 type="button"
                 onClick={() => setZoomed(false)}
-                className="rounded-[12px] border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white"
+                className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white"
               >
                 关闭放大
               </button>
             </div>
-            <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-[1.25rem] border border-white/10 bg-black/40">
+            <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-xl border border-white/10 bg-black/40">
               <Image
                 src={activeAttachment.public_url}
                 alt={activeAttachment.note ?? `${group.subject} 放大参考图片 ${selectedIndex + 1}`}
