@@ -8,7 +8,14 @@
 - 孩子端查看今日任务并更新状态
 - 家长端实时同步看到状态变化
 - 支持把老师作业文本拆分后导入任务
+- AI 智能解析作业（自动识别学科 + 拆分子任务）
+- AI 今日作战计划（孩子端个性化鼓励 + 顺序建议）
+- AI 人设自定义（定义 AI 说话的语气和风格）
 - 支持“每天固定任务”模板并一键加入当天任务
+- 孩子端番茄钟计时器
+- 孩子端图片资料全屏滑动查看
+- 学科优先级排序（语文→数学→英语）
+- PWA 支持，iPad 桌面图标直达孩子端
 
 ## 技术栈
 
@@ -56,6 +63,7 @@ NEXT_PUBLIC_DEFAULT_BOARD_ID=family-demo
 4. [004_harden_tasks_schema.sql](supabase/migrations/004_harden_tasks_schema.sql)
 5. [005_add_task_attachments.sql](supabase/migrations/005_add_task_attachments.sql)
 6. [006_add_ai_config.sql](supabase/migrations/006_add_ai_config.sql)
+7. [007_add_ai_soul.sql](supabase/migrations/007_add_ai_soul.sql)
 
 这些 migration 会创建或补齐：
 
@@ -69,7 +77,7 @@ NEXT_PUBLIC_DEFAULT_BOARD_ID=family-demo
 - RLS policy
 - 常用索引与基础约束
 - `teacher-attachments` storage bucket 与公开读写策略
-- `public.ai_config` AI 服务配置表
+- `public.ai_config` AI 服务配置表（含 `soul` 人设描述字段）
 
 ### 3. 建议执行后的快速检查
 
@@ -181,11 +189,12 @@ npm run dev
 
 ### 配置方式
 
-1. 确保已执行 `006_add_ai_config.sql` 建表
+1. 确保已执行 `006_add_ai_config.sql` 和 `007_add_ai_soul.sql`
 2. 在家长端顶栏点击「⚙ AI 设置」
 3. 选择服务商和模型
 4. 填入对应服务商的 API Key
-5. 保存即可
+5. （可选）填写 AI 人设描述，定义 AI 生成内容的语气和风格
+6. 保存即可
 
 API Key 存储在 Supabase 数据库中，前端仅显示脱敏值。所有 AI 调用走服务端 API Route，不暴露在浏览器中。
 
@@ -233,4 +242,4 @@ npm run build
 
 ## 说明
 
-本次 README 和 migration 补全只针对基础工程可部署性，不改变现有 UI 与交互逻辑。
+本项目专为小学生家庭场景设计，孩子端针对 iPad 优化，界面克制平静，不分散注意力。
