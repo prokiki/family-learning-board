@@ -25,6 +25,7 @@ const HELP_OPTIONS = [
 ] as const;
 
 const WRITING_OPTIONS = [
+  { key: "images", label: "🎨 看图写话" },
   { key: "analyze", label: "📝 读懂题目" },
   { key: "recall", label: "👀 回忆画面" },
   { key: "structure", label: "🧱 搭骨架" },
@@ -32,11 +33,14 @@ const WRITING_OPTIONS = [
   { key: "tips", label: "✨ 写作锦囊" },
 ] as const;
 
+type WritingImage = { image_url: string | null; hint: string };
+
 function TaskHelpButton({ task }: { task: TaskRecord }) {
   const writing = isWritingTask(task);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
+  const [images, setImages] = useState<WritingImage[] | null>(null);
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
   const options = writing ? WRITING_OPTIONS : HELP_OPTIONS;
@@ -47,6 +51,30 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
       setActiveKey(key);
       setLoading(true);
       setAnswer(null);
+      setImages(null);
+
+      /* 看图写话走独立的 API */
+      if (key === "images") {
+        try {
+          const res = await fetch("/api/writing-images", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: task.title, details: task.details || "" }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            setAnswer(data.error || "图片生成失败");
+          } else {
+            setImages(data.images);
+          }
+        } catch {
+          setAnswer("网络异常，请重试");
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
       try {
         const payload = writing
           ? { title: task.title, details: task.details || "", step: key }
@@ -127,12 +155,39 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
         </button>
       </div>
       {loading && (
-        <p className="mt-2 text-xs text-[var(--text-muted)]">思考中...</p>
+        <p className="mt-2 text-xs text-[var(--text-muted)]">
+          {activeKey === "images" ? "🎨 正在生成 4 张图片，请稍等约 30 秒..." : "思考中..."}
+        </p>
       )}
       {answer && !loading && (
         <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[var(--foreground)]">
           {answer}
         </p>
+      )}
+      {images && !loading && (
+        <div className="mt-3 space-y-3">
+          <p className="text-xs font-medium text-[var(--text-secondary)]">看着图片，每张写 2-3 句话，四段拼起来就是一篇作文</p>
+          <div className="grid grid-cols-2 gap-2">
+            {images.map((img, i) => (
+              <div key={i} className="overflow-hidden rounded-[10px] border border-[var(--line)] bg-card">
+                {img.image_url ? (
+                  <img
+                    src={img.image_url}
+                    alt={`场景 ${i + 1}`}
+                    className="aspect-square w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex aspect-square items-center justify-center bg-[var(--card-alt)] text-xs text-[var(--text-muted)]">
+                    图片生成失败
+                  </div>
+                )}
+                <p className="px-2 py-1.5 text-center text-xs font-medium text-[var(--text-secondary)]">
+                  {["\u2460 ", "\u2461 ", "\u2462 ", "\u2463 "][i]}{img.hint}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
