@@ -119,6 +119,7 @@ export async function POST(request: Request) {
     });
 
     const raw = completion.choices[0]?.message?.content ?? "[]";
+    console.log("[parse-homework] AI raw response:", raw);
 
     let parsed: unknown;
     try {
