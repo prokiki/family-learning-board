@@ -556,23 +556,24 @@ export function ImportPreviewSection({
                   {group.tasks.map((task, taskIndex) => (
                     <div
                       key={`${group.subject}-${taskIndex}`}
-                      className="flex items-center gap-2"
+                      className="flex min-w-0 items-center gap-1.5"
                     >
-                      <span className="w-8 text-center text-sm font-semibold text-[var(--text-tertiary)]">
+                      <span className="w-6 shrink-0 text-center text-xs font-semibold text-[var(--text-tertiary)]">
                         {taskIndex + 1}
                       </span>
                       <input
                         value={task.title}
                         onChange={(event) => onTaskUpdate(subjectIndex, taskIndex, event.target.value)}
-                        placeholder={`补充 ${group.subject} 子任务`}
-                        className="flex-1 rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] px-3 py-2.5 text-sm outline-none focus:border-[var(--primary)]"
+                        placeholder="补充子任务"
+                        className="min-w-0 flex-1 rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] px-3 py-2.5 text-sm outline-none focus:border-[var(--primary)]"
                       />
                       <button
                         type="button"
                         onClick={() => onTaskDelete(subjectIndex, taskIndex)}
-                        className="rounded-[10px] px-3 py-2 text-sm font-semibold text-[var(--error)]"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base text-[var(--error)]/70"
+                        aria-label="删除"
                       >
-                        删除
+                        ×
                       </button>
                     </div>
                   ))}
