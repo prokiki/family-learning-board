@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ParentDashboard } from "@/components/parent-dashboard";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AISettingsButton } from "@/components/ai-settings-button";
 
 export default function ParentPage() {
   return (
@@ -19,6 +20,7 @@ export default function ParentPage() {
           >
             📊 周报统计
           </Link>
+          <AISettingsButton />
         </div>
         <ThemeToggle />
       </div>
