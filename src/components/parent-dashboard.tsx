@@ -203,18 +203,24 @@ export function ParentDashboard() {
         return;
       }
       if (Array.isArray(data.groups) && data.groups.length > 0) {
-        setImportGroups(
-          data.groups.map((g: { subject: string; tasks: { title: string; details?: string }[] }) => ({
-            subject: g.subject,
-            tasks: g.tasks.map((t) => ({ title: t.title, details: t.details || undefined })),
-          })),
-        );
+        /* 兼容两种格式：[{subject,tasks:[...]}] 或 [{title,details}] */
+        const firstItem = data.groups[0];
+        const normalized = firstItem.tasks
+          ? data.groups.map((g: { subject: string; tasks: { title: string; details?: string }[] }) => ({
+              subject: g.subject || "其他",
+              tasks: (g.tasks || []).map((t: { title: string; details?: string }) => ({ title: t.title, details: t.details || undefined })),
+            }))
+          : [{
+              subject: firstItem.subject || "其他",
+              tasks: data.groups.map((t: { title: string; details?: string }) => ({ title: t.title, details: t.details || undefined })),
+            }];
+        setImportGroups(normalized.filter((g: { tasks: unknown[] }) => g.tasks.length > 0));
         setMessage("AI 解析完成，请校对后确认导入");
       } else {
         setMessage("未解析出任务，请检查输入内容");
       }
-    } catch {
-      setMessage("AI 服务连接失败，请稍后重试");
+    } catch (err) {
+      setMessage(`AI 服务异常：${err instanceof Error ? err.message : "请稍后重试"}`);
     } finally {
       setAiParsing(false);
     }
