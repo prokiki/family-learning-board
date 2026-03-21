@@ -184,7 +184,13 @@ export function ParentDashboard() {
 
   /* 不再实时解析——由父组件通过 handleParseImport 手动触发 */
   function handleParseImport() {
-    setImportGroups(parseHomeworkGroups(rawText));
+    /* 先 blur 所有输入框，等 iOS 键盘完全收起后再更新 DOM */
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setTimeout(() => {
+      setImportGroups(parseHomeworkGroups(rawText));
+    }, 400);
   }
 
   useEffect(() => {
