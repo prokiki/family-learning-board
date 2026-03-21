@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SetupNotice } from "@/components/setup-notice";
 import { CardSkeleton, EmptyState } from "@/components/empty-state";
@@ -435,6 +435,131 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
             </div>
           ) : null}
 
+          {/* AI 点评 */}
+          <AIWeeklyReview
+            weekLabel={weekLabel}
+            total={totalCount}
+            completed={completedCount}
+            completionRate={completionRate}
+            prevRate={prevCompletionRate}
+            streak={streak}
+            dayStats={dayStats}
+            subjectStats={subjectStats}
+          />
+
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────── AI 周报点评 ─────────────── */
+
+function AIWeeklyReview({
+  weekLabel,
+  total,
+  completed,
+  completionRate,
+  prevRate,
+  streak,
+  dayStats,
+  subjectStats,
+}: {
+  weekLabel: string;
+  total: number;
+  completed: number;
+  completionRate: number;
+  prevRate: number;
+  streak: number;
+  dayStats: DayStat[];
+  subjectStats: SubjectStat[];
+}) {
+  const [review, setReview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const generateReview = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setReview(null);
+    try {
+      const weekdayNames = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+      const res = await fetch("/api/weekly-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          week_label: weekLabel,
+          total,
+          completed,
+          completion_rate: completionRate,
+          prev_rate: prevRate,
+          streak,
+          day_stats: dayStats.map((d) => ({
+            ...d,
+            weekday: weekdayNames[new Date(`${d.date}T00:00:00`).getDay()],
+          })),
+          subject_stats: subjectStats,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "AI 点评失败");
+      } else {
+        setReview(data.review);
+      }
+    } catch {
+      setError("网络异常，请重试");
+    } finally {
+      setLoading(false);
+    }
+  }, [weekLabel, total, completed, completionRate, prevRate, streak, dayStats, subjectStats]);
+
+  if (total === 0) return null;
+
+  return (
+    <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
+      <h2 className="text-base font-semibold text-[var(--foreground)]">AI 点评</h2>
+      <p className="mt-1 text-xs text-[var(--text-tertiary)]">根据本周数据给出学习建议</p>
+
+      {!review && !loading && !error && (
+        <button
+          type="button"
+          onClick={generateReview}
+          className="mt-4 w-full rounded-[12px] border border-dashed border-[var(--line)] px-4 py-3 text-sm font-medium text-[var(--text-muted)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+        >
+          ✨ 生成 AI 点评
+        </button>
+      )}
+
+      {loading && (
+        <p className="mt-4 text-sm text-[var(--text-muted)]">分析中...</p>
+      )}
+
+      {error && (
+        <div className="mt-4">
+          <p className="text-sm text-[var(--error)]">{error}</p>
+          <button
+            type="button"
+            onClick={generateReview}
+            className="mt-2 text-xs font-medium text-[var(--primary)]"
+          >
+            重试
+          </button>
+        </div>
+      )}
+
+      {review && (
+        <div className="mt-4">
+          <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--foreground)]">
+            {review}
+          </p>
+          <button
+            type="button"
+            onClick={generateReview}
+            className="mt-3 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--primary)]"
+          >
+            重新生成
+          </button>
         </div>
       )}
     </div>
