@@ -96,6 +96,38 @@ function filterAttachmentsForVisibleTasks(
   );
 }
 
+/** 图片转 base64（压缩到 1200px 宽度以内） */
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onload = () => {
+        const maxWidth = 1200;
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(reader.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => resolve(reader.result as string);
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export function ParentDashboard({ boardId }: { boardId: string }) {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [templates, setTemplates] = useState<TaskTemplateRecord[]>([]);
@@ -120,6 +152,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<"import" | "manual" | "template" | "attachment">("import");
   const [aiParsing, setAiParsing] = useState(false);
+  const [ocrScanning, setOcrScanning] = useState(false);
   const today = useLocalDate();
   const [selectedDate, setSelectedDate] = useState("");
   const yesterday = useMemo(() => (today ? shiftLocalDate(today, -1) : ""), [today]);
@@ -185,6 +218,36 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
   useEffect(() => {
     setImportGroups(parseHomeworkGroups(rawText));
   }, [rawText]);
+
+  async function handleOCR(file: File) {
+    if (ocrScanning) return;
+    setOcrScanning(true);
+    setMessage(null);
+    try {
+      /* 压缩图片到合理大小 */
+      const base64 = await fileToBase64(file);
+      const res = await fetch("/api/ocr-homework", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64 }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data.error || "识别失败");
+        return;
+      }
+      if (data.text) {
+        setRawText((prev) => (prev ? `${prev}\n${data.text}` : data.text));
+        setMessage("拍照识别完成，可继续 AI 解析");
+      } else {
+        setMessage("未识别到文字内容");
+      }
+    } catch (err) {
+      setMessage(`识别异常：${err instanceof Error ? err.message : "请重试"}`);
+    } finally {
+      setOcrScanning(false);
+    }
+  }
 
   async function handleAIParse() {
     if (!rawText.trim() || aiParsing) return;
@@ -820,6 +883,8 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
                   onRawTextChange={setRawText}
                   onAIParse={handleAIParse}
                   aiParsing={aiParsing}
+                  ocrScanning={ocrScanning}
+                  onOCR={handleOCR}
                   onTaskUpdate={updateImportedTask}
                   onTaskDelete={deleteImportedTask}
                   onTaskAdd={addImportedTask}
