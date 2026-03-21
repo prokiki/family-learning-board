@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import { getProvider } from "@/lib/ai-providers";
-
-const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
+import { resolveBoardId } from "@/lib/board";
 
 const BASE_SYSTEM_PROMPT = `你是一个温暖的学习伙伴，正在跟一个中国三年级小学生说话。
 
@@ -24,7 +23,7 @@ function getAdminClient() {
 }
 
 export async function POST(request: Request) {
-  let body: { tasks?: { subject: string; title: string }[] };
+  let body: { tasks?: { subject: string; title: string }[]; board?: string };
 
   try {
     body = await request.json();
@@ -33,6 +32,7 @@ export async function POST(request: Request) {
   }
 
   const tasks = body.tasks;
+  const boardId = resolveBoardId(body.board);
   if (!tasks || tasks.length === 0) {
     return NextResponse.json({ error: "没有任务" }, { status: 400 });
   }

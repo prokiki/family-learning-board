@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import { getProvider } from "@/lib/ai-providers";
-
-const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
+import { resolveBoardId } from "@/lib/board";
 
 const SYSTEM_PROMPT = `你是一个小学生家长的学习顾问，正在帮家长分析孩子这一周的学习情况。
 
@@ -25,6 +24,7 @@ function getAdminClient() {
 
 export async function POST(request: Request) {
   let body: {
+    board?: string;
     week_label?: string;
     total?: number;
     completed?: number;
@@ -42,6 +42,7 @@ export async function POST(request: Request) {
   }
 
   const {
+    board,
     week_label,
     total = 0,
     completed = 0,
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
     day_stats = [],
     subject_stats = [],
   } = body;
+  const boardId = resolveBoardId(board);
 
   if (total === 0) {
     return NextResponse.json({ error: "本周没有任务数据" }, { status: 400 });

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AISettingsModal } from "./ai-settings";
 
-export function AISettingsButton() {
+export function AISettingsButton({ boardId }: { boardId: string }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -15,7 +15,7 @@ export function AISettingsButton() {
       >
         ⚙ AI 设置
       </button>
-      {open && <AISettingsModal onClose={() => setOpen(false)} />}
+      {open && <AISettingsModal boardId={boardId} onClose={() => setOpen(false)} />}
     </>
   );
 }

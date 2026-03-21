@@ -212,8 +212,6 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
       }),
     [tasks],
   );
-  const currentTaskId =
-    orderedTasks.find((task) => task.status === "in_progress")?.id ?? null;
   const groupedOrderedTasks = useMemo(() => groupTasksBySubject(orderedTasks), [orderedTasks]);
   const groupedAttachments = useMemo(
     () =>
@@ -237,7 +235,6 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
   const openAttachmentGroup =
     groupedAttachments.find((item) => item.subject === openAttachmentSubject) ?? null;
   const completedTaskCount = tasks.filter((task) => isCompletedStatus(task.status)).length;
-  const inProgressCount = tasks.filter((task) => task.status === "in_progress").length;
   const allTasksCompleted = tasks.length > 0 && completedTaskCount === tasks.length;
 
   useEffect(() => {
@@ -369,7 +366,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
     return () => {
       active = false;
     };
-  }, [supabase, today]);
+  }, [supabase, today, boardId]);
 
   useEffect(() => {
     if (!supabase || !today) {
@@ -437,7 +434,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
     return () => {
       void client.removeChannel(channel);
     };
-  }, [supabase, today]);
+  }, [supabase, today, boardId]);
 
   function updateTask(id: string, status: TaskStatus) {
     if (!supabase) {
@@ -517,7 +514,6 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
         <ChildHeader
           today={today}
           totalCount={tasks.length}
-          inProgressCount={inProgressCount}
           completedCount={completedTaskCount}
         />
 
@@ -543,6 +539,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
+                        board: boardId,
                         tasks: tasks.map((t) => ({ subject: t.subject || "", title: t.title })),
                       }),
                     });
@@ -578,13 +575,13 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
 
           {/* Task Area */}
           <div className="min-w-0 flex-1">
-            <ChildTasksSection
-              groups={groupedOrderedTasks}
-              attachmentGroups={groupedAttachments}
-              today={today}
-              currentTaskId={currentTaskId}
-              highlightedTaskId={highlightedTaskId}
-              isPending={isPending}
+        <ChildTasksSection
+          boardId={boardId}
+          groups={groupedOrderedTasks}
+          attachmentGroups={groupedAttachments}
+          today={today}
+          highlightedTaskId={highlightedTaskId}
+          isPending={isPending}
               onUpdateTask={updateTask}
               onOpenAttachments={setOpenAttachmentSubject}
               allTasksCompleted={allTasksCompleted}

@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import { getProvider } from "@/lib/ai-providers";
-
-const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
+import { resolveBoardId } from "@/lib/board";
 
 const BASE_SYSTEM_PROMPT = `你是一个中国小学作业解析助手。用户粘贴老师布置的作业文字，你要按学科分组解析。
 
@@ -32,7 +31,7 @@ function getAdminClient() {
 }
 
 export async function POST(request: Request) {
-  let body: { text?: string };
+  let body: { text?: string; board?: string };
 
   try {
     body = await request.json();
@@ -41,6 +40,7 @@ export async function POST(request: Request) {
   }
 
   const text = body.text?.trim();
+  const boardId = resolveBoardId(body.board);
   if (!text) {
     return NextResponse.json({ error: "作业文字不能为空" }, { status: 400 });
   }

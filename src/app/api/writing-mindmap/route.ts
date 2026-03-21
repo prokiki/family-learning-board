@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import { getProvider } from "@/lib/ai-providers";
-
-const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
+import { resolveBoardId } from "@/lib/board";
 
 const SYSTEM_PROMPT = `你是一个有趣的三年级作文小老师。根据作文题目，生成一棵思维导图，帮孩子把作文拆解成具体可写的内容。
 
@@ -50,7 +49,7 @@ function getAdminClient() {
 }
 
 export async function POST(request: Request) {
-  let body: { title?: string; details?: string };
+  let body: { board?: string; title?: string; details?: string };
 
   try {
     body = await request.json();
@@ -59,6 +58,7 @@ export async function POST(request: Request) {
   }
 
   const { title, details } = body;
+  const boardId = resolveBoardId(body.board);
   if (!title) {
     return NextResponse.json({ error: "缺少作文题目" }, { status: 400 });
   }

@@ -35,7 +35,7 @@ const WRITING_OPTIONS = [
 type MindmapSection = { name: string; color: string; points: string[] };
 type MindmapData = { title: string; sections: MindmapSection[] };
 
-function TaskHelpButton({ task }: { task: TaskRecord }) {
+function TaskHelpButton({ boardId, task }: { boardId: string; task: TaskRecord }) {
   const writing = isWritingTask(task);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -59,7 +59,7 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
           const res = await fetch("/api/writing-mindmap", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title: task.title, details: task.details || "" }),
+            body: JSON.stringify({ board: boardId, title: task.title, details: task.details || "" }),
           });
           const data = await res.json();
           if (!res.ok) {
@@ -77,8 +77,8 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
 
       try {
         const payload = writing
-          ? { title: task.title, details: task.details || "", step: key }
-          : { subject: task.subject || "", title: task.title, details: task.details || "", question_type: key };
+          ? { board: boardId, title: task.title, details: task.details || "", step: key }
+          : { board: boardId, subject: task.subject || "", title: task.title, details: task.details || "", question_type: key };
 
         const res = await fetch(apiPath, {
           method: "POST",
@@ -97,7 +97,7 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
         setLoading(false);
       }
     },
-    [task, writing, apiPath],
+    [boardId, task, writing, apiPath],
   );
 
   const handleClose = useCallback(() => {
@@ -357,28 +357,15 @@ function statusPillLabel(status: TaskStatus) {
   }
 }
 
-function attachmentRoleLabel(role: TaskAttachmentRecord["role"]) {
-  switch (role) {
-    case "reference":
-      return "参考图片";
-    case "instruction":
-      return "老师说明";
-    case "parent_only":
-      return "仅家长可见";
-  }
-}
-
 /* ─────────────────────────── Header ─────────────────────────── */
 
 export function ChildHeader({
   today,
   totalCount,
-  inProgressCount,
   completedCount,
 }: {
   today: string;
   totalCount: number;
-  inProgressCount: number;
   completedCount: number;
 }) {
   const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
@@ -537,10 +524,10 @@ export function PomodoroSection({
 /* ─────────────────────────── Tasks ─────────────────────────── */
 
 export function ChildTasksSection({
+  boardId,
   groups,
   attachmentGroups,
   today,
-  currentTaskId,
   highlightedTaskId,
   isPending,
   onUpdateTask,
@@ -549,10 +536,10 @@ export function ChildTasksSection({
   loading,
   message,
 }: {
+  boardId: string;
   groups: GroupedTasks[];
   attachmentGroups: AttachmentGroup[];
   today: string;
-  currentTaskId: string | null;
   highlightedTaskId: string | null;
   isPending: boolean;
   onUpdateTask: (id: string, status: TaskStatus) => void;
@@ -713,7 +700,7 @@ export function ChildTasksSection({
                     </div>
 
                     {/* AI 问一问 */}
-                    {!completed && <TaskHelpButton task={task} />}
+                    {!completed && <TaskHelpButton boardId={boardId} task={task} />}
                   </article>
                 );
               })}

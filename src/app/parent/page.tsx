@@ -26,7 +26,7 @@ function ParentContent() {
           <Link href={`/parent/report?board=${board}`} className="nav-button">
             📊 周报统计
           </Link>
-          {!isDemo && <AISettingsButton />}
+          {!isDemo && <AISettingsButton boardId={board} />}
         </div>
         <div className="flex items-center gap-2">
           {isDemo && (

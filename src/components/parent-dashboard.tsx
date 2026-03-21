@@ -213,7 +213,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
     return () => {
       active = false;
     };
-  }, [supabase, effectiveSelectedDate, isTodaySelected]);
+  }, [supabase, effectiveSelectedDate, isTodaySelected, boardId]);
 
   useEffect(() => {
     setImportGroups(parseHomeworkGroups(rawText));
@@ -229,7 +229,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
       const res = await fetch("/api/ocr-homework", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64 }),
+        body: JSON.stringify({ image: base64, board: boardId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -256,7 +256,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
       const response = await fetch("/api/parse-homework", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: rawText }),
+        body: JSON.stringify({ text: rawText, board: boardId }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -360,7 +360,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
     return () => {
       void client.removeChannel(channel);
     };
-  }, [supabase, effectiveSelectedDate, isTodaySelected]);
+  }, [supabase, effectiveSelectedDate, isTodaySelected, boardId]);
 
   useEffect(() => {
     if (!highlightedTaskId) {

@@ -12,7 +12,13 @@ type AIConfig = {
   soul: string;
 };
 
-export function AISettingsModal({ onClose }: { onClose: () => void }) {
+export function AISettingsModal({
+  boardId,
+  onClose,
+}: {
+  boardId: string;
+  onClose: () => void;
+}) {
   const [config, setConfig] = useState<AIConfig | null>(null);
   const [provider, setProvider] = useState("openai");
   const [apiKey, setApiKey] = useState("");
@@ -22,7 +28,7 @@ export function AISettingsModal({ onClose }: { onClose: () => void }) {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/ai-config")
+    fetch(`/api/ai-config?board=${encodeURIComponent(boardId)}`)
       .then((res) => res.json())
       .then((data: AIConfig) => {
         setConfig(data);
@@ -31,7 +37,7 @@ export function AISettingsModal({ onClose }: { onClose: () => void }) {
         setSoul(data.soul || "");
       })
       .catch(() => setMessage("加载配置失败"));
-  }, []);
+  }, [boardId]);
 
   const currentProvider = AI_PROVIDERS.find((p) => p.id === provider);
   const models = currentProvider?.models ?? [];
@@ -44,6 +50,7 @@ export function AISettingsModal({ onClose }: { onClose: () => void }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          board: boardId,
           provider,
           api_key: apiKey || undefined,
           model,
@@ -56,7 +63,7 @@ export function AISettingsModal({ onClose }: { onClose: () => void }) {
       } else {
         setMessage("保存成功");
         /* 刷新配置显示 */
-        const refreshRes = await fetch("/api/ai-config");
+        const refreshRes = await fetch(`/api/ai-config?board=${encodeURIComponent(boardId)}`);
         const refreshData = await refreshRes.json();
         setConfig(refreshData);
         setApiKey("");

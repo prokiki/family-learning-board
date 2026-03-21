@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 type ThemePreference = "light" | "dark" | "system";
 
@@ -20,42 +20,53 @@ function applyTheme(preference: ThemePreference) {
   document.documentElement.dataset.themePreference = preference;
 }
 
+function readPreference(): ThemePreference {
+  if (typeof window === "undefined") {
+    return "system";
+  }
+
+  const saved = window.localStorage.getItem(STORAGE_KEY);
+  return saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+}
+
+function subscribePreference(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleStorage = (event: StorageEvent) => {
+    if (!event.key || event.key === STORAGE_KEY) {
+      callback();
+    }
+  };
+  const handleMediaChange = () => {
+    if (readPreference() === "system") {
+      callback();
+    }
+  };
+
+  window.addEventListener("storage", handleStorage);
+  media.addEventListener("change", handleMediaChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    media.removeEventListener("change", handleMediaChange);
+  };
+}
+
 export function ThemeToggle() {
-  const [preference, setPreference] = useState<ThemePreference>("system");
+  const preference = useSyncExternalStore<ThemePreference>(
+    subscribePreference,
+    readPreference,
+    () => "system",
+  );
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
-    const nextPreference =
-      saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
-
-    if (nextPreference !== preference) {
-      setPreference(nextPreference);
-      applyTheme(nextPreference);
-      return;
-    }
-
     applyTheme(preference);
-
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
-      const currentPreference =
-        (window.localStorage.getItem(STORAGE_KEY) as ThemePreference | null) ?? "system";
-
-      if (currentPreference === "system") {
-        applyTheme("system");
-        setPreference("system");
-      }
-    };
-
-    media.addEventListener("change", handleChange);
-
-    return () => {
-      media.removeEventListener("change", handleChange);
-    };
   }, [preference]);
 
   function updatePreference(nextPreference: ThemePreference) {
-    setPreference(nextPreference);
     window.localStorage.setItem(STORAGE_KEY, nextPreference);
     applyTheme(nextPreference);
   }

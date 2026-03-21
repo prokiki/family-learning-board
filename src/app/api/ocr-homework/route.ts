@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import { getProvider } from "@/lib/ai-providers";
-
-const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
+import { resolveBoardId } from "@/lib/board";
 
 const SYSTEM_PROMPT = `你是一个 OCR 文字识别助手。用户会发送一张包含中国小学作业内容的照片（可能是老师手写的、打印的、或者钉钉/微信截图）。
 
@@ -23,7 +22,7 @@ function getAdminClient() {
 }
 
 export async function POST(request: Request) {
-  let body: { image?: string };
+  let body: { image?: string; board?: string };
 
   try {
     body = await request.json();
@@ -32,6 +31,7 @@ export async function POST(request: Request) {
   }
 
   const { image } = body;
+  const boardId = resolveBoardId(body.board);
   if (!image) {
     return NextResponse.json({ error: "缺少图片数据" }, { status: 400 });
   }

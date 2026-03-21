@@ -143,7 +143,7 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
 
     void run();
     return () => { active = false; };
-  }, [supabase, currentMonday, sunday, prevMonday, prevSunday]);
+  }, [supabase, currentMonday, sunday, prevMonday, prevSunday, boardId]);
 
   /* ───── derived stats ───── */
 
@@ -418,7 +418,9 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
           {helpStats.length > 0 ? (
             <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
               <h2 className="text-base font-semibold text-[var(--foreground)]">求助分析</h2>
-              <p className="mt-1 text-xs text-[var(--text-tertiary)]">孩子点击"需要帮助"的学科分布，可关注薄弱环节</p>
+              <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+                孩子点击“需要帮助”的学科分布，可关注薄弱环节
+              </p>
               <div className="mt-4 space-y-2.5">
                 {helpStats.map((stat) => (
                   <div key={stat.subject} className="flex items-center justify-between rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)]/40 px-4 py-3">
@@ -437,6 +439,7 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
 
           {/* AI 点评 */}
           <AIWeeklyReview
+            boardId={boardId}
             weekLabel={weekLabel}
             total={totalCount}
             completed={completedCount}
@@ -456,6 +459,7 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
 /* ─────────────── AI 周报点评 ─────────────── */
 
 function AIWeeklyReview({
+  boardId,
   weekLabel,
   total,
   completed,
@@ -465,6 +469,7 @@ function AIWeeklyReview({
   dayStats,
   subjectStats,
 }: {
+  boardId: string;
   weekLabel: string;
   total: number;
   completed: number;
@@ -488,6 +493,7 @@ function AIWeeklyReview({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          board: boardId,
           week_label: weekLabel,
           total,
           completed,
@@ -512,7 +518,7 @@ function AIWeeklyReview({
     } finally {
       setLoading(false);
     }
-  }, [weekLabel, total, completed, completionRate, prevRate, streak, dayStats, subjectStats]);
+  }, [boardId, weekLabel, total, completed, completionRate, prevRate, streak, dayStats, subjectStats]);
 
   if (total === 0) return null;
 

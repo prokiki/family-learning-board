@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
+import { getBoardFromUrl, resolveBoardId } from "@/lib/board";
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,11 +10,12 @@ function getAdminClient() {
 }
 
 /** GET — 读取当前 AI 配置（API Key 脱敏） */
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = getAdminClient();
   if (!supabase) {
     return NextResponse.json({ error: "数据库未配置" }, { status: 500 });
   }
+  const boardId = getBoardFromUrl(request.url);
 
   const { data, error } = await supabase
     .from("ai_config")
@@ -62,13 +62,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "数据库未配置" }, { status: 500 });
   }
 
-  let body: { provider?: string; api_key?: string; model?: string; soul?: string };
+  let body: { board?: string; provider?: string; api_key?: string; model?: string; soul?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "请求格式错误" }, { status: 400 });
   }
 
+  const boardId = resolveBoardId(body.board ?? getBoardFromUrl(request.url));
   const provider = body.provider || "openai";
   const apiKey = body.api_key ?? "";
   const model = body.model || "gpt-4o-mini";

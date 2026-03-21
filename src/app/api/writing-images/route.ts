@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import { getProvider } from "@/lib/ai-providers";
-
-const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
+import { resolveBoardId } from "@/lib/board";
 
 const SCENE_PROMPT = `你是一个三年级作文教学助手。根据作文题目，构思一个适合三年级孩子写的故事，拆成 4 个连续画面（起因→发展→高潮→结尾）。
 
@@ -39,7 +38,7 @@ function getAdminClient() {
 }
 
 export async function POST(request: Request) {
-  let body: { title?: string; details?: string };
+  let body: { board?: string; title?: string; details?: string };
 
   try {
     body = await request.json();
@@ -48,6 +47,7 @@ export async function POST(request: Request) {
   }
 
   const { title, details } = body;
+  const boardId = resolveBoardId(body.board);
   if (!title) {
     return NextResponse.json({ error: "缺少作文题目" }, { status: 400 });
   }

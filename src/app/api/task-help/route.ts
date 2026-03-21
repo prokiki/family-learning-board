@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import { getProvider } from "@/lib/ai-providers";
-
-const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
+import { resolveBoardId } from "@/lib/board";
 
 const QUESTION_PROMPTS: Record<string, string> = {
   explain: `用三年级小学生能懂的话，解释这个任务是什么意思。
@@ -37,6 +36,7 @@ function getAdminClient() {
 
 export async function POST(request: Request) {
   let body: {
+    board?: string;
     subject?: string;
     title?: string;
     details?: string;
@@ -50,6 +50,7 @@ export async function POST(request: Request) {
   }
 
   const { subject, title, details, question_type } = body;
+  const boardId = resolveBoardId(body.board);
   if (!title || !question_type) {
     return NextResponse.json({ error: "缺少任务信息" }, { status: 400 });
   }
