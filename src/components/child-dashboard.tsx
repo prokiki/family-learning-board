@@ -189,6 +189,8 @@ export function ChildDashboard() {
   const supabase = getSupabaseBrowserClient();
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
+  const [dailyPlan, setDailyPlan] = useState<string | null>(null);
+  const [planLoading, setPlanLoading] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const tasksRef = useRef<TaskRecord[]>([]);
   const timerTotalSeconds = getModeSeconds(timerState.mode);
@@ -525,6 +527,41 @@ export function ChildDashboard() {
             <SetupNotice />
           </div>
         ) : null}
+
+        {/* AI 今日作战计划 */}
+        {tasks.length > 0 && (
+          <div className="rounded-[1.5rem] border border-[var(--primary)]/20 bg-[var(--primary-light)] p-4">
+            {dailyPlan ? (
+              <p className="text-sm leading-7 text-[var(--foreground)]">{dailyPlan}</p>
+            ) : (
+              <button
+                type="button"
+                disabled={planLoading}
+                onClick={async () => {
+                  setPlanLoading(true);
+                  try {
+                    const res = await fetch("/api/daily-plan", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        tasks: tasks.map((t) => ({ subject: t.subject || "", title: t.title })),
+                      }),
+                    });
+                    const data = await res.json();
+                    if (data.plan) setDailyPlan(data.plan);
+                  } catch {} finally { setPlanLoading(false); }
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-[12px] py-2 text-sm font-semibold text-[var(--primary)]"
+              >
+                {planLoading ? (
+                  <><span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />正在生成...</>
+                ) : (
+                  "✨ 查看今日作战计划"
+                )}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Main Layout: Timer (left) + Tasks (right) on iPad+ */}
         <div className="flex flex-col gap-6 md:flex-row md:items-start">
