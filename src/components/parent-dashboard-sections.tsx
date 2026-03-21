@@ -219,7 +219,7 @@ export function ParentHeader({
               type="date"
               value={selectedDate}
               onChange={(event) => onDateChange(event.target.value)}
-              className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)]"
+              className="w-auto rounded-[12px] border border-[var(--line)] bg-card px-3 py-2 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)]"
             />
           </div>
         </div>
@@ -501,8 +501,8 @@ export function ImportPreviewSection({
               上方保留原始文本，下面按学科展示并支持逐条校对。
             </p>
           </div>
-          <p className="rounded-full bg-card px-3 py-1 text-sm font-semibold text-[var(--text-secondary)]">
-            共 {drafts.filter((draft) => draft.title.trim()).length} 条子任务
+          <p className="shrink-0 whitespace-nowrap rounded-full bg-card px-3 py-1 text-sm font-semibold text-[var(--text-secondary)]">
+            共 {drafts.filter((draft) => draft.title.trim()).length} 条
           </p>
         </div>
 
@@ -920,25 +920,27 @@ export function LiveStatusSection({
                           </span>
                         </div>
                       ) : (
-                        <div className="flex flex-wrap items-center gap-2 border-t border-[var(--line-light)] pt-3">
-                          <button
-                            type="button"
-                            onClick={() => onStatusChange(task.id, "confirmed_by_parent")}
-                            className="rounded-[12px] bg-[var(--success)] px-3.5 py-2 text-sm font-semibold text-white"
-                          >
-                            ✓ 确认完成
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onStatusChange(task.id, "pending")}
-                            className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2 text-sm font-semibold text-[var(--text-secondary)]"
-                          >
-                            ↺ 重置
-                          </button>
+                        <div className="flex items-center border-t border-[var(--line-light)] pt-3">
+                          <div className="flex flex-1 items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => onStatusChange(task.id, "confirmed_by_parent")}
+                              className="rounded-[12px] bg-[var(--success)] px-3.5 py-2.5 text-sm font-semibold text-white"
+                            >
+                              ✓ 确认完成
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onStatusChange(task.id, "pending")}
+                              className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"
+                            >
+                              ↺ 重置
+                            </button>
+                          </div>
                           <button
                             type="button"
                             onClick={() => onDelete(task.id)}
-                            className="rounded-[12px] px-3 py-2 text-sm font-semibold text-[var(--error)]/70"
+                            className="rounded-[12px] px-3 py-2.5 text-sm font-semibold text-[var(--error)]/70"
                           >
                             删除
                           </button>
