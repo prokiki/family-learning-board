@@ -349,16 +349,37 @@ export function ChildTasksSection({
               <span className={`text-xs font-semibold tracking-[0.02em] ${subjectLabelClass(group.subject)}`}>
                 {group.subject}
               </span>
-              {attachmentGroup ? (
-                <button
-                  type="button"
-                  onClick={() => onOpenAttachments(group.subject)}
-                  className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-1.5 text-xs font-medium text-[var(--primary)]"
-                >
-                  查看参考图片
-                </button>
-              ) : null}
             </div>
+
+            {/* 参考图片提示条 */}
+            {attachmentGroup ? (
+              <button
+                type="button"
+                onClick={() => onOpenAttachments(group.subject)}
+                className="mb-3 flex w-full items-center gap-3 rounded-[1rem] border border-[var(--primary)]/25 bg-[var(--primary-light)] p-2.5 text-left"
+              >
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[10px] border border-[var(--line)] bg-[var(--surface-3)]">
+                  <Image
+                    src={attachmentGroup.attachments[0].public_url}
+                    alt="参考图片"
+                    fill
+                    sizes="40px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-[var(--primary)]">
+                    老师发了 {attachmentGroup.attachments.length} 张参考图片
+                  </p>
+                  {attachmentGroup.attachments[0].note ? (
+                    <p className="mt-0.5 truncate text-xs text-[var(--text-secondary)]">
+                      {attachmentGroup.attachments[0].note}
+                    </p>
+                  ) : null}
+                </div>
+                <span className="shrink-0 text-xs font-semibold text-[var(--primary)]">查看 &rsaquo;</span>
+              </button>
+            ) : null}
 
             {/* Task Cards Grid — 2 columns on iPad+ */}
             <div className="grid gap-3 md:grid-cols-2">
@@ -476,175 +497,118 @@ export function AttachmentModal({
   onClose: () => void;
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [zoomed, setZoomed] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   if (!group) {
     return null;
   }
 
   const activeAttachment = group.attachments[selectedIndex] ?? group.attachments[0];
-  const canGoPrev = selectedIndex > 0;
-  const canGoNext = selectedIndex < group.attachments.length - 1;
+  const total = group.attachments.length;
+
+  function goPrev() {
+    setSelectedIndex((i) => Math.max(i - 1, 0));
+  }
+  function goNext() {
+    setSelectedIndex((i) => Math.min(i + 1, total - 1));
+  }
 
   return (
-    <>
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/55 px-3 py-4 md:px-6 md:py-6">
-        <div className="max-h-[94vh] w-full max-w-6xl overflow-hidden rounded-[1.5rem] border border-[var(--line)] bg-card shadow-[var(--shadow-lg)]">
-          <div className="flex items-center justify-between gap-4 border-b border-[var(--line-light)] px-4 py-4 md:px-6">
-            <div>
-              <p className="text-sm font-semibold tracking-[0.16em] text-[var(--primary)]">
-                参考图片
-              </p>
-              <h3 className="mt-1 text-xl font-semibold text-[var(--foreground)] md:text-2xl">
-                {group.subject}
-              </h3>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)]"
-            >
-              关闭
-            </button>
-          </div>
-          <div className="max-h-[calc(94vh-88px)] overflow-y-auto p-4 md:p-6">
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_320px]">
-              <section className="space-y-4">
-                <div className="flex items-center justify-between gap-3 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/55 px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-[var(--info-subtle)] px-3 py-1 text-xs font-semibold text-[var(--info)]">
-                      {attachmentRoleLabel(activeAttachment.role)}
-                    </span>
-                    <span className="rounded-full bg-card px-3 py-1 text-xs font-semibold text-[var(--text-secondary)]">
-                      第 {selectedIndex + 1} 张 / 共 {group.attachments.length} 张
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      disabled={!canGoPrev}
-                      onClick={() => {
-                        setSelectedIndex((current) => Math.max(current - 1, 0));
-                        setZoomed(false);
-                      }}
-                      className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-40"
-                    >
-                      上一张
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!canGoNext}
-                      onClick={() => {
-                        setSelectedIndex((current) =>
-                          Math.min(current + 1, group.attachments.length - 1),
-                        );
-                        setZoomed(false);
-                      }}
-                      className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] disabled:opacity-40"
-                    >
-                      下一张
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setZoomed(true)}
-                  className="group relative block min-h-[52vh] w-full overflow-hidden rounded-[1rem] border border-[var(--line)] bg-[var(--surface-3)] text-left md:min-h-[62vh]"
-                >
-                  <Image
-                    src={activeAttachment.public_url}
-                    alt={activeAttachment.note ?? `${group.subject} 参考图片 ${selectedIndex + 1}`}
-                    fill
-                    sizes="(max-width: 1280px) 100vw, 900px"
-                    className="object-contain p-3 md:p-5"
-                    priority
-                  />
-                  <div className="absolute right-3 top-3 rounded-full bg-black/65 px-3 py-1.5 text-xs font-semibold text-white">
-                    点一下放大看
-                  </div>
-                </button>
-
-                {group.attachments.length > 1 ? (
-                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-                    {group.attachments.map((attachment, index) => (
-                      <button
-                        key={attachment.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedIndex(index);
-                          setZoomed(false);
-                        }}
-                        className={`relative overflow-hidden rounded-[1rem] border ${
-                          index === selectedIndex
-                            ? "border-[var(--primary)] shadow-[var(--shadow-glow)]"
-                            : "border-[var(--line)]"
-                        }`}
-                      >
-                        <div className="relative h-24 w-full bg-[var(--surface-3)]">
-                          <Image
-                            src={attachment.public_url}
-                            alt={attachment.note ?? `${group.subject} 缩略图 ${index + 1}`}
-                            fill
-                            sizes="120px"
-                            className="object-contain p-2"
-                          />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </section>
-
-              <aside className="space-y-4">
-                <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/55 p-4">
-                  <p className="text-sm font-semibold tracking-[0.14em] text-[var(--primary)]">
-                    老师提示
-                  </p>
-                  <p className="mt-3 text-base leading-8 text-[var(--foreground)]">
-                    {activeAttachment.note || "先认真看这张参考图片，再继续完成下面的任务。"}
-                  </p>
-                </div>
-                <div className="rounded-[1rem] border border-[var(--line)] bg-card p-4">
-                  <p className="text-sm font-semibold text-[var(--foreground)]">怎么看更清楚</p>
-                  <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-                    横屏看会更清楚。点中间大图可以再放大一层，更适合看整页单词、抄写模版和页码要求。
-                  </p>
-                </div>
-              </aside>
-            </div>
-          </div>
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-black/95"
+      onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+      onTouchEnd={(e) => {
+        if (touchStartX === null) return;
+        const diff = e.changedTouches[0].clientX - touchStartX;
+        if (diff > 60) goPrev();
+        else if (diff < -60) goNext();
+        setTouchStartX(null);
+      }}
+    >
+      {/* 顶栏 */}
+      <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-white/15 px-3 py-1 text-sm font-semibold text-white">
+            {group.subject}
+          </span>
+          <span className="text-sm text-white/60">
+            {selectedIndex + 1} / {total}
+          </span>
         </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-[10px] bg-white/15 px-3 py-1.5 text-sm font-semibold text-white"
+        >
+          关闭
+        </button>
       </div>
 
-      {zoomed ? (
-        <div className="fixed inset-0 z-50 bg-black/90 px-3 py-4 md:px-6 md:py-6">
-          <div className="flex h-full flex-col">
-            <div className="flex items-center justify-between gap-4">
-              <div className="rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold text-white">
-                第 {selectedIndex + 1} 张 / 共 {group.attachments.length} 张
-              </div>
+      {/* 主图区域 */}
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <Image
+          src={activeAttachment.public_url}
+          alt={activeAttachment.note ?? `${group.subject} 参考图片 ${selectedIndex + 1}`}
+          fill
+          sizes="100vw"
+          className="object-contain p-2"
+          priority
+        />
+
+        {/* 左右切换按钮（iPad / 横屏） */}
+        {selectedIndex > 0 && (
+          <button
+            type="button"
+            onClick={goPrev}
+            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-lg text-white"
+          >
+            ‹
+          </button>
+        )}
+        {selectedIndex < total - 1 && (
+          <button
+            type="button"
+            onClick={goNext}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-lg text-white"
+          >
+            ›
+          </button>
+        )}
+      </div>
+
+      {/* 底部：老师提示 + 缩略图 */}
+      <div className="shrink-0 px-4 pb-4 pt-2">
+        {activeAttachment.note ? (
+          <p className="mb-2 rounded-[10px] bg-white/10 px-3 py-2 text-sm leading-6 text-white/90">
+            {activeAttachment.note}
+          </p>
+        ) : null}
+
+        {total > 1 ? (
+          <div className="flex gap-2 overflow-x-auto py-1">
+            {group.attachments.map((attachment, index) => (
               <button
+                key={attachment.id}
                 type="button"
-                onClick={() => setZoomed(false)}
-                className="rounded-[12px] border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white"
+                onClick={() => setSelectedIndex(index)}
+                className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-[10px] border-2 ${
+                  index === selectedIndex
+                    ? "border-white"
+                    : "border-transparent opacity-50"
+                }`}
               >
-                关闭放大
+                <Image
+                  src={attachment.public_url}
+                  alt={`缩略图 ${index + 1}`}
+                  fill
+                  sizes="56px"
+                  className="object-cover"
+                />
               </button>
-            </div>
-            <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-[1rem] border border-white/10 bg-black/40">
-              <Image
-                src={activeAttachment.public_url}
-                alt={activeAttachment.note ?? `${group.subject} 放大参考图片 ${selectedIndex + 1}`}
-                fill
-                sizes="100vw"
-                className="object-contain p-2 md:p-4"
-                priority
-              />
-            </div>
+            ))}
           </div>
-        </div>
-      ) : null}
-    </>
+        ) : null}
+      </div>
+    </div>
   );
 }
