@@ -9,6 +9,7 @@ type AIConfig = {
   model: string;
   is_active: boolean;
   has_key: boolean;
+  soul: string;
 };
 
 export function AISettingsModal({ onClose }: { onClose: () => void }) {
@@ -16,6 +17,7 @@ export function AISettingsModal({ onClose }: { onClose: () => void }) {
   const [provider, setProvider] = useState("openai");
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("gpt-4o-mini");
+  const [soul, setSoul] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -26,6 +28,7 @@ export function AISettingsModal({ onClose }: { onClose: () => void }) {
         setConfig(data);
         setProvider(data.provider);
         setModel(data.model);
+        setSoul(data.soul || "");
       })
       .catch(() => setMessage("加载配置失败"));
   }, []);
@@ -44,6 +47,7 @@ export function AISettingsModal({ onClose }: { onClose: () => void }) {
           provider,
           api_key: apiKey || undefined,
           model,
+          soul,
         }),
       });
       const data = await res.json();
@@ -157,6 +161,24 @@ export function AISettingsModal({ onClose }: { onClose: () => void }) {
                   placeholder={config.has_key ? "留空保持不变，输入新值则替换" : "粘贴你的 API Key"}
                   className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
                 />
+              </div>
+
+              {/* AI 人设 */}
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">
+                  AI 人设描述
+                  <span className="ml-1 font-normal text-[var(--text-muted)]">可选</span>
+                </label>
+                <textarea
+                  value={soul}
+                  onChange={(e) => setSoul(e.target.value)}
+                  placeholder="例如：你是一个温柔的大姐姐，说话带点幽默，喜欢用比喻鼓励孩子"
+                  rows={2}
+                  className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+                />
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
+                  影响今日作战计划等 AI 生成内容的语气和风格
+                </p>
               </div>
 
               {/* 提示信息 */}

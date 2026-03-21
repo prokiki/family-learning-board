@@ -5,7 +5,7 @@ import { getProvider } from "@/lib/ai-providers";
 
 const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
 
-const SYSTEM_PROMPT = `你是一个温暖的学习伙伴，正在跟一个中国三年级小学生说话。
+const BASE_SYSTEM_PROMPT = `你是一个温暖的学习伙伴，正在跟一个中国三年级小学生说话。
 
 根据今天的作业任务列表，写一段简短的"今日作战计划"，要求：
 1. 用孩子能懂的语气，像朋友聊天，不要像老师说教
@@ -41,12 +41,13 @@ export async function POST(request: Request) {
   let apiKey = process.env.OPENAI_API_KEY || "";
   let model = "gpt-4o-mini";
   let baseURL: string | undefined;
+  let soulDesc = "";
 
   const supabase = getAdminClient();
   if (supabase) {
     const { data } = await supabase
       .from("ai_config")
-      .select("provider, api_key, model, is_active")
+      .select("provider, api_key, model, is_active, soul")
       .eq("board_id", boardId)
       .single();
 
@@ -56,6 +57,9 @@ export async function POST(request: Request) {
       const provider = getProvider(data.provider);
       if (provider?.baseURL) {
         baseURL = provider.baseURL;
+      }
+      if (data.soul) {
+        soulDesc = data.soul;
       }
     }
   }
@@ -75,12 +79,16 @@ export async function POST(request: Request) {
       ...(baseURL ? { baseURL } : {}),
     });
 
+    const systemPrompt = soulDesc
+      ? `${BASE_SYSTEM_PROMPT}\n\n你的人设：${soulDesc}`
+      : BASE_SYSTEM_PROMPT;
+
     const completion = await openai.chat.completions.create({
       model,
       temperature: 0.8,
       max_tokens: 200,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         { role: "user", content: `今天一共 ${tasks.length} 个任务：\n${taskSummary}` },
       ],
     });

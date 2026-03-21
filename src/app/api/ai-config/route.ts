@@ -19,7 +19,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("ai_config")
-    .select("provider, api_key, model, is_active")
+    .select("provider, api_key, model, is_active, soul")
     .eq("board_id", boardId)
     .single();
 
@@ -35,6 +35,7 @@ export async function GET() {
       model: "gpt-4o-mini",
       is_active: false,
       has_key: false,
+      soul: "",
     });
   }
 
@@ -50,6 +51,7 @@ export async function GET() {
     model: data.model,
     is_active: data.is_active,
     has_key: Boolean(key),
+    soul: data.soul || "",
   });
 }
 
@@ -60,7 +62,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "数据库未配置" }, { status: 500 });
   }
 
-  let body: { provider?: string; api_key?: string; model?: string };
+  let body: { provider?: string; api_key?: string; model?: string; soul?: string };
   try {
     body = await request.json();
   } catch {
@@ -70,6 +72,7 @@ export async function POST(request: Request) {
   const provider = body.provider || "openai";
   const apiKey = body.api_key ?? "";
   const model = body.model || "gpt-4o-mini";
+  const soul = body.soul ?? "";
 
   const { error } = await supabase
     .from("ai_config")
@@ -79,6 +82,7 @@ export async function POST(request: Request) {
         provider,
         api_key: apiKey,
         model,
+        soul,
         is_active: Boolean(apiKey),
         updated_at: new Date().toISOString(),
       },

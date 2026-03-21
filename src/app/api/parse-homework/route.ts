@@ -5,7 +5,7 @@ import { getProvider } from "@/lib/ai-providers";
 
 const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
 
-const SYSTEM_PROMPT = `你是一个中国小学作业解析助手。用户会粘贴老师在钉钉群里布置的作业文字（可能格式不规范、有标点混用、口语化表达）。
+const BASE_SYSTEM_PROMPT = `你是一个中国小学作业解析助手。用户会粘贴老师在钉钉群里布置的作业文字（可能格式不规范、有标点混用、口语化表达）。
 
 你的任务：
 1. 识别每个学科
@@ -57,12 +57,13 @@ export async function POST(request: Request) {
   let apiKey = process.env.OPENAI_API_KEY || "";
   let model = "gpt-4o-mini";
   let baseURL: string | undefined;
+  let soulDesc = "";
 
   const supabase = getAdminClient();
   if (supabase) {
     const { data } = await supabase
       .from("ai_config")
-      .select("provider, api_key, model, is_active")
+      .select("provider, api_key, model, is_active, soul")
       .eq("board_id", boardId)
       .single();
 
@@ -72,6 +73,9 @@ export async function POST(request: Request) {
       const provider = getProvider(data.provider);
       if (provider?.baseURL) {
         baseURL = provider.baseURL;
+      }
+      if (data.soul) {
+        soulDesc = data.soul;
       }
     }
   }
@@ -94,7 +98,7 @@ export async function POST(request: Request) {
       temperature: 0.1,
       max_tokens: 2000,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: soulDesc ? `${BASE_SYSTEM_PROMPT}\n\n你的人设：${soulDesc}` : BASE_SYSTEM_PROMPT },
         { role: "user", content: text },
       ],
       response_format: { type: "json_object" },
