@@ -128,68 +128,71 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
         </button>
       )}
 
-      {/* 全屏弹窗 */}
+      {/* 全屏页面 */}
       {open && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-background">
-          {/* 顶栏 */}
-          <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3 sm:px-6">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-[var(--primary)]">
-                {writing ? "✏️ 写作小帮手" : "💡 问一问"}
-              </p>
-              <p className="mt-0.5 truncate text-base font-bold text-[var(--foreground)]">{task.title}</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleClose}
-              className="ml-3 shrink-0 rounded-[10px] border border-[var(--line)] bg-[var(--card-alt)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)]"
-            >
-              关闭
-            </button>
-          </div>
-
-          {/* 选项按钮 */}
-          <div className="flex flex-wrap gap-2 border-b border-[var(--line-light)] px-4 py-3 sm:px-6">
-            {options.map((opt) => (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
+          <div className="mx-auto max-w-3xl px-4 py-6 md:px-6 md:py-8">
+            {/* 顶栏：返回 + 标题 */}
+            <div className="mb-6">
               <button
-                key={opt.key}
                 type="button"
-                disabled={loading}
-                onClick={() => askHelp(opt.key)}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
-                  activeKey === opt.key
-                    ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
-                    : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
-                } disabled:opacity-50`}
+                onClick={handleClose}
+                className="nav-button"
               >
-                {opt.label}
+                ← 返回任务
               </button>
-            ))}
-          </div>
+              <p className="mt-4 text-sm font-semibold tracking-[0.18em] text-[var(--primary)]">
+                {writing ? "写作小帮手" : "问一问"}
+              </p>
+              <h1 className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
+                {task.title}
+              </h1>
+              {task.details && (
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">{task.details}</p>
+              )}
+            </div>
 
-          {/* 内容区域 */}
-          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
-            {!activeKey && !loading && (
-              <div className="flex h-full items-center justify-center">
-                <p className="text-base text-[var(--text-muted)]">
+            {/* 选项按钮 */}
+            <div className="mb-6 flex flex-wrap gap-2">
+              {options.map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => askHelp(opt.key)}
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                    activeKey === opt.key
+                      ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
+                      : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
+                  } disabled:opacity-50`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* 内容区域 */}
+            <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5 md:p-6">
+              {!activeKey && !loading && (
+                <p className="py-8 text-center text-base text-[var(--text-muted)]">
                   {writing ? "点上方按钮，帮你一步步理清思路" : "点上方按钮，我来帮你"}
                 </p>
-              </div>
-            )}
-            {loading && (
-              <div className="flex items-center gap-2 py-4">
-                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
-                <p className="text-base text-[var(--text-muted)]">
-                  {activeKey === "mindmap" ? "正在拆解作文思路..." : "思考中..."}
+              )}
+              {loading && (
+                <div className="flex items-center gap-2 py-8">
+                  <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
+                  <p className="text-base text-[var(--text-muted)]">
+                    {activeKey === "mindmap" ? "正在拆解作文思路..." : "思考中..."}
+                  </p>
+                </div>
+              )}
+              {answer && !loading && (
+                <p className="whitespace-pre-line text-base leading-8 text-[var(--foreground)]">
+                  {answer}
                 </p>
-              </div>
-            )}
-            {answer && !loading && (
-              <p className="whitespace-pre-line text-base leading-8 text-[var(--foreground)]">
-                {answer}
-              </p>
-            )}
-            {mindmap && !loading && <MindmapView data={mindmap} />}
+              )}
+              {mindmap && !loading && <MindmapView data={mindmap} />}
+            </div>
           </div>
         </div>
       )}
