@@ -25,10 +25,11 @@ const HELP_OPTIONS = [
 ] as const;
 
 const WRITING_OPTIONS = [
-  { key: "analyze", label: "📝 审题" },
-  { key: "brainstorm", label: "💡 想素材" },
+  { key: "analyze", label: "📝 读懂题目" },
+  { key: "recall", label: "👀 回忆画面" },
   { key: "structure", label: "🧱 搭骨架" },
-  { key: "tips", label: "✨ 写法提示" },
+  { key: "opening", label: "✍️ 开头帮一把" },
+  { key: "tips", label: "✨ 写作锦囊" },
 ] as const;
 
 function TaskHelpButton({ task }: { task: TaskRecord }) {
