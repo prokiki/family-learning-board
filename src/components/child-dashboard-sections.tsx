@@ -25,22 +25,22 @@ const HELP_OPTIONS = [
 ] as const;
 
 const WRITING_OPTIONS = [
-  { key: "images", label: "🎨 看图写话" },
+  { key: "mindmap", label: "🧠 思维导图" },
   { key: "analyze", label: "📝 读懂题目" },
   { key: "recall", label: "👀 回忆画面" },
-  { key: "structure", label: "🧱 搭骨架" },
   { key: "opening", label: "✍️ 开头帮一把" },
   { key: "tips", label: "✨ 写作锦囊" },
 ] as const;
 
-type WritingImage = { image_url: string | null; hint: string };
+type MindmapSection = { name: string; color: string; points: string[] };
+type MindmapData = { title: string; sections: MindmapSection[] };
 
 function TaskHelpButton({ task }: { task: TaskRecord }) {
   const writing = isWritingTask(task);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
-  const [images, setImages] = useState<WritingImage[] | null>(null);
+  const [mindmap, setMindmap] = useState<MindmapData | null>(null);
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
   const options = writing ? WRITING_OPTIONS : HELP_OPTIONS;
@@ -51,21 +51,21 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
       setActiveKey(key);
       setLoading(true);
       setAnswer(null);
-      setImages(null);
+      setMindmap(null);
 
-      /* 看图写话走独立的 API */
-      if (key === "images") {
+      /* 思维导图走独立的 API */
+      if (key === "mindmap") {
         try {
-          const res = await fetch("/api/writing-images", {
+          const res = await fetch("/api/writing-mindmap", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ title: task.title, details: task.details || "" }),
           });
           const data = await res.json();
           if (!res.ok) {
-            setAnswer(data.error || "图片生成失败");
+            setAnswer(data.error || "思维导图生成失败");
           } else {
-            setImages(data.images);
+            setMindmap(data.mindmap);
           }
         } catch {
           setAnswer("网络异常，请重试");
@@ -147,6 +147,7 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
           onClick={() => {
             setOpen(false);
             setAnswer(null);
+            setMindmap(null);
             setActiveKey(null);
           }}
           className="ml-auto rounded-full border border-[var(--line)] bg-card px-2.5 py-1.5 text-xs text-[var(--text-muted)]"
@@ -156,7 +157,7 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
       </div>
       {loading && (
         <p className="mt-2 text-xs text-[var(--text-muted)]">
-          {activeKey === "images" ? "🎨 正在生成 4 张图片，请稍等约 30 秒..." : "思考中..."}
+          {activeKey === "mindmap" ? "🧠 正在拆解作文思路..." : "思考中..."}
         </p>
       )}
       {answer && !loading && (
@@ -164,31 +165,52 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
           {answer}
         </p>
       )}
-      {images && !loading && (
-        <div className="mt-3 space-y-3">
-          <p className="text-xs font-medium text-[var(--text-secondary)]">看着图片，每张写 2-3 句话，四段拼起来就是一篇作文</p>
-          <div className="grid grid-cols-2 gap-2">
-            {images.map((img, i) => (
-              <div key={i} className="overflow-hidden rounded-[10px] border border-[var(--line)] bg-card">
-                {img.image_url ? (
-                  <img
-                    src={img.image_url}
-                    alt={`场景 ${i + 1}`}
-                    className="aspect-square w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex aspect-square items-center justify-center bg-[var(--card-alt)] text-xs text-[var(--text-muted)]">
-                    图片生成失败
-                  </div>
-                )}
-                <p className="px-2 py-1.5 text-center text-xs font-medium text-[var(--text-secondary)]">
-                  {["\u2460 ", "\u2461 ", "\u2462 ", "\u2463 "][i]}{img.hint}
-                </p>
+      {mindmap && !loading && <MindmapView data={mindmap} />}
+    </div>
+  );
+}
+
+/* ───────── 思维导图可视化 ───────── */
+
+const SECTION_COLORS: Record<string, { bg: string; border: string; dot: string; text: string }> = {
+  rose:    { bg: "bg-rose-50",    border: "border-rose-200",    dot: "bg-rose-400",    text: "text-rose-700" },
+  amber:   { bg: "bg-amber-50",   border: "border-amber-200",   dot: "bg-amber-400",   text: "text-amber-700" },
+  sky:     { bg: "bg-sky-50",     border: "border-sky-200",     dot: "bg-sky-400",     text: "text-sky-700" },
+  emerald: { bg: "bg-emerald-50", border: "border-emerald-200", dot: "bg-emerald-400", text: "text-emerald-700" },
+};
+
+function MindmapView({ data }: { data: MindmapData }) {
+  return (
+    <div className="mt-3 space-y-2.5">
+      {/* 根节点 */}
+      <div className="rounded-[10px] bg-[var(--foreground)] px-4 py-2 text-center text-sm font-bold text-[var(--background)]">
+        {data.title}
+      </div>
+
+      {/* 段落分支 */}
+      <div className="space-y-2">
+        {data.sections.map((section, si) => {
+          const colors = SECTION_COLORS[section.color] || SECTION_COLORS.sky;
+          return (
+            <div key={si} className={`rounded-[10px] border ${colors.border} ${colors.bg} p-3`}>
+              <div className="flex items-center gap-2">
+                <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${colors.dot}`} />
+                <span className={`text-xs font-bold ${colors.text}`}>{section.name}</span>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+              <div className="mt-2 ml-[18px] space-y-1.5">
+                {section.points.map((point, pi) => (
+                  <div key={pi} className="flex items-start gap-2">
+                    <span className="mt-0.5 shrink-0 text-xs text-[var(--text-muted)]">‣</span>
+                    <p className="text-xs leading-relaxed text-[var(--foreground)]">{point}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="text-center text-xs text-[var(--text-muted)]">沿着导图，每个要点写 1-2 句话，拼起来就是一篇完整作文</p>
     </div>
   );
 }
