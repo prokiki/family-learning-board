@@ -21,7 +21,7 @@ function ParentContent() {
             ← 返回首页
           </Link>
           <Link href={`/child?board=${board}`} className="nav-button">
-            👦 孩子端
+            孩子端
           </Link>
           <Link href={`/parent/report?board=${board}`} className="nav-button">
             📊 周报统计
