@@ -6,7 +6,17 @@ import { EmptyState, TaskListSkeleton } from "@/components/empty-state";
 import { formatDisplayDate } from "@/lib/date";
 import type { TaskAttachmentRecord, TaskRecord, TaskStatus } from "@/types/task";
 
-/* ─────────── AI 问一问 ─────────── */
+/* ─────────── AI 问一问 + 写作引导 ─────────── */
+
+const WRITING_KEYWORDS = ["作文", "写作", "写话", "看图写话", "日记", "读后感", "观后感", "写一篇", "写一段"];
+
+function isWritingTask(task: TaskRecord): boolean {
+  const sub = (task.subject || "").trim();
+  const title = task.title || "";
+  const details = task.details || "";
+  const text = `${sub} ${title} ${details}`;
+  return WRITING_KEYWORDS.some((kw) => text.includes(kw));
+}
 
 const HELP_OPTIONS = [
   { key: "explain", label: "这是什么意思？" },
@@ -14,27 +24,37 @@ const HELP_OPTIONS = [
   { key: "how_to_check", label: "做完怎么检查？" },
 ] as const;
 
+const WRITING_OPTIONS = [
+  { key: "analyze", label: "📝 审题" },
+  { key: "brainstorm", label: "💡 想素材" },
+  { key: "structure", label: "🧱 搭骨架" },
+  { key: "tips", label: "✨ 写法提示" },
+] as const;
+
 function TaskHelpButton({ task }: { task: TaskRecord }) {
+  const writing = isWritingTask(task);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
+  const options = writing ? WRITING_OPTIONS : HELP_OPTIONS;
+  const apiPath = writing ? "/api/writing-help" : "/api/task-help";
+
   const askHelp = useCallback(
-    async (questionType: string) => {
-      setActiveKey(questionType);
+    async (key: string) => {
+      setActiveKey(key);
       setLoading(true);
       setAnswer(null);
       try {
-        const res = await fetch("/api/task-help", {
+        const payload = writing
+          ? { title: task.title, details: task.details || "", step: key }
+          : { subject: task.subject || "", title: task.title, details: task.details || "", question_type: key };
+
+        const res = await fetch(apiPath, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            subject: task.subject || "",
-            title: task.title,
-            details: task.details || "",
-            question_type: questionType,
-          }),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         if (!res.ok) {
@@ -48,11 +68,19 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
         setLoading(false);
       }
     },
-    [task],
+    [task, writing, apiPath],
   );
 
   if (!open) {
-    return (
+    return writing ? (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-2 w-full rounded-[10px] border border-dashed border-[var(--subject-chinese,#e8a735)] bg-[var(--warning-subtle)] px-3 py-2.5 text-xs font-semibold text-[var(--subject-chinese,#c47a20)] transition-colors"
+      >
+        ✏️ 不知道怎么写？点这里帮你理思路
+      </button>
+    ) : (
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -64,9 +92,13 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
   }
 
   return (
-    <div className="mt-2 rounded-[10px] border border-[var(--line)] bg-[var(--card-alt)] p-3">
+    <div className={`mt-2 rounded-[10px] border p-3 ${
+      writing
+        ? "border-[var(--subject-chinese,#e8a735)]/30 bg-[var(--warning-subtle)]"
+        : "border-[var(--line)] bg-[var(--card-alt)]"
+    }`}>
       <div className="flex flex-wrap gap-1.5">
-        {HELP_OPTIONS.map((opt) => (
+        {options.map((opt) => (
           <button
             key={opt.key}
             type="button"
