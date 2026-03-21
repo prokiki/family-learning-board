@@ -182,9 +182,10 @@ export function ParentDashboard() {
     };
   }, [supabase, effectiveSelectedDate, isTodaySelected]);
 
-  useEffect(() => {
+  /* 不再实时解析——由父组件通过 handleParseImport 手动触发 */
+  function handleParseImport() {
     setImportGroups(parseHomeworkGroups(rawText));
-  }, [rawText]);
+  }
 
   useEffect(() => {
     if (!supabase || !effectiveSelectedDate) {
@@ -780,6 +781,7 @@ export function ParentDashboard() {
                   groups={importGroups}
                   drafts={importDrafts}
                   onRawTextChange={setRawText}
+                  onParse={handleParseImport}
                   onTaskUpdate={updateImportedTask}
                   onTaskDelete={deleteImportedTask}
                   onTaskAdd={addImportedTask}
