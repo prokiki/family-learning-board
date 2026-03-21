@@ -184,13 +184,7 @@ export function ParentDashboard() {
 
   /* 不再实时解析——由父组件通过 handleParseImport 手动触发 */
   function handleParseImport() {
-    /* 先 blur 所有输入框，等 iOS 键盘完全收起后再更新 DOM */
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-    setTimeout(() => {
-      setImportGroups(parseHomeworkGroups(rawText));
-    }, 400);
+    setImportGroups(parseHomeworkGroups(rawText));
   }
 
   useEffect(() => {
@@ -753,8 +747,8 @@ export function ParentDashboard() {
 
       {!supabase ? <SetupNotice /> : null}
 
-      <section className="grid gap-6 lg:grid-cols-[0.98fr_1.22fr] xl:grid-cols-[1.05fr_1.3fr]">
-        <div className="space-y-6">
+      <section className="grid gap-6 overflow-hidden lg:grid-cols-[0.98fr_1.22fr] xl:grid-cols-[1.05fr_1.3fr]">
+        <div className="min-w-0 space-y-6">
           {isTodaySelected ? (
             <div>
               {/* Tab Bar */}
