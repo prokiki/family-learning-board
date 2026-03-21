@@ -103,7 +103,7 @@ export default function Home() {
 
             <div className="grid gap-4 md:col-span-4 md:grid-cols-4 md:gap-5">
               {[
-                ["file", "老师作业导入", "支持把钉钉群里复制出的文字直接拆成任务。"],
+                ["file", "老师作业导入", "支持把钉钉群里复制出的文字直接拆成任务。支持 AI 智能解析，格式再乱也能准确拆分。"],
                 ["sync", "实时状态同步", "孩子点击“已完成”或“需要帮助”后，家长端立即刷新。"],
                 ["blocks", "专注时钟", "内置番茄钟帮助孩子集中注意力，专注 20 分钟休息 5 分钟。"],
               ].map(([icon, title, desc], index) => (
