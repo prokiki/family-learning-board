@@ -19,6 +19,9 @@ function ChildContent() {
           <Link href="/" className="nav-button">
             ← 返回首页
           </Link>
+          <Link href={`/parent?board=${board}`} className="nav-button">
+            👨 家长端
+          </Link>
           {isDemo && (
             <span className="rounded-full bg-[var(--warning-subtle)] px-2.5 py-1 text-xs font-semibold text-[var(--warning)]">
               Demo 模式
