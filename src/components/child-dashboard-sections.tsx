@@ -172,35 +172,44 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
 
 /* ───────── 思维导图可视化 ───────── */
 
-const SECTION_COLORS: Record<string, { bg: string; border: string; dot: string; text: string }> = {
-  rose:    { bg: "bg-rose-50",    border: "border-rose-200",    dot: "bg-rose-400",    text: "text-rose-700" },
-  amber:   { bg: "bg-amber-50",   border: "border-amber-200",   dot: "bg-amber-400",   text: "text-amber-700" },
-  sky:     { bg: "bg-sky-50",     border: "border-sky-200",     dot: "bg-sky-400",     text: "text-sky-700" },
-  emerald: { bg: "bg-emerald-50", border: "border-emerald-200", dot: "bg-emerald-400", text: "text-emerald-700" },
+const SECTION_STYLES: Record<string, { bg: string; border: string; dot: string; name: string }> = {
+  rose:    { bg: "rgba(244,63,94,0.08)",  border: "rgba(244,63,94,0.25)",  dot: "#f43f5e", name: "#e11d48" },
+  amber:   { bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.25)", dot: "#f59e0b", name: "#d97706" },
+  sky:     { bg: "rgba(14,165,233,0.08)", border: "rgba(14,165,233,0.25)", dot: "#0ea5e9", name: "#0284c7" },
+  emerald: { bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.25)", dot: "#10b981", name: "#059669" },
 };
 
 function MindmapView({ data }: { data: MindmapData }) {
   return (
     <div className="mt-3 space-y-2.5">
       {/* 根节点 */}
-      <div className="rounded-[10px] bg-[var(--foreground)] px-4 py-2 text-center text-sm font-bold text-[var(--background)]">
+      <div className="rounded-[10px] bg-[var(--primary)] px-4 py-2.5 text-center text-sm font-bold text-white">
         {data.title}
       </div>
 
       {/* 段落分支 */}
       <div className="space-y-2">
         {data.sections.map((section, si) => {
-          const colors = SECTION_COLORS[section.color] || SECTION_COLORS.sky;
+          const s = SECTION_STYLES[section.color] || SECTION_STYLES.sky;
           return (
-            <div key={si} className={`rounded-[10px] border ${colors.border} ${colors.bg} p-3`}>
+            <div
+              key={si}
+              className="rounded-[10px] border p-3"
+              style={{ backgroundColor: s.bg, borderColor: s.border }}
+            >
               <div className="flex items-center gap-2">
-                <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${colors.dot}`} />
-                <span className={`text-xs font-bold ${colors.text}`}>{section.name}</span>
+                <span
+                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: s.dot }}
+                />
+                <span className="text-xs font-bold" style={{ color: s.name }}>
+                  {section.name}
+                </span>
               </div>
               <div className="mt-2 ml-[18px] space-y-1.5">
                 {section.points.map((point, pi) => (
                   <div key={pi} className="flex items-start gap-2">
-                    <span className="mt-0.5 shrink-0 text-xs text-[var(--text-muted)]">‣</span>
+                    <span className="mt-0.5 shrink-0 text-xs" style={{ color: s.dot }}>‣</span>
                     <p className="text-xs leading-relaxed text-[var(--foreground)]">{point}</p>
                   </div>
                 ))}
