@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Image from "next/image";
 import { EmptyState, TaskListSkeleton } from "@/components/empty-state";
 import { StatusPill } from "@/components/status-pill";
@@ -10,6 +11,54 @@ import type {
   TaskSource,
   TaskTemplateRecord,
 } from "@/types/task";
+
+const PRESET_SUBJECTS = ["语文", "数学", "英语", "科学", "美术", "音乐", "体育", "道法"] as const;
+
+function SubjectPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const isCustom = value !== "" && !PRESET_SUBJECTS.includes(value as typeof PRESET_SUBJECTS[number]);
+  const [showCustomInput, setShowCustomInput] = useState(isCustom);
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2">
+        {PRESET_SUBJECTS.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => { setShowCustomInput(false); onChange(s); }}
+            className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+              value === s && !showCustomInput
+                ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
+                : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
+            }`}
+          >
+            {s}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => { setShowCustomInput(true); if (!isCustom) onChange(""); }}
+          className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+            showCustomInput
+              ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
+              : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
+          }`}
+        >
+          自定义
+        </button>
+      </div>
+      {showCustomInput && (
+        <input
+          value={isCustom ? value : ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="输入学科名称"
+          autoFocus
+          className="mt-2 w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+        />
+      )}
+    </div>
+  );
+}
 
 function subjectPillClass(subject: string | null) {
   switch (subject) {
@@ -250,13 +299,7 @@ export function ManualTaskSection({
       </p>
       <div className="mt-4 rounded-[1rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4">
         <div className="space-y-3">
-          <input
-            value={subject}
-            onChange={(event) => onSubjectChange(event.target.value)}
-            list="subject-options"
-            placeholder="学科，例如：语文"
-            className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
-          />
+          <SubjectPicker value={subject} onChange={onSubjectChange} />
           <input
             value={title}
             onChange={(event) => onTitleChange(event.target.value)}
@@ -588,14 +631,8 @@ export function AttachmentSection({
       </p>
 
       <div className="mt-4 rounded-[1rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4">
-        <div className="grid gap-3 md:grid-cols-2">
-          <input
-            value={subject}
-            onChange={(event) => onSubjectChange(event.target.value)}
-            list="subject-options"
-            placeholder="学科，例如：语文"
-            className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
-          />
+        <SubjectPicker value={subject} onChange={onSubjectChange} />
+        <div className="mt-3">
           <select
             value={role}
             onChange={(event) => onRoleChange(event.target.value as AttachmentRole)}

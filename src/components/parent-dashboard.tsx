@@ -747,18 +747,6 @@ export function ParentDashboard() {
 
       {!supabase ? <SetupNotice /> : null}
 
-      <datalist id="subject-options">
-        <option value="语文" />
-        <option value="数学" />
-        <option value="英语" />
-        <option value="科学" />
-        <option value="美术" />
-        <option value="音乐" />
-        <option value="体育" />
-        <option value="道法" />
-        <option value="其他" />
-      </datalist>
-
       <section className="grid gap-6 overflow-hidden lg:grid-cols-[0.98fr_1.22fr] xl:grid-cols-[1.05fr_1.3fr]">
         <div className="min-w-0 space-y-6">
           {isTodaySelected ? (
