@@ -5,6 +5,7 @@ import { useEffect, useSyncExternalStore } from "react";
 type ThemePreference = "light" | "dark" | "system";
 
 const STORAGE_KEY = "family-learning-board-theme";
+const THEME_EVENT = "family-learning-board-theme-change";
 
 function resolveTheme(preference: ThemePreference) {
   if (preference === "system") {
@@ -35,6 +36,9 @@ function subscribePreference(callback: () => void) {
   }
 
   const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleThemeChange = () => {
+    callback();
+  };
   const handleStorage = (event: StorageEvent) => {
     if (!event.key || event.key === STORAGE_KEY) {
       callback();
@@ -47,10 +51,12 @@ function subscribePreference(callback: () => void) {
   };
 
   window.addEventListener("storage", handleStorage);
+  window.addEventListener(THEME_EVENT, handleThemeChange);
   media.addEventListener("change", handleMediaChange);
 
   return () => {
     window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(THEME_EVENT, handleThemeChange);
     media.removeEventListener("change", handleMediaChange);
   };
 }
@@ -69,6 +75,7 @@ export function ThemeToggle() {
   function updatePreference(nextPreference: ThemePreference) {
     window.localStorage.setItem(STORAGE_KEY, nextPreference);
     applyTheme(nextPreference);
+    window.dispatchEvent(new Event(THEME_EVENT));
   }
 
   const nextPreferenceMap: Record<ThemePreference, ThemePreference> = {
