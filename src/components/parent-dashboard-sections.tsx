@@ -225,15 +225,19 @@ export function HistoricalTasksNotice({
 
 export function ManualTaskSection({
   title,
+  subject,
   details,
   onTitleChange,
+  onSubjectChange,
   onDetailsChange,
   onCreate,
   disabled,
 }: {
   title: string;
+  subject: string;
   details: string;
   onTitleChange: (value: string) => void;
+  onSubjectChange: (value: string) => void;
   onDetailsChange: (value: string) => void;
   onCreate: () => void;
   disabled: boolean;
@@ -246,6 +250,13 @@ export function ManualTaskSection({
       </p>
       <div className="mt-4 rounded-[1rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4">
         <div className="space-y-3">
+          <input
+            value={subject}
+            onChange={(event) => onSubjectChange(event.target.value)}
+            list="subject-options"
+            placeholder="学科，例如：语文"
+            className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+          />
           <input
             value={title}
             onChange={(event) => onTitleChange(event.target.value)}
@@ -578,17 +589,13 @@ export function AttachmentSection({
 
       <div className="mt-4 rounded-[1rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4">
         <div className="grid gap-3 md:grid-cols-2">
-          <select
+          <input
             value={subject}
             onChange={(event) => onSubjectChange(event.target.value)}
-            className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none focus:border-[var(--primary)]"
-          >
-            <option value="语文">语文</option>
-            <option value="数学">数学</option>
-            <option value="英语">英语</option>
-            <option value="科学">科学</option>
-            <option value="其他">其他</option>
-          </select>
+            list="subject-options"
+            placeholder="学科，例如：语文"
+            className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+          />
           <select
             value={role}
             onChange={(event) => onRoleChange(event.target.value as AttachmentRole)}
