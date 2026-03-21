@@ -121,6 +121,7 @@ export function ParentDashboard() {
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<"import" | "manual" | "template" | "attachment">("import");
+  const [aiParsing, setAiParsing] = useState(false);
   const today = useLocalDate();
   const [selectedDate, setSelectedDate] = useState("");
   const yesterday = useMemo(() => (today ? shiftLocalDate(today, -1) : ""), [today]);
@@ -186,6 +187,38 @@ export function ParentDashboard() {
   useEffect(() => {
     setImportGroups(parseHomeworkGroups(rawText));
   }, [rawText]);
+
+  async function handleAIParse() {
+    if (!rawText.trim() || aiParsing) return;
+    setAiParsing(true);
+    try {
+      const response = await fetch("/api/parse-homework", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: rawText }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(data.error || "AI 解析失败");
+        return;
+      }
+      if (Array.isArray(data.groups) && data.groups.length > 0) {
+        setImportGroups(
+          data.groups.map((g: { subject: string; tasks: { title: string; details?: string }[] }) => ({
+            subject: g.subject,
+            tasks: g.tasks.map((t) => ({ title: t.title, details: t.details || undefined })),
+          })),
+        );
+        setMessage("AI 解析完成，请校对后确认导入");
+      } else {
+        setMessage("未解析出任务，请检查输入内容");
+      }
+    } catch {
+      setMessage("AI 服务连接失败，请稍后重试");
+    } finally {
+      setAiParsing(false);
+    }
+  }
 
   useEffect(() => {
     if (!supabase || !effectiveSelectedDate) {
@@ -781,6 +814,8 @@ export function ParentDashboard() {
                   groups={importGroups}
                   drafts={importDrafts}
                   onRawTextChange={setRawText}
+                  onAIParse={handleAIParse}
+                  aiParsing={aiParsing}
                   onTaskUpdate={updateImportedTask}
                   onTaskDelete={deleteImportedTask}
                   onTaskAdd={addImportedTask}

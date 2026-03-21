@@ -462,6 +462,8 @@ export function ImportPreviewSection({
   groups,
   drafts,
   onRawTextChange,
+  onAIParse,
+  aiParsing,
   onTaskUpdate,
   onTaskDelete,
   onTaskAdd,
@@ -472,6 +474,8 @@ export function ImportPreviewSection({
   groups: SubjectTaskGroup[];
   drafts: TaskDraft[];
   onRawTextChange: (value: string) => void;
+  onAIParse: () => void;
+  aiParsing: boolean;
   onTaskUpdate: (subjectIndex: number, taskIndex: number, title: string) => void;
   onTaskDelete: (subjectIndex: number, taskIndex: number) => void;
   onTaskAdd: (subjectIndex: number) => void;
@@ -492,6 +496,21 @@ export function ImportPreviewSection({
           rows={8}
           className="min-h-[120px] w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
         />
+        <button
+          type="button"
+          disabled={!rawText.trim() || aiParsing}
+          onClick={onAIParse}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] bg-[var(--foreground)] px-4 py-3 text-sm font-semibold text-[var(--background)] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {aiParsing ? (
+            <>
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              AI 解析中...
+            </>
+          ) : (
+            "AI 智能解析"
+          )}
+        </button>
       </div>
       <div className="mt-4 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/50 p-4">
         <div className="flex items-center justify-between gap-3">
