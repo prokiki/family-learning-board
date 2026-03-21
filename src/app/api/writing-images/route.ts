@@ -7,23 +7,27 @@ const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
 
 const SCENE_PROMPT = `你是一个三年级作文教学助手。根据作文题目，构思一个适合三年级孩子写的故事，拆成 4 个连续画面（起因→发展→高潮→结尾）。
 
-要求：
-1. 故事要贴近三年级孩子的日常生活（学校、家里、公园、朋友等）
-2. 每个画面都要有具体的场景、人物和动作
-3. 第三张图是最关键的瞬间（高潮），要有情感冲击
-4. 每个画面附一句写作引导提示，帮孩子知道这段该写什么
+核心规则（非常重要）：
+1. 先定义一个固定主角外貌，4 张图必须是同一个角色。例如："a 8-year-old Chinese girl with short black hair wearing a yellow T-shirt and blue jeans"
+2. 场景要有连贯性——同一天发生的事，地点变化要合理（不要从教室突然跳到海边）
+3. 故事要贴近三年级孩子的日常生活（学校、家里、小区、公园）
+4. 第三张图是最关键的瞬间（高潮），要有情感变化
+5. 内容必须健康阳光，不能有危险、恐怖、暴力、奇幻魔法等内容
 
 严格按 JSON 格式输出，不要其他文字：
-[
-  {"scene": "用英文描述画面内容，给AI画图用，50词以内", "hint": "中文写作引导提示，15字以内"},
-  {"scene": "...", "hint": "..."},
-  {"scene": "...", "hint": "..."},
-  {"scene": "...", "hint": "..."}
-]
+{
+  "character": "用英文描述主角固定外貌特征，30词以内，包含年龄、性别、发型、服装颜色",
+  "scenes": [
+    {"scene": "用英文描述画面，必须包含主角描述，50词以内", "hint": "中文写作引导，15字以内"},
+    {"scene": "...", "hint": "..."},
+    {"scene": "...", "hint": "..."},
+    {"scene": "...", "hint": "..."}
+  ]
+}
 
 scene 描述规则：
-- 必须用英文，因为要给 DALL-E 生成图片
-- 风格统一：warm children's book illustration, soft watercolor style, cute Chinese elementary school children
+- 必须用英文
+- 每个 scene 开头必须包含 character 字段的完整描述，确保主角一致
 - 场景要具体，有人物动作和表情
 - 不要出现任何文字、字母、数字在画面中`;
 
@@ -102,10 +106,18 @@ export async function POST(request: Request) {
     const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) raw = jsonMatch[1].trim();
 
+    let character = "";
     let scenes: { scene: string; hint: string }[];
     try {
       const parsed = JSON.parse(raw);
-      scenes = Array.isArray(parsed) ? parsed : [];
+      if (parsed && typeof parsed === "object" && Array.isArray(parsed.scenes)) {
+        character = parsed.character || "";
+        scenes = parsed.scenes;
+      } else if (Array.isArray(parsed)) {
+        scenes = parsed;
+      } else {
+        scenes = [];
+      }
     } catch {
       return NextResponse.json({ error: "AI 场景构思失败，请重试" }, { status: 502 });
     }
@@ -117,18 +129,25 @@ export async function POST(request: Request) {
     /* 第二步：并行生成 4 张图片（使用 DALL-E，不传 baseURL） */
     const dalleClient = new OpenAI({ apiKey }); // DALL-E 只走 OpenAI 官方
 
-    const imagePromises = scenes.slice(0, 4).map((s) =>
-      dalleClient.images
+    const styleTag = "warm children's book illustration, soft watercolor style, consistent character design, no text or words or letters or numbers in image";
+
+    const imagePromises = scenes.slice(0, 4).map((s) => {
+      /* 确保每张图都包含主角描述 */
+      const prompt = character
+        ? `${character}. ${s.scene}. Style: ${styleTag}.`
+        : `${s.scene}. Style: ${styleTag}.`;
+
+      return dalleClient.images
         .generate({
           model: "dall-e-3",
-          prompt: `${s.scene}. Style: warm children's book illustration, soft watercolor, no text or letters in image.`,
+          prompt,
           n: 1,
           size: "1024x1024",
           quality: "standard",
         })
         .then((res) => res.data?.[0]?.url ?? null)
-        .catch(() => null),
-    );
+        .catch(() => null);
+    });
 
     const imageUrls = await Promise.all(imagePromises);
 
