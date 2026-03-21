@@ -100,73 +100,100 @@ function TaskHelpButton({ task }: { task: TaskRecord }) {
     [task, writing, apiPath],
   );
 
-  if (!open) {
-    return writing ? (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="mt-2 w-full rounded-[10px] border border-dashed border-[var(--subject-chinese,#e8a735)] bg-[var(--warning-subtle)] px-3 py-2.5 text-xs font-semibold text-[var(--subject-chinese,#c47a20)] transition-colors"
-      >
-        ✏️ 不知道怎么写？点这里帮你理思路
-      </button>
-    ) : (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="mt-2 w-full rounded-[10px] border border-dashed border-[var(--line)] px-3 py-2 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
-      >
-        💡 问一问
-      </button>
-    );
-  }
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    setAnswer(null);
+    setMindmap(null);
+    setActiveKey(null);
+  }, []);
 
   return (
-    <div className={`mt-2 rounded-[10px] border p-3 ${
-      writing
-        ? "border-[var(--subject-chinese,#e8a735)]/30 bg-[var(--warning-subtle)]"
-        : "border-[var(--line)] bg-[var(--card-alt)]"
-    }`}>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map((opt) => (
-          <button
-            key={opt.key}
-            type="button"
-            disabled={loading}
-            onClick={() => askHelp(opt.key)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-              activeKey === opt.key
-                ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
-                : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
-            } disabled:opacity-50`}
-          >
-            {opt.label}
-          </button>
-        ))}
+    <>
+      {/* 入口按钮（卡片内） */}
+      {writing ? (
         <button
           type="button"
-          onClick={() => {
-            setOpen(false);
-            setAnswer(null);
-            setMindmap(null);
-            setActiveKey(null);
-          }}
-          className="ml-auto rounded-full border border-[var(--line)] bg-card px-2.5 py-1.5 text-xs text-[var(--text-muted)]"
+          onClick={() => setOpen(true)}
+          className="mt-2 w-full rounded-[10px] border border-dashed border-[var(--subject-chinese,#e8a735)] bg-[var(--warning-subtle)] px-3 py-2.5 text-xs font-semibold text-[var(--subject-chinese,#c47a20)] transition-colors"
         >
-          收起
+          ✏️ 不知道怎么写？点这里帮你理思路
         </button>
-      </div>
-      {loading && (
-        <p className="mt-2 text-xs text-[var(--text-muted)]">
-          {activeKey === "mindmap" ? "🧠 正在拆解作文思路..." : "思考中..."}
-        </p>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="mt-2 w-full rounded-[10px] border border-dashed border-[var(--line)] px-3 py-2 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+        >
+          💡 问一问
+        </button>
       )}
-      {answer && !loading && (
-        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[var(--foreground)]">
-          {answer}
-        </p>
+
+      {/* 全屏弹窗 */}
+      {open && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-background">
+          {/* 顶栏 */}
+          <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3 sm:px-6">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-[var(--primary)]">
+                {writing ? "✏️ 写作小帮手" : "💡 问一问"}
+              </p>
+              <p className="mt-0.5 truncate text-base font-bold text-[var(--foreground)]">{task.title}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="ml-3 shrink-0 rounded-[10px] border border-[var(--line)] bg-[var(--card-alt)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)]"
+            >
+              关闭
+            </button>
+          </div>
+
+          {/* 选项按钮 */}
+          <div className="flex flex-wrap gap-2 border-b border-[var(--line-light)] px-4 py-3 sm:px-6">
+            {options.map((opt) => (
+              <button
+                key={opt.key}
+                type="button"
+                disabled={loading}
+                onClick={() => askHelp(opt.key)}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                  activeKey === opt.key
+                    ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
+                    : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
+                } disabled:opacity-50`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* 内容区域 */}
+          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+            {!activeKey && !loading && (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-base text-[var(--text-muted)]">
+                  {writing ? "点上方按钮，帮你一步步理清思路" : "点上方按钮，我来帮你"}
+                </p>
+              </div>
+            )}
+            {loading && (
+              <div className="flex items-center gap-2 py-4">
+                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
+                <p className="text-base text-[var(--text-muted)]">
+                  {activeKey === "mindmap" ? "正在拆解作文思路..." : "思考中..."}
+                </p>
+              </div>
+            )}
+            {answer && !loading && (
+              <p className="whitespace-pre-line text-base leading-8 text-[var(--foreground)]">
+                {answer}
+              </p>
+            )}
+            {mindmap && !loading && <MindmapView data={mindmap} />}
+          </div>
+        </div>
       )}
-      {mindmap && !loading && <MindmapView data={mindmap} />}
-    </div>
+    </>
   );
 }
 
@@ -181,36 +208,36 @@ const SECTION_STYLES: Record<string, { bg: string; border: string; dot: string; 
 
 function MindmapView({ data }: { data: MindmapData }) {
   return (
-    <div className="mt-3 space-y-2.5">
+    <div className="space-y-3">
       {/* 根节点 */}
-      <div className="rounded-[10px] bg-[var(--primary)] px-4 py-2.5 text-center text-sm font-bold text-white">
+      <div className="rounded-[12px] bg-[var(--primary)] px-5 py-3 text-center text-lg font-bold text-white">
         {data.title}
       </div>
 
       {/* 段落分支 */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {data.sections.map((section, si) => {
           const s = SECTION_STYLES[section.color] || SECTION_STYLES.sky;
           return (
             <div
               key={si}
-              className="rounded-[10px] border p-3"
+              className="rounded-[12px] border p-4"
               style={{ backgroundColor: s.bg, borderColor: s.border }}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <span
-                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                  className="inline-block h-3 w-3 shrink-0 rounded-full"
                   style={{ backgroundColor: s.dot }}
                 />
-                <span className="text-xs font-bold" style={{ color: s.name }}>
+                <span className="text-base font-bold" style={{ color: s.name }}>
                   {section.name}
                 </span>
               </div>
-              <div className="mt-2 ml-[18px] space-y-1.5">
+              <div className="mt-3 ml-[22px] space-y-2.5">
                 {section.points.map((point, pi) => (
-                  <div key={pi} className="flex items-start gap-2">
-                    <span className="mt-0.5 shrink-0 text-xs" style={{ color: s.dot }}>‣</span>
-                    <p className="text-xs leading-relaxed text-[var(--foreground)]">{point}</p>
+                  <div key={pi} className="flex items-start gap-2.5">
+                    <span className="mt-0.5 shrink-0 text-sm" style={{ color: s.dot }}>‣</span>
+                    <p className="text-sm leading-7 text-[var(--foreground)]">{point}</p>
                   </div>
                 ))}
               </div>
@@ -219,7 +246,7 @@ function MindmapView({ data }: { data: MindmapData }) {
         })}
       </div>
 
-      <p className="text-center text-xs text-[var(--text-muted)]">沿着导图，每个要点写 1-2 句话，拼起来就是一篇完整作文</p>
+      <p className="text-center text-sm text-[var(--text-muted)]">沿着导图，每个要点写 1-2 句话，拼起来就是一篇完整作文</p>
     </div>
   );
 }
