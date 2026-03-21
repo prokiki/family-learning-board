@@ -415,7 +415,6 @@ export function ImportPreviewSection({
   groups,
   drafts,
   onRawTextChange,
-  onParse,
   onTaskUpdate,
   onTaskDelete,
   onTaskAdd,
@@ -426,7 +425,6 @@ export function ImportPreviewSection({
   groups: SubjectTaskGroup[];
   drafts: TaskDraft[];
   onRawTextChange: (value: string) => void;
-  onParse: () => void;
   onTaskUpdate: (subjectIndex: number, taskIndex: number, title: string) => void;
   onTaskDelete: (subjectIndex: number, taskIndex: number) => void;
   onTaskAdd: (subjectIndex: number) => void;
@@ -447,29 +445,25 @@ export function ImportPreviewSection({
           rows={8}
           className="min-h-[120px] w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
         />
-        <button
-          type="button"
-          disabled={!rawText.trim()}
-          onClick={onParse}
-          className="mt-3 w-full rounded-[12px] bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          解析拆分
-        </button>
       </div>
-
-      {groups.length > 0 && (
-        <div className="mt-4 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/50 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-base font-semibold text-[var(--foreground)]">任务拆分预览</h3>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                按学科展示并支持逐条校对
-              </p>
-            </div>
-            <p className="rounded-full bg-card px-3 py-1 text-sm font-semibold text-[var(--text-secondary)]">
-              共 {drafts.filter((draft) => draft.title.trim()).length} 条子任务
+      <div className="mt-4 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/50 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-semibold text-[var(--foreground)]">任务拆分预览</h3>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              上方保留原始文本，下面按学科展示并支持逐条校对。
             </p>
           </div>
+          <p className="rounded-full bg-card px-3 py-1 text-sm font-semibold text-[var(--text-secondary)]">
+            共 {drafts.filter((draft) => draft.title.trim()).length} 条子任务
+          </p>
+        </div>
+
+        {groups.length === 0 ? (
+          <div className="mt-4 rounded-[1rem] bg-[var(--card-alt)] px-4 py-5 text-sm text-[var(--text-secondary)]">
+            贴入老师作业后，这里会显示按学科分组的预览。
+          </div>
+        ) : (
 
           <div className="mt-4 space-y-4">
             {groups.map((group, subjectIndex) => (
@@ -520,19 +514,19 @@ export function ImportPreviewSection({
               </section>
             ))}
           </div>
+        )}
 
-          <div className="mt-4 flex items-center justify-end">
-            <button
-              type="button"
-              disabled={importDisabled}
-              onClick={onImport}
-              className="rounded-[12px] border border-[var(--primary)] bg-card px-4 py-2.5 text-sm font-semibold text-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              确认导入
-            </button>
-          </div>
+        <div className="mt-4 flex items-center justify-end">
+          <button
+            type="button"
+            disabled={importDisabled}
+            onClick={onImport}
+            className="rounded-[12px] border border-[var(--primary)] bg-card px-4 py-2.5 text-sm font-semibold text-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            确认导入
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
