@@ -1,128 +1,126 @@
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-function FeatureIcon({ type }: { type: "file" | "sync" | "blocks" }) {
-  const common = "h-6 w-6 text-[var(--primary)]";
-
-  if (type === "file") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={common}>
-        <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-        <path d="M14 3v5h5" />
-        <path d="M9 13h6" />
-        <path d="M9 17h4" />
-      </svg>
-    );
-  }
-
-  if (type === "sync") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={common}>
-        <path d="M3 12a9 9 0 0 1 15.3-6.3L21 8" />
-        <path d="M21 3v5h-5" />
-        <path d="M21 12a9 9 0 0 1-15.3 6.3L3 16" />
-        <path d="M8 16H3v5" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={common}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 3" />
-    </svg>
-  );
-}
+const DEMO_BOARD = "demo";
 
 export default function Home() {
+  const router = useRouter();
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    if (!password.trim()) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "验证失败");
+        return;
+      }
+      router.push(`/parent?board=${data.board}`);
+    } catch {
+      setError("网络异常，请重试");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleDemo() {
+    router.push(`/child?board=${DEMO_BOARD}`);
+  }
+
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6 md:py-14">
-      <div className="mx-auto max-w-[980px]">
-        <div className="mb-4 flex items-center justify-between px-2">
+      <div className="mx-auto max-w-[480px]">
+        <div className="mb-6 flex items-center justify-between px-2">
           <p className="text-sm font-semibold tracking-[0.14em] text-[var(--text-secondary)]">
             家庭学习看板
           </p>
           <ThemeToggle />
         </div>
 
-        <section className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-4 sm:p-5 md:p-6">
-          <div className="grid gap-4 md:grid-cols-4 md:gap-5">
-            <div className="rounded-[1.5rem] border border-[var(--line)] bg-card px-6 py-7 md:col-span-2 md:row-span-2 md:min-h-[428px] md:px-8 md:py-8">
-              <div className="space-y-4">
-                <h1 className="max-w-[14ch] text-3xl font-semibold leading-[1.15] text-[var(--foreground)] sm:max-w-[12ch] sm:text-4xl">
-                  放学后，孩子一眼就知道该做什么。
-                </h1>
-                <p className="max-w-[30rem] text-base leading-8 text-[var(--text-secondary)] md:text-lg">
-                  家长把老师作业整理成清晰任务，孩子在固定设备上大字查看、点按反馈，家长端实时看到完成情况。
-                </p>
-              </div>
-            </div>
+        <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-6 sm:p-8">
+          <h1 className="text-2xl font-semibold leading-tight text-[var(--foreground)] sm:text-3xl">
+            放学后，孩子一眼就知道该做什么。
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
+            家长把老师作业整理成清晰任务，孩子在固定设备上大字查看、点按反馈。
+          </p>
 
-            <Link
-              href="/parent"
-              className="interactive-card soft-shadow group flex min-h-[204px] flex-col rounded-[1.5rem] border border-[var(--line)] bg-card px-6 py-6 md:col-span-2 md:px-7"
-            >
-              <div className="flex h-full flex-col justify-between">
-                <div>
-                  <h2 className="mt-3 text-2xl font-semibold leading-tight text-[var(--foreground)]">
-                    家长端
-                  </h2>
-                  <p className="mt-3 max-w-[18rem] text-sm leading-7 text-[var(--text-secondary)]">
-                    创建今日任务、导入老师作业、实时查看孩子反馈。
-                  </p>
-                </div>
-                <div className="mt-6 flex items-end justify-between">
-                  <p className="rounded-full bg-[var(--primary-light)] px-3 py-1.5 text-sm font-semibold text-[var(--primary)]">
-                    今天任务一目了然
-                  </p>
-                  <span className="text-2xl font-semibold text-[var(--primary)]">→</span>
-                </div>
-              </div>
-            </Link>
-            <Link
-              href="/child"
-              className="interactive-card soft-shadow group flex min-h-[204px] flex-col rounded-[1.5rem] border border-[var(--line)] bg-card px-6 py-6 md:col-span-2 md:px-7"
-            >
-              <div className="flex h-full flex-col justify-between">
-                <div>
-                  <h2 className="mt-3 text-2xl font-semibold leading-tight text-[var(--foreground)]">
-                    孩子看板
-                  </h2>
-                  <p className="mt-3 max-w-[18rem] text-sm leading-7 text-[var(--text-secondary)]">
-                    大按钮、大字、少导航，专注今天的任务和下一步。
-                  </p>
-                </div>
-                <div className="mt-6 flex items-end justify-between">
-                  <p className="rounded-full bg-[var(--warning-subtle)] px-3 py-1.5 text-sm font-semibold text-[var(--warning)]">
-                    今天做什么很清楚
-                  </p>
-                  <span className="text-2xl font-semibold text-[var(--warning)]">→</span>
-                </div>
-              </div>
-            </Link>
-
-            <div className="grid gap-4 md:col-span-4 md:grid-cols-4 md:gap-5">
-              {[
-                ["file", "老师作业导入", "支持把钉钉群里复制出的文字直接拆成任务。支持 AI 智能解析，格式再乱也能准确拆分。"],
-                ["sync", "实时状态同步", "孩子点击“已完成”或“需要帮助”后，家长端立即刷新。"],
-                ["blocks", "专注时钟", "内置番茄钟帮助孩子集中注意力，专注 20 分钟休息 5 分钟。"],
-              ].map(([icon, title, desc], index) => (
-                <div
-                  key={title}
-                  className={`rounded-[1rem] border border-[var(--line)] bg-card p-6 shadow-[var(--shadow-xs)] md:p-7 ${
-                    index === 1 ? "md:col-span-2" : "md:col-span-1"
-                  }`}
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-[12px] bg-[var(--primary-light)]">
-                    <FeatureIcon type={icon as "file" | "sync" | "blocks"} />
-                  </div>
-                  <h3 className="mt-4 text-lg font-semibold text-[var(--foreground)]">{title}</h3>
-                  <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">{desc}</p>
-                </div>
-              ))}
+          {/* 密码登录区 */}
+          <form onSubmit={handleLogin} className="mt-8">
+            <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">
+              进入我的看板
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="输入访问密码"
+                className="min-w-0 flex-1 rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+              />
+              <button
+                type="submit"
+                disabled={loading || !password.trim()}
+                className="shrink-0 rounded-[12px] bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {loading ? "验证中..." : "进入"}
+              </button>
             </div>
+            {error && (
+              <p className="mt-2 text-sm font-medium text-[var(--error)]">{error}</p>
+            )}
+          </form>
+
+          {/* 分隔线 */}
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[var(--line)]" />
+            <span className="text-xs text-[var(--text-muted)]">或者</span>
+            <div className="h-px flex-1 bg-[var(--line)]" />
           </div>
-        </section>
+
+          {/* Demo 入口 */}
+          <button
+            type="button"
+            onClick={handleDemo}
+            className="w-full rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] px-4 py-3 text-sm font-semibold text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+          >
+            免密码体验 Demo 看板
+          </button>
+          <p className="mt-2 text-center text-xs text-[var(--text-muted)]">
+            Demo 数据所有人共享，仅供体验功能
+          </p>
+        </div>
+
+        {/* 功能亮点 */}
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          {[
+            ["📋", "作业导入", "AI 智能拆分"],
+            ["🔄", "实时同步", "状态即时更新"],
+            ["⏱", "专注计时", "番茄钟模式"],
+          ].map(([icon, title, desc]) => (
+            <div
+              key={title}
+              className="rounded-[1rem] border border-[var(--line)] bg-card p-4 text-center"
+            >
+              <p className="text-xl">{icon}</p>
+              <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">{title}</p>
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">{desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </main>
   );

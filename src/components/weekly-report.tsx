@@ -9,8 +9,6 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { formatLocalDate, shiftLocalDate } from "@/lib/date";
 import type { TaskRecord, TaskStatus } from "@/types/task";
 
-const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
-
 /* ───────────────── helpers ───────────────── */
 
 function isCompletedStatus(status: TaskStatus) {
@@ -40,7 +38,7 @@ function shortDate(dateStr: string) {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-async function fetchWeekTasks(supabase: SupabaseClient, monday: string, sunday: string) {
+async function fetchWeekTasks(supabase: SupabaseClient, monday: string, sunday: string, boardId: string) {
   return supabase
     .from("tasks")
     .select("*")
@@ -104,7 +102,7 @@ function exportCSV(tasks: TaskRecord[], weekLabel: string) {
 
 /* ───────────────── component ───────────────── */
 
-export function WeeklyReport() {
+export function WeeklyReport({ boardId }: { boardId: string }) {
   const today = useLocalDate();
   const supabase = getSupabaseBrowserClient();
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
@@ -133,8 +131,8 @@ export function WeeklyReport() {
     async function run() {
       setLoading(true);
       const [current, prev] = await Promise.all([
-        fetchWeekTasks(client, currentMonday, sunday),
-        fetchWeekTasks(client, prevMonday, prevSunday),
+        fetchWeekTasks(client, currentMonday, sunday, boardId),
+        fetchWeekTasks(client, prevMonday, prevSunday, boardId),
       ]);
 
       if (!active) return;

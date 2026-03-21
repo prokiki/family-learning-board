@@ -21,7 +21,6 @@ import { useLocalDate } from "@/hooks/use-local-date";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { TaskAttachmentRecord, TaskRecord, TaskStatus } from "@/types/task";
 
-const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
 const FOCUS_MINUTES = 20;
 const BREAK_MINUTES = 5;
 
@@ -90,7 +89,7 @@ function timerReducer(state: TimerState, action: TimerAction): TimerState {
   }
 }
 
-async function fetchTodayTasks(supabase: SupabaseClient, dueDate: string) {
+async function fetchTodayTasks(supabase: SupabaseClient, dueDate: string, boardId: string) {
   const result = await supabase
     .from("tasks")
     .select("*")
@@ -110,7 +109,7 @@ async function fetchTodayTasks(supabase: SupabaseClient, dueDate: string) {
   return { ...result, data: visibleTasks };
 }
 
-async function fetchTodayAttachments(supabase: SupabaseClient, dueDate: string) {
+async function fetchTodayAttachments(supabase: SupabaseClient, dueDate: string, boardId: string) {
   return supabase
     .from("task_attachments")
     .select("*")
@@ -173,7 +172,7 @@ function filterAttachmentsForVisibleTasks(
   );
 }
 
-export function ChildDashboard() {
+export function ChildDashboard({ boardId }: { boardId: string }) {
   const today = useLocalDate();
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [attachments, setAttachments] = useState<TaskAttachmentRecord[]>([]);
@@ -341,8 +340,8 @@ export function ChildDashboard() {
     async function run() {
       setLoading(true);
       const [{ data, error }, attachmentsResult] = await Promise.all([
-        fetchTodayTasks(client, today),
-        fetchTodayAttachments(client, today),
+        fetchTodayTasks(client, today, boardId),
+        fetchTodayAttachments(client, today, boardId),
       ]);
 
       if (!active) {
@@ -391,8 +390,8 @@ export function ChildDashboard() {
         },
         async () => {
           const [{ data, error }, attachmentsResult] = await Promise.all([
-            fetchTodayTasks(client, today),
-            fetchTodayAttachments(client, today),
+            fetchTodayTasks(client, today, boardId),
+            fetchTodayAttachments(client, today, boardId),
           ]);
 
           if (error) {
@@ -418,7 +417,7 @@ export function ChildDashboard() {
           filter: `board_id=eq.${boardId}`,
         },
         async () => {
-          const { data, error } = await fetchTodayAttachments(client, today);
+          const { data, error } = await fetchTodayAttachments(client, today, boardId);
 
           if (error) {
             setMessage(error.message);
@@ -469,8 +468,8 @@ export function ChildDashboard() {
         }
 
         const [{ data }, attachmentsResult] = await Promise.all([
-          fetchTodayTasks(client, today),
-          fetchTodayAttachments(client, today),
+          fetchTodayTasks(client, today, boardId),
+          fetchTodayAttachments(client, today, boardId),
         ]);
         const nextTasks = (data as TaskRecord[]) ?? [];
         setTasks(nextTasks);

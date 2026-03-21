@@ -27,8 +27,6 @@ import type {
 } from "@/types/task";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const boardId = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID ?? "family-demo";
-
 function summarizeProgress(tasks: TaskRecord[]) {
   return {
     total: tasks.length,
@@ -40,7 +38,7 @@ function summarizeProgress(tasks: TaskRecord[]) {
   };
 }
 
-async function fetchTodayTasks(supabase: SupabaseClient, dueDate: string) {
+function fetchTodayTasks(supabase: SupabaseClient, dueDate: string, boardId: string) {
   return supabase
     .from("tasks")
     .select("*")
@@ -50,7 +48,7 @@ async function fetchTodayTasks(supabase: SupabaseClient, dueDate: string) {
     .order("created_at", { ascending: true });
 }
 
-async function fetchTaskTemplates(supabase: SupabaseClient) {
+function fetchTaskTemplates(supabase: SupabaseClient, boardId: string) {
   return supabase
     .from("task_templates")
     .select("*")
@@ -59,7 +57,7 @@ async function fetchTaskTemplates(supabase: SupabaseClient) {
     .order("created_at", { ascending: true });
 }
 
-async function fetchTaskAttachments(supabase: SupabaseClient, dueDate: string) {
+function fetchTaskAttachments(supabase: SupabaseClient, dueDate: string, boardId: string) {
   return supabase
     .from("task_attachments")
     .select("*")
@@ -98,7 +96,7 @@ function filterAttachmentsForVisibleTasks(
   );
 }
 
-export function ParentDashboard() {
+export function ParentDashboard({ boardId }: { boardId: string }) {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [templates, setTemplates] = useState<TaskTemplateRecord[]>([]);
   const [attachments, setAttachments] = useState<TaskAttachmentRecord[]>([]);
@@ -146,9 +144,9 @@ export function ParentDashboard() {
     async function run() {
       setLoading(true);
       const [{ data, error }, templatesResult, attachmentsResult] = await Promise.all([
-        fetchTodayTasks(client, effectiveSelectedDate),
-        fetchTaskTemplates(client),
-        fetchTaskAttachments(client, effectiveSelectedDate),
+        fetchTodayTasks(client, effectiveSelectedDate, boardId),
+        fetchTaskTemplates(client, boardId),
+        fetchTaskAttachments(client, effectiveSelectedDate, boardId),
       ]);
 
       if (!active) {
@@ -245,9 +243,9 @@ export function ParentDashboard() {
         },
         async () => {
           const [{ data, error }, { data: templateData }, { data: attachmentData }] = await Promise.all([
-            fetchTodayTasks(client, effectiveSelectedDate),
-            fetchTaskTemplates(client),
-            fetchTaskAttachments(client, effectiveSelectedDate),
+            fetchTodayTasks(client, effectiveSelectedDate, boardId),
+            fetchTaskTemplates(client, boardId),
+            fetchTaskAttachments(client, effectiveSelectedDate, boardId),
           ]);
 
           if (error) {
@@ -279,7 +277,7 @@ export function ParentDashboard() {
           filter: `board_id=eq.${boardId}`,
         },
         async () => {
-          const { data, error } = await fetchTaskAttachments(client, effectiveSelectedDate);
+          const { data, error } = await fetchTaskAttachments(client, effectiveSelectedDate, boardId);
 
           if (error) {
             setMessage(error.message);
@@ -350,8 +348,8 @@ export function ParentDashboard() {
     setManualDetails("");
     setRawText("");
     const [{ data }, attachmentsResult] = await Promise.all([
-      fetchTodayTasks(client, effectiveSelectedDate),
-      fetchTaskAttachments(client, effectiveSelectedDate),
+      fetchTodayTasks(client, effectiveSelectedDate, boardId),
+      fetchTaskAttachments(client, effectiveSelectedDate, boardId),
     ]);
     const nextTasks = filterVisibleTasks(
       (data as TaskRecord[]) ?? [],
@@ -459,7 +457,7 @@ export function ParentDashboard() {
         setTemplateSubject("");
         setTemplateDetails("");
         setMessage("已新增固定任务模板");
-        const { data } = await fetchTaskTemplates(client);
+        const { data } = await fetchTaskTemplates(client, boardId);
         setTemplates((data as TaskTemplateRecord[]) ?? []);
       })();
     });
@@ -484,7 +482,7 @@ export function ParentDashboard() {
           return;
         }
 
-        const { data } = await fetchTaskTemplates(client);
+        const { data } = await fetchTaskTemplates(client, boardId);
         setTemplates((data as TaskTemplateRecord[]) ?? []);
       })();
     });
@@ -506,7 +504,7 @@ export function ParentDashboard() {
           return;
         }
 
-        const { data } = await fetchTaskTemplates(client);
+        const { data } = await fetchTaskTemplates(client, boardId);
         setTemplates((data as TaskTemplateRecord[]) ?? []);
       })();
     });
@@ -558,8 +556,8 @@ export function ParentDashboard() {
         }
 
         const [{ data }, attachmentsResult] = await Promise.all([
-          fetchTodayTasks(client, effectiveSelectedDate),
-          fetchTaskAttachments(client, effectiveSelectedDate),
+          fetchTodayTasks(client, effectiveSelectedDate, boardId),
+          fetchTaskAttachments(client, effectiveSelectedDate, boardId),
         ]);
         const nextTasks = filterVisibleTasks(
           (data as TaskRecord[]) ?? [],
@@ -643,7 +641,7 @@ export function ParentDashboard() {
     setAttachmentVisibleToChild(true);
     /* 学科保留上次选择，方便连续上传同一学科的多张图片 */
     setMessage("已保存老师图片资料");
-    const { data } = await fetchTaskAttachments(client, effectiveSelectedDate);
+    const { data } = await fetchTaskAttachments(client, effectiveSelectedDate, boardId);
     setAttachments(
       filterAttachmentsForVisibleTasks(
         (data as TaskAttachmentRecord[]) ?? [],
@@ -682,7 +680,7 @@ export function ParentDashboard() {
           ),
         );
 
-        const { data } = await fetchTaskAttachments(client, effectiveSelectedDate);
+        const { data } = await fetchTaskAttachments(client, effectiveSelectedDate, boardId);
         setAttachments(
           filterAttachmentsForVisibleTasks(
             (data as TaskAttachmentRecord[]) ?? [],
@@ -724,7 +722,7 @@ export function ParentDashboard() {
           ),
         );
 
-        const { data } = await fetchTaskAttachments(client, effectiveSelectedDate);
+        const { data } = await fetchTaskAttachments(client, effectiveSelectedDate, boardId);
         setAttachments(
           filterAttachmentsForVisibleTasks(
             (data as TaskAttachmentRecord[]) ?? [],
@@ -752,8 +750,8 @@ export function ParentDashboard() {
         }
 
         const [{ data }, attachmentsResult] = await Promise.all([
-          fetchTodayTasks(client, effectiveSelectedDate),
-          fetchTaskAttachments(client, effectiveSelectedDate),
+          fetchTodayTasks(client, effectiveSelectedDate, boardId),
+          fetchTaskAttachments(client, effectiveSelectedDate, boardId),
         ]);
         const nextTasks = filterVisibleTasks(
           (data as TaskRecord[]) ?? [],
