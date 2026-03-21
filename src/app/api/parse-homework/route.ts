@@ -74,13 +74,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "AI 返回格式异常，请重试" }, { status: 502 });
     }
 
-    const groups = Array.isArray(parsed)
-      ? parsed
-      : Array.isArray((parsed as Record<string, unknown>)?.groups)
-        ? (parsed as Record<string, unknown>).groups
-        : Array.isArray((parsed as Record<string, unknown>)?.data)
-          ? (parsed as Record<string, unknown>).data
-          : [];
+    let groups: unknown[] = [];
+
+    if (Array.isArray(parsed)) {
+      groups = parsed;
+    } else if (parsed && typeof parsed === "object") {
+      /* 模型可能用任意 key 包装数组，取第一个值为数组的字段 */
+      for (const value of Object.values(parsed as Record<string, unknown>)) {
+        if (Array.isArray(value)) {
+          groups = value;
+          break;
+        }
+      }
+    }
 
     return NextResponse.json({ groups });
   } catch (error) {
