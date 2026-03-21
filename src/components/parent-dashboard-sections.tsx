@@ -793,22 +793,26 @@ export function LiveStatusSection({
     return acc;
   }, []);
 
-  const orderedGroups = groupedTasks.map((group) => ({
-    ...group,
-    tasks: [...group.tasks].sort((left, right) => {
-      const weightDiff = taskStatusWeight(left.status) - taskStatusWeight(right.status);
+  /* 主科优先，其余按首次出现顺序 */
+  const subjectPriority: Record<string, number> = { "语文": 0, "数学": 1, "英语": 2 };
+  const orderedGroups = groupedTasks
+    .map((group) => ({
+      ...group,
+      tasks: [...group.tasks].sort((left, right) => {
+        const weightDiff = taskStatusWeight(left.status) - taskStatusWeight(right.status);
 
-      if (weightDiff !== 0) {
-        return weightDiff;
-      }
+        if (weightDiff !== 0) {
+          return weightDiff;
+        }
 
-      if (left.sort_order !== right.sort_order) {
-        return left.sort_order - right.sort_order;
-      }
+        if (left.sort_order !== right.sort_order) {
+          return left.sort_order - right.sort_order;
+        }
 
-      return left.created_at.localeCompare(right.created_at);
-    }),
-  }));
+        return left.created_at.localeCompare(right.created_at);
+      }),
+    }))
+    .sort((a, b) => (subjectPriority[a.subject] ?? 99) - (subjectPriority[b.subject] ?? 99));
 
   return (
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5">
