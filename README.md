@@ -1,20 +1,26 @@
 # 家庭学习看板
 
-面向三年级孩子与家长的家庭作业协同 Web App。
+面向小学生家庭的作业协同 Web App。家长整理任务，孩子在 iPad 上大字查看、点按反馈，家长端实时同步。
 
-当前仓库包含一个可运行、可部署的 MVP：
+## 项目截图
+
+| 首页入口 | 家长端 | 孩子端 |
+|:---:|:---:|:---:|
+| ![home](docs/screenshots/01-home.png) | ![parent](docs/screenshots/02-parent.jpg) | ![child](docs/screenshots/03-child.png) |
+| 密码登录 / Demo 体验 | 作业导入、AI 解析、实时状态 | 番茄钟、任务卡片、图片资料 |
+
+## 功能特性
 
 - 家长端创建和管理今日任务
-- 孩子端查看今日任务并更新状态
-- 家长端实时同步看到状态变化
-- 支持把老师作业文本拆分后导入任务
-- AI 智能解析作业（自动识别学科 + 拆分子任务）
-- AI 今日作战计划（孩子端个性化鼓励 + 顺序建议）
-- AI 人设自定义（定义 AI 说话的语气和风格）
-- 支持“每天固定任务”模板并一键加入当天任务
-- 孩子端番茄钟计时器
-- 孩子端图片资料全屏滑动查看
+- 孩子端查看任务并更新状态，家长端实时同步
+- 老师作业文本导入 + AI 智能解析（自动识别学科、拆分子任务）
+- AI 今日作战计划（孩子端个性化鼓励 + 做作业顺序建议）
+- AI 人设自定义（定义 AI 生成内容的语气和风格）
+- “每天固定任务”模板并一键加入当天任务
+- 孩子端番茄钟计时器（专注 20 分钟 + 休息 5 分钟）
+- 老师图片资料全屏滑动查看
 - 学科优先级排序（语文→数学→英语）
+- 访问保护：密码门 + board_id 数据隔离
 - PWA 支持，iPad 桌面图标直达孩子端
 
 ## 技术栈
@@ -39,13 +45,15 @@ cp .env.example .env.local
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_public_client_key
 NEXT_PUBLIC_DEFAULT_BOARD_ID=family-demo
+BOARD_PASSWORD=your_access_password
 ```
 
 说明：
 
 - `NEXT_PUBLIC_SUPABASE_URL`：Supabase 项目的 Project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`：前端公开 key，可使用 anon public key 或新版 publishable key
-- `NEXT_PUBLIC_DEFAULT_BOARD_ID`：家长端和孩子端共享的看板 ID，默认可使用 `family-demo`
+- `NEXT_PUBLIC_DEFAULT_BOARD_ID`：私有看板 ID，设一个不容易猜到的值
+- `BOARD_PASSWORD`：访问私有看板的密码（首页输入密码才能进入）
 
 ## Supabase 初始化
 
@@ -200,6 +208,16 @@ API Key 存储在 Supabase 数据库中，前端仅显示脱敏值。所有 AI �
 
 如果不想用界面配置，也可以在 Vercel 环境变量中设置 `OPENAI_API_KEY` 作为 fallback。
 
+## 访问保护
+
+项目采用 **密码门 + board_id 隔离** 方案：
+
+- **私有看板**：首页输入密码后进入，URL 带 `?board=你的ID`，数据完全隔离
+- **Demo 看板**：免密码，URL 带 `?board=demo`，所有访客共享，仅供体验
+- **PWA**：iPad 桌面图标直接打开 `/child`，无参数时自动使用环境变量中的私有 board_id
+
+密码通过 `BOARD_PASSWORD` 环境变量设置，验证成功后设置 httpOnly cookie（90 天有效）。
+
 ## 部署到 Vercel
 
 1. 将代码推送到 GitHub
@@ -209,20 +227,11 @@ API Key 存储在 Supabase 数据库中，前端仅显示脱敏值。所有 AI �
 ```env
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-NEXT_PUBLIC_DEFAULT_BOARD_ID=family-demo
+NEXT_PUBLIC_DEFAULT_BOARD_ID=your-private-board-id
+BOARD_PASSWORD=your-password
 ```
 
 4. 触发部署
-
-部署完成后，建议做一轮线上验收：
-
-- `/parent` 新增任务
-- `/child` 查看任务
-- `/child` 更新状态
-- `/parent` 确认实时同步
-- 刷新后数据持久化正常
-- `/parent` 上传老师图片资料
-- `/child` 在对应学科下查看参考图片弹层
 
 ## 常用命令
 
