@@ -599,9 +599,9 @@ export function ParentDashboard() {
     }
 
     setAttachmentNote("");
-    setAttachmentSubject("");
     setAttachmentRole("reference");
     setAttachmentVisibleToChild(true);
+    /* 学科保留上次选择，方便连续上传同一学科的多张图片 */
     setMessage("已保存老师图片资料");
     const { data } = await fetchTaskAttachments(client, effectiveSelectedDate);
     setAttachments(
