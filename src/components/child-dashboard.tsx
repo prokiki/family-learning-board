@@ -153,10 +153,11 @@ function groupTasksBySubject(tasks: TaskRecord[]) {
     grouped.set(subject, subjectTasks);
   }
 
-  return [...grouped.entries()].map(([subject, subjectTasks]) => ({
-    subject,
-    tasks: subjectTasks,
-  }));
+  /* 主科优先，其余按首次出现顺序 */
+  const priority: Record<string, number> = { "语文": 0, "数学": 1, "英语": 2 };
+  return [...grouped.entries()]
+    .map(([subject, subjectTasks]) => ({ subject, tasks: subjectTasks }))
+    .sort((a, b) => (priority[a.subject] ?? 99) - (priority[b.subject] ?? 99));
 }
 
 function filterAttachmentsForVisibleTasks(

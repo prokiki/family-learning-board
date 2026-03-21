@@ -188,39 +188,39 @@ export function PomodoroSection({
         </span>
 
         {/* Timer Ring */}
-        <div className="relative h-40 w-40">
+        <div className="relative h-44 w-44">
           <svg viewBox="0 0 160 160" className="h-full w-full -rotate-90">
-            <circle cx="80" cy="80" r="70" fill="none" stroke="var(--line)" strokeWidth="6" />
+            <circle cx="80" cy="80" r="68" fill="none" stroke="var(--line)" strokeWidth="8" strokeOpacity="0.5" />
             <circle
               cx="80"
               cy="80"
-              r="70"
+              r="68"
               fill="none"
               stroke={strokeColor}
-              strokeWidth="6"
+              strokeWidth="8"
               strokeLinecap="round"
               pathLength="100"
               strokeDasharray="100"
               strokeDashoffset={100 - timerProgress}
               className="transition-[stroke-dashoffset,stroke] duration-700 ease-linear"
+              style={{ filter: timerState.isRunning ? `drop-shadow(0 0 6px ${strokeColor})` : 'none' }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-4xl font-bold tracking-tight text-[var(--foreground)] [font-variant-numeric:tabular-nums]">
-              {formatTimer(timerState.secondsLeft)}
+            {timerState.secondsLeft === 0 && !timerState.isRunning ? (
+              <span className="text-2xl font-bold text-[var(--primary)]">时间到</span>
+            ) : (
+              <span className="text-4xl font-bold tracking-tight text-[var(--foreground)] [font-variant-numeric:tabular-nums]">
+                {formatTimer(timerState.secondsLeft)}
+              </span>
+            )}
+            <span className="mt-1 text-xs font-medium text-[var(--text-muted)]">
+              {timerState.mode === "focus"
+                ? timerState.isRunning ? "专注中" : "专注模式"
+                : timerState.isRunning ? "休息中" : "休息模式"}
             </span>
           </div>
         </div>
-
-        <span className="text-xs font-medium text-[var(--primary)]">
-          {timerState.mode === "focus"
-            ? timerState.isRunning
-              ? "专注中"
-              : "专注模式"
-            : timerState.isRunning
-              ? "休息中"
-              : "休息模式"}
-        </span>
 
         {/* Mode Switch */}
         <div className="flex w-full rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] p-0.5">

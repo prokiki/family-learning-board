@@ -376,20 +376,13 @@ export function TemplatesSection({
       </div>
 
       <div className="mt-4 rounded-[1rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4">
-        <div className="grid gap-3 md:grid-cols-[1.5fr_0.9fr]">
-          <input
-            value={title}
-            onChange={(event) => onTitleChange(event.target.value)}
-            placeholder="固定任务标题，例如：英语听读 15 分钟"
-            className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
-          />
-          <input
-            value={subject}
-            onChange={(event) => onSubjectChange(event.target.value)}
-            placeholder="学科，可选，例如：英语"
-            className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
-          />
-        </div>
+        <SubjectPicker value={subject} onChange={onSubjectChange} />
+        <input
+          value={title}
+          onChange={(event) => onTitleChange(event.target.value)}
+          placeholder="固定任务标题，例如：英语听读 15 分钟"
+          className="mt-3 w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+        />
         <textarea
           value={details}
           onChange={(event) => onDetailsChange(event.target.value)}
