@@ -1,10 +1,109 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import { EmptyState, TaskListSkeleton } from "@/components/empty-state";
 import { formatDisplayDate } from "@/lib/date";
 import type { TaskAttachmentRecord, TaskRecord, TaskStatus } from "@/types/task";
+
+/* ─────────── AI 问一问 ─────────── */
+
+const HELP_OPTIONS = [
+  { key: "explain", label: "这是什么意思？" },
+  { key: "how_to_start", label: "怎么开始做？" },
+  { key: "how_to_check", label: "做完怎么检查？" },
+] as const;
+
+function TaskHelpButton({ task }: { task: TaskRecord }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+
+  const askHelp = useCallback(
+    async (questionType: string) => {
+      setActiveKey(questionType);
+      setLoading(true);
+      setAnswer(null);
+      try {
+        const res = await fetch("/api/task-help", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subject: task.subject || "",
+            title: task.title,
+            details: task.details || "",
+            question_type: questionType,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setAnswer(data.error || "暂时回答不了");
+        } else {
+          setAnswer(data.answer);
+        }
+      } catch {
+        setAnswer("网络异常，请重试");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [task],
+  );
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-2 w-full rounded-[10px] border border-dashed border-[var(--line)] px-3 py-2 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+      >
+        💡 问一问
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-2 rounded-[10px] border border-[var(--line)] bg-[var(--card-alt)] p-3">
+      <div className="flex flex-wrap gap-1.5">
+        {HELP_OPTIONS.map((opt) => (
+          <button
+            key={opt.key}
+            type="button"
+            disabled={loading}
+            onClick={() => askHelp(opt.key)}
+            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+              activeKey === opt.key
+                ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
+                : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
+            } disabled:opacity-50`}
+          >
+            {opt.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            setAnswer(null);
+            setActiveKey(null);
+          }}
+          className="ml-auto rounded-full border border-[var(--line)] bg-card px-2.5 py-1.5 text-xs text-[var(--text-muted)]"
+        >
+          收起
+        </button>
+      </div>
+      {loading && (
+        <p className="mt-2 text-xs text-[var(--text-muted)]">思考中...</p>
+      )}
+      {answer && !loading && (
+        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[var(--foreground)]">
+          {answer}
+        </p>
+      )}
+    </div>
+  );
+}
 
 type TimerMode = "focus" | "break";
 type TimerState = {
@@ -463,6 +562,9 @@ export function ChildTasksSection({
                         </>
                       )}
                     </div>
+
+                    {/* AI 问一问 */}
+                    {!completed && <TaskHelpButton task={task} />}
                   </article>
                 );
               })}
