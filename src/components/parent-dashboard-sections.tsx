@@ -578,12 +578,17 @@ export function AttachmentSection({
 
       <div className="mt-4 rounded-[1rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4">
         <div className="grid gap-3 md:grid-cols-2">
-          <input
+          <select
             value={subject}
             onChange={(event) => onSubjectChange(event.target.value)}
-            placeholder="归属学科，例如：英语"
-            className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
-          />
+            className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none focus:border-[var(--primary)]"
+          >
+            <option value="语文">语文</option>
+            <option value="数学">数学</option>
+            <option value="英语">英语</option>
+            <option value="科学">科学</option>
+            <option value="其他">其他</option>
+          </select>
           <select
             value={role}
             onChange={(event) => onRoleChange(event.target.value as AttachmentRole)}

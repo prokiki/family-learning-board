@@ -109,7 +109,7 @@ export function ParentDashboard() {
   const [templateTitle, setTemplateTitle] = useState("");
   const [templateSubject, setTemplateSubject] = useState("");
   const [templateDetails, setTemplateDetails] = useState("");
-  const [attachmentSubject, setAttachmentSubject] = useState("");
+  const [attachmentSubject, setAttachmentSubject] = useState("语文");
   const [attachmentNote, setAttachmentNote] = useState("");
   const [attachmentRole, setAttachmentRole] = useState<AttachmentRole>("reference");
   const [attachmentVisibleToChild, setAttachmentVisibleToChild] = useState(true);
