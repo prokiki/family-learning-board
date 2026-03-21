@@ -55,6 +55,7 @@ NEXT_PUBLIC_DEFAULT_BOARD_ID=family-demo
 3. [003_add_task_templates.sql](supabase/migrations/003_add_task_templates.sql)
 4. [004_harden_tasks_schema.sql](supabase/migrations/004_harden_tasks_schema.sql)
 5. [005_add_task_attachments.sql](supabase/migrations/005_add_task_attachments.sql)
+6. [006_add_ai_config.sql](supabase/migrations/006_add_ai_config.sql)
 
 这些 migration 会创建或补齐：
 
@@ -68,6 +69,7 @@ NEXT_PUBLIC_DEFAULT_BOARD_ID=family-demo
 - RLS policy
 - 常用索引与基础约束
 - `teacher-attachments` storage bucket 与公开读写策略
+- `public.ai_config` AI 服务配置表
 
 ### 3. 建议执行后的快速检查
 
@@ -162,6 +164,32 @@ npm run dev
 - `role`: `reference` / `instruction` / `parent_only`
 - `visible_to_child`: 是否显示给孩子端
 - `sort_order`: 同一学科下的图片顺序
+
+## AI 智能解析配置
+
+导入预览支持 AI 智能解析作业文字，可在家长端顶栏「⚙ AI 设置」中配置。
+
+### 支持的服务商
+
+| 服务商 | 可用模型 |
+|---------|----------|
+| OpenAI | GPT-4o Mini, GPT-4o, GPT-4.1 Mini, GPT-4.1 |
+| Anthropic (Claude) | Claude Sonnet 4, Claude Haiku 3 |
+| DeepSeek | DeepSeek Chat, DeepSeek Reasoner |
+| 智谱 AI (GLM) | GLM-4 Flash, GLM-4 Plus |
+| 通义千问 (Qwen) | Qwen Turbo, Qwen Plus, Qwen Max |
+
+### 配置方式
+
+1. 确保已执行 `006_add_ai_config.sql` 建表
+2. 在家长端顶栏点击「⚙ AI 设置」
+3. 选择服务商和模型
+4. 填入对应服务商的 API Key
+5. 保存即可
+
+API Key 存储在 Supabase 数据库中，前端仅显示脱敏值。所有 AI 调用走服务端 API Route，不暴露在浏览器中。
+
+如果不想用界面配置，也可以在 Vercel 环境变量中设置 `OPENAI_API_KEY` 作为 fallback。
 
 ## 部署到 Vercel
 
