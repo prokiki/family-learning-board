@@ -151,6 +151,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<"import" | "manual" | "template" | "attachment">("import");
+  const [taskCategory, setTaskCategory] = useState<"school" | "extra">("school");
   const [aiParsing, setAiParsing] = useState(false);
   const [ocrScanning, setOcrScanning] = useState(false);
   const today = useLocalDate();
@@ -392,7 +393,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
       status: "pending" as TaskStatus,
       sort_order: tasks.length + index,
       source,
-      category: "school",
+      category: taskCategory,
       last_updated_by: "parent" as const,
     }));
 
@@ -874,6 +875,30 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
                   </button>
                 ))}
               </div>
+
+              {/* 学校/课外 切换 */}
+              {(activeTab === "import" || activeTab === "manual" || activeTab === "template") && (
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="text-xs text-[var(--text-muted)]">归类：</span>
+                  {([
+                    ["school", "学校任务"],
+                    ["extra", "课外学习"],
+                  ] as const).map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setTaskCategory(key)}
+                      className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                        taskCategory === key
+                          ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
+                          : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Tab Content */}
               {activeTab === "import" ? (
