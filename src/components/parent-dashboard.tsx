@@ -412,6 +412,8 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
     setManualTitle("");
     setManualDetails("");
     setRawText("");
+    /* 等待数据库写入完成后再拉取 */
+    await new Promise((r) => setTimeout(r, 300));
     const [{ data }, attachmentsResult] = await Promise.all([
       fetchTodayTasks(client, effectiveSelectedDate, boardId),
       fetchTaskAttachments(client, effectiveSelectedDate, boardId),

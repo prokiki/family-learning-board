@@ -942,6 +942,11 @@ export function LiveStatusSection({
                             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${sourcePillClass(task.source)}`}>
                               {sourceLabel(task.source)}
                             </span>
+                            {task.category === "extra" && (
+                              <span className="rounded-full bg-[var(--primary-light)] px-2.5 py-1 text-xs font-semibold text-[var(--primary)]">
+                                课外
+                              </span>
+                            )}
                           </div>
                           <h4
                             className={`mt-2 text-base font-medium text-[var(--foreground)] ${
