@@ -63,6 +63,27 @@ export const AI_PROVIDERS: AIProvider[] = [
       { id: "qwen-max", name: "Qwen Max", description: "最强模型" },
     ],
   },
+  {
+    id: "minimax",
+    name: "MiniMax",
+    baseURL: "https://api.minimax.io/v1",
+    models: [
+      { id: "MiniMax-M2.7", name: "MiniMax M2.7", description: "最新旗舰，递归自提升" },
+      { id: "MiniMax-M2.7-highspeed", name: "MiniMax M2.7 极速", description: "同性能更快速" },
+      { id: "MiniMax-M2.5", name: "MiniMax M2.5", description: "性价比高" },
+      { id: "MiniMax-M2.5-highspeed", name: "MiniMax M2.5 极速", description: "同性能更快速" },
+    ],
+  },
+  {
+    id: "moonshot",
+    name: "Moonshot (Kimi)",
+    baseURL: "https://api.moonshot.ai/v1",
+    models: [
+      { id: "kimi-k2.5", name: "Kimi K2.5", description: "最新旗舰模型" },
+      { id: "kimi-k2", name: "Kimi K2", description: "均衡性能与速度" },
+      { id: "moonshot-v1-8k", name: "Moonshot v1 8K", description: "快速轻量" },
+    ],
+  },
 ];
 
 export function getProvider(providerId: string) {
