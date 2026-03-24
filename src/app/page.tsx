@@ -72,8 +72,8 @@ export default function Home() {
           </p>
 
           {authBoard ? (
-            /* 已登录：直接显示入口 */
-            <div className="mt-8 space-y-3">
+            /* 已登录：直接进入孩子看板 */
+            <div className="mt-8">
               <button
                 type="button"
                 onClick={() => router.push(`/child?board=${authBoard}`)}
@@ -81,13 +81,12 @@ export default function Home() {
               >
                 进入孩子看板
               </button>
-              <button
-                type="button"
+              <p
                 onClick={() => router.push(`/parent?board=${authBoard}`)}
-                className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm font-semibold text-[var(--text-secondary)]"
+                className="mt-3 cursor-pointer text-center text-xs text-[var(--text-muted)]"
               >
-                进入家长端
-              </button>
+                家长入口
+              </p>
             </div>
           ) : (
             /* 未登录：密码表单 */
