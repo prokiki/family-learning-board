@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const DEMO_BOARD = "demo";
+const DEFAULT_BOARD = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID || "";
 
 export default function Home() {
   const router = useRouter();
@@ -55,6 +56,8 @@ export default function Home() {
   function handleParentEntry() {
     if (authBoard) {
       router.push(`/parent?board=${authBoard}`);
+    } else if (DEFAULT_BOARD) {
+      setShowParentLogin(true);
     } else {
       setShowParentLogin(true);
     }
@@ -84,10 +87,13 @@ export default function Home() {
           <div className="mt-8">
             <button
               type="button"
-              onClick={() => router.push(authBoard ? `/child?board=${authBoard}` : `/child?board=${DEMO_BOARD}`)}
+              onClick={() => {
+                const board = authBoard || DEFAULT_BOARD || DEMO_BOARD;
+                router.push(`/child?board=${board}`);
+              }}
               className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3.5 text-base font-semibold text-white"
             >
-              {authBoard ? "进入孩子看板" : "体验 Demo 看板"}
+              进入孩子看板
             </button>
           </div>
 
