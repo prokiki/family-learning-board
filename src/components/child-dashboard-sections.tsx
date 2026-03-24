@@ -886,18 +886,7 @@ export function ChildTasksSection({
         );
       })}
 
-      {/* All Done Section */}
-      {allTasksCompleted ? (
-        <div className="rounded-[1.5rem] border border-[var(--line)] bg-card px-6 py-8 text-center shadow-[var(--shadow-sm)]">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--success-subtle)] text-xl font-bold text-[var(--success)]">
-            ✓
-          </div>
-          <p className="mt-3 text-base font-semibold text-[var(--foreground)]">
-            今天的任务全部完成了
-          </p>
-          <p className="mt-1 text-sm text-[var(--text-tertiary)]">好好休息一下吧</p>
-        </div>
-      ) : null}
+
     </div>
   );
 }
