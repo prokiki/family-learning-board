@@ -68,6 +68,13 @@
   --accent-subtle: #eaf3fb;
   --accent-muted: #b4d3ec;
   --shadow-glow: 0 0 0 3px rgba(74, 143, 194, 0.12);
+  /* 重新映射兼容层，确保子元素继承新色 */
+  --background: #faf8f0;
+  --card-alt: #fdfbf5;
+  --line-light: #f3f0e6;
+  --primary: #4a8fc2;
+  --primary-hover: #3d7db0;
+  --primary-light: #eaf3fb;
 }
 
 html[data-theme="dark"] {
@@ -115,6 +122,9 @@ html[data-theme="dark"] [data-view="child"] {
   --accent-subtle: rgba(109, 171, 224, 0.16);
   --accent-muted: rgba(109, 171, 224, 0.34);
   --shadow-glow: 0 0 0 3px rgba(109, 171, 224, 0.18);
+  --primary: #6dabe0;
+  --primary-hover: #88bfeb;
+  --primary-light: rgba(109, 171, 224, 0.16);
 }
 
 @theme inline {
