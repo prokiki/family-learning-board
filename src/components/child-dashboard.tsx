@@ -529,6 +529,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
     const { error } = await client.from("tasks").insert({
       board_id: boardId,
       due_date: today,
+      subject: "课外学习",
       title: extraTitle.trim(),
       status: "pending",
       sort_order: tasks.length,
