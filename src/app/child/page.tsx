@@ -19,7 +19,7 @@ function ChildContent() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <main className="min-h-screen bg-background">
+      <main data-view="child" className="min-h-screen bg-background">
         <div className="flex items-center justify-between px-3 pt-3 sm:px-4 sm:pt-4 md:px-6">
           <div className="flex items-center gap-2">
             <Link href="/" className="nav-button">

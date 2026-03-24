@@ -57,6 +57,19 @@
   color-scheme: light;
 }
 
+/* ── 孩子端配色覆盖（亮色）── */
+[data-view="child"] {
+  --surface-0: #faf8f0;
+  --surface-2: #fdfbf5;
+  --surface-3: #f3f0e6;
+  --border-subtle: #f3f0e6;
+  --accent: #4a8fc2;
+  --accent-hover: #3d7db0;
+  --accent-subtle: #eaf3fb;
+  --accent-muted: #b4d3ec;
+  --shadow-glow: 0 0 0 3px rgba(74, 143, 194, 0.12);
+}
+
 html[data-theme="dark"] {
   --surface-0: #171816;
   --surface-1: #1f201d;
@@ -93,6 +106,15 @@ html[data-theme="dark"] {
   --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.38);
   --shadow-glow: 0 0 0 3px rgba(93, 181, 170, 0.18);
   color-scheme: dark;
+}
+
+/* ── 孩子端配色覆盖（暗色）── */
+html[data-theme="dark"] [data-view="child"] {
+  --accent: #6dabe0;
+  --accent-hover: #88bfeb;
+  --accent-subtle: rgba(109, 171, 224, 0.16);
+  --accent-muted: rgba(109, 171, 224, 0.34);
+  --shadow-glow: 0 0 0 3px rgba(109, 171, 224, 0.18);
 }
 
 @theme inline {
