@@ -9,14 +9,24 @@ function isCompleted(status: TaskStatus) {
   return status === "done_by_child" || status === "confirmed_by_parent";
 }
 
-/** 生成最近 N 天的日期数组 */
-function recentDays(count: number): string[] {
-  const result: string[] = [];
+/** 生成对齐到周一的日历格子（4 周 + 本周到今天） */
+function calendarDays(weeks: number): string[] {
   const now = new Date();
-  for (let i = count - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
+  // 找到本周的周一
+  const dayOfWeek = now.getDay(); // 0=周日 1=周一 ... 6=周六
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const thisMonday = new Date(now);
+  thisMonday.setDate(now.getDate() + diffToMonday);
+
+  // 往前推 weeks 周
+  const startMonday = new Date(thisMonday);
+  startMonday.setDate(thisMonday.getDate() - weeks * 7);
+
+  const result: string[] = [];
+  const d = new Date(startMonday);
+  while (d <= now) {
     result.push(formatLocalDate(d));
+    d.setDate(d.getDate() + 1);
   }
   return result;
 }
@@ -26,7 +36,7 @@ type DayStatus = "full" | "partial" | "none" | "empty";
 export function LearningCalendar({ boardId }: { boardId: string }) {
   const supabase = getSupabaseBrowserClient();
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
-  const days = useMemo(() => recentDays(28), []); // 最近 4 周
+  const days = useMemo(() => calendarDays(3), []); // 本周 + 前 3 周
 
   useEffect(() => {
     if (!supabase) return;
