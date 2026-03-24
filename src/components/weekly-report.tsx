@@ -156,6 +156,12 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
   const prevCompletionRate = prevTotalCount === 0 ? 0 : Math.round((prevCompletedCount / prevTotalCount) * 100);
   const rateDiff = completionRate - prevCompletionRate;
 
+  // 学校/课外分类统计
+  const schoolTasks = tasks.filter((t) => (t as TaskRecord & { category?: string }).category !== "extra");
+  const extraTasks = tasks.filter((t) => (t as TaskRecord & { category?: string }).category === "extra");
+  const schoolCompleted = schoolTasks.filter((t) => isCompletedStatus(t.status)).length;
+  const extraCompleted = extraTasks.filter((t) => isCompletedStatus(t.status)).length;
+
   // Per-day stats
   const dayStats: DayStat[] = useMemo(() => {
     return weekDays.map((date) => {
@@ -339,6 +345,48 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
             </div>
           </div>
 
+          {/* ───── School vs Extra Breakdown ───── */}
+          {(schoolTasks.length > 0 || extraTasks.length > 0) && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
+                <p className="text-xs font-medium text-[var(--text-tertiary)]">学校任务</p>
+                <p className="mt-2 text-2xl font-bold text-[var(--foreground)]">
+                  {schoolCompleted}/{schoolTasks.length}
+                  <span className="ml-2 text-sm font-semibold text-[var(--text-secondary)]">
+                    {schoolTasks.length > 0 ? `${Math.round((schoolCompleted / schoolTasks.length) * 100)}%` : "0%"}
+                  </span>
+                </p>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--line-light)]">
+                  <div
+                    className="h-full rounded-full bg-[var(--success)] transition-[width] duration-300"
+                    style={{ width: schoolTasks.length > 0 ? `${(schoolCompleted / schoolTasks.length) * 100}%` : "0%" }}
+                  />
+                </div>
+              </div>
+              <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
+                <p className="text-xs font-medium text-[var(--text-tertiary)]">课外学习</p>
+                {extraTasks.length > 0 ? (
+                  <>
+                    <p className="mt-2 text-2xl font-bold text-[var(--foreground)]">
+                      {extraCompleted}/{extraTasks.length}
+                      <span className="ml-2 text-sm font-semibold text-[var(--text-secondary)]">
+                        {Math.round((extraCompleted / extraTasks.length) * 100)}%
+                      </span>
+                    </p>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--line-light)]">
+                      <div
+                        className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-300"
+                        style={{ width: `${(extraCompleted / extraTasks.length) * 100}%` }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-[var(--text-muted)]">本周无课外任务</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* ───── Daily Bar Chart ───── */}
           <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
             <h2 className="text-base font-semibold text-[var(--foreground)]">每日完成情况</h2>
@@ -397,6 +445,9 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
                       <div className="flex items-center gap-2">
                         <span className={`inline-block h-2.5 w-2.5 rounded-full ${subjectDotClass(stat.subject)}`} />
                         <span className="text-sm font-medium text-[var(--foreground)]">{stat.subject}</span>
+                        {stat.subject === "课外学习" && (
+                          <span className="rounded-full bg-[var(--primary-light)] px-2 py-0.5 text-[10px] font-semibold text-[var(--primary)]">课外</span>
+                        )}
                       </div>
                       <span className="text-xs text-[var(--text-secondary)]">
                         {stat.completed}/{stat.total} 完成（{rate}%）
@@ -448,6 +499,10 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
             streak={streak}
             dayStats={dayStats}
             subjectStats={subjectStats}
+            schoolCount={schoolTasks.length}
+            schoolCompleted={schoolCompleted}
+            extraCount={extraTasks.length}
+            extraCompleted={extraCompleted}
           />
 
         </div>
@@ -468,6 +523,10 @@ function AIWeeklyReview({
   streak,
   dayStats,
   subjectStats,
+  schoolCount,
+  schoolCompleted,
+  extraCount,
+  extraCompleted,
 }: {
   boardId: string;
   weekLabel: string;
@@ -478,6 +537,10 @@ function AIWeeklyReview({
   streak: number;
   dayStats: DayStat[];
   subjectStats: SubjectStat[];
+  schoolCount: number;
+  schoolCompleted: number;
+  extraCount: number;
+  extraCompleted: number;
 }) {
   const [review, setReview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -505,6 +568,10 @@ function AIWeeklyReview({
             weekday: weekdayNames[new Date(`${d.date}T00:00:00`).getDay()],
           })),
           subject_stats: subjectStats,
+          school_count: schoolCount,
+          school_completed: schoolCompleted,
+          extra_count: extraCount,
+          extra_completed: extraCompleted,
         }),
       });
       const data = await res.json();
@@ -518,7 +585,7 @@ function AIWeeklyReview({
     } finally {
       setLoading(false);
     }
-  }, [boardId, weekLabel, total, completed, completionRate, prevRate, streak, dayStats, subjectStats]);
+  }, [boardId, weekLabel, total, completed, completionRate, prevRate, streak, dayStats, subjectStats, schoolCount, schoolCompleted, extraCount, extraCompleted]);
 
   if (total === 0) return null;
 
