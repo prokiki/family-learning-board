@@ -33,7 +33,7 @@ function calendarDays(weeks: number): string[] {
 
 type DayStatus = "full" | "partial" | "none" | "empty";
 
-export function LearningCalendar({ boardId }: { boardId: string }) {
+export function LearningCalendar({ boardId, refreshKey = 0 }: { boardId: string; refreshKey?: number }) {
   const supabase = getSupabaseBrowserClient();
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const days = useMemo(() => calendarDays(3), []); // 本周 + 前 3 周
@@ -52,7 +52,7 @@ export function LearningCalendar({ boardId }: { boardId: string }) {
       .then(({ data }) => {
         if (data) setTasks(data as TaskRecord[]);
       });
-  }, [supabase, boardId, days]);
+  }, [supabase, boardId, days, refreshKey]);
 
   const dayStatusMap = useMemo(() => {
     const map = new Map<string, DayStatus>();

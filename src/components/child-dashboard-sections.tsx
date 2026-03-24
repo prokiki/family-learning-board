@@ -538,36 +538,18 @@ function statusPillLabel(status: TaskStatus) {
 
 export function ChildHeader({
   today,
-  totalCount,
-  completedCount,
 }: {
   today: string;
-  totalCount: number;
-  completedCount: number;
 }) {
-  const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
-
   return (
-    <section className="space-y-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">
-            学习看板
-          </h1>
-          <span className="text-sm text-[var(--text-tertiary)]">
-            {today ? formatDisplayDate(today) : ""}
-          </span>
-        </div>
-        <span className="text-sm font-medium text-[var(--text-secondary)]">
-          <strong className="font-semibold text-[var(--primary)]">{completedCount}</strong>
-          /{totalCount} 完成
+    <section>
+      <div className="flex items-baseline gap-3">
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">
+          学习看板
+        </h1>
+        <span className="text-sm text-[var(--text-tertiary)]">
+          {today ? formatDisplayDate(today) : ""}
         </span>
-      </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-[var(--line-light)]">
-        <div
-          className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-500 ease-out"
-          style={{ width: `${progressPercent}%` }}
-        />
       </div>
     </section>
   );

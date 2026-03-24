@@ -196,6 +196,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
   const [addingExtra, setAddingExtra] = useState(false);
   const [dailySummary, setDailySummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [calendarKey, setCalendarKey] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
   const tasksRef = useRef<TaskRecord[]>([]);
   const timerTotalSeconds = getModeSeconds(timerState.mode);
@@ -416,6 +417,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
           );
           setTasks(nextTasks);
           setAttachments(nextAttachments);
+          setCalendarKey((k) => k + 1);
         },
       )
       .on(
@@ -489,6 +491,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
             nextTasks,
           ),
         );
+        setCalendarKey((k) => k + 1);
         setHighlightedTaskId(id);
       })();
     });
@@ -569,15 +572,11 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
   return (
     <div className="min-h-screen bg-background px-4 py-5 text-[var(--foreground)] sm:px-6 md:px-8 md:py-8">
       <div className="mx-auto max-w-[960px] space-y-5">
-        <ChildHeader
-          today={today}
-          totalCount={activeTasks.length}
-          completedCount={completedTaskCount}
-        />
+        <ChildHeader today={today} />
 
         {/* 学习日历在手机端显示在顶部，iPad 上显示在左侧栏 */}
         <div className="md:hidden">
-          <LearningCalendar boardId={boardId} />
+          <LearningCalendar boardId={boardId} refreshKey={calendarKey} />
         </div>
 
         {!supabase ? (
@@ -696,7 +695,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
               onReset={resetTimer}
             />
             <div className="hidden md:block">
-              <LearningCalendar boardId={boardId} />
+              <LearningCalendar boardId={boardId} refreshKey={calendarKey} />
             </div>
           </div>
 
