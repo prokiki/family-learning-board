@@ -10,6 +10,8 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 export type TaskSource = "manual" | "imported" | "template";
 
+export type TaskCategory = "school" | "extra";
+
 export type Actor = "parent" | "child";
 
 export const ATTACHMENT_ROLES = ["reference", "instruction", "parent_only"] as const;
@@ -27,6 +29,7 @@ export interface TaskRecord {
   status: TaskStatus;
   sort_order: number;
   source: TaskSource;
+  category: TaskCategory;
   last_updated_by: Actor;
   created_at: string;
   updated_at: string;

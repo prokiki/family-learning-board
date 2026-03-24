@@ -392,6 +392,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
       status: "pending" as TaskStatus,
       sort_order: tasks.length + index,
       source,
+      category: "school",
       last_updated_by: "parent" as const,
     }));
 

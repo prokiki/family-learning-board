@@ -20,6 +20,7 @@ import {
 import { useLocalDate } from "@/hooks/use-local-date";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { TaskAttachmentRecord, TaskRecord, TaskStatus } from "@/types/task";
+import { LearningCalendar } from "@/components/learning-calendar";
 
 const FOCUS_MINUTES = 20;
 const BREAK_MINUTES = 5;
@@ -190,14 +191,23 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
   const [isPending, startTransition] = useTransition();
   const [dailyPlan, setDailyPlan] = useState<string | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"school" | "extra">("school");
+  const [extraTitle, setExtraTitle] = useState("");
+  const [addingExtra, setAddingExtra] = useState(false);
+  const [dailySummary, setDailySummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const tasksRef = useRef<TaskRecord[]>([]);
   const timerTotalSeconds = getModeSeconds(timerState.mode);
   const timerProgress =
     ((timerTotalSeconds - timerState.secondsLeft) / timerTotalSeconds) * 100;
+  const schoolTasks = useMemo(() => tasks.filter((t) => t.category !== "extra"), [tasks]);
+  const extraTasks = useMemo(() => tasks.filter((t) => t.category === "extra"), [tasks]);
+  const activeTasks = activeTab === "school" ? schoolTasks : extraTasks;
+
   const orderedTasks = useMemo(
     () =>
-      [...tasks].sort((left, right) => {
+      [...activeTasks].sort((left, right) => {
         const weightDiff = taskSortWeight(left.status) - taskSortWeight(right.status);
 
         if (weightDiff !== 0) {
@@ -210,7 +220,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
 
         return left.created_at.localeCompare(right.created_at);
       }),
-    [tasks],
+    [activeTasks],
   );
   const groupedOrderedTasks = useMemo(() => groupTasksBySubject(orderedTasks), [orderedTasks]);
   const groupedAttachments = useMemo(
@@ -234,8 +244,11 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
   );
   const openAttachmentGroup =
     groupedAttachments.find((item) => item.subject === openAttachmentSubject) ?? null;
-  const completedTaskCount = tasks.filter((task) => isCompletedStatus(task.status)).length;
-  const allTasksCompleted = tasks.length > 0 && completedTaskCount === tasks.length;
+  const completedTaskCount = activeTasks.filter((task) => isCompletedStatus(task.status)).length;
+  const allSchoolCompleted = schoolTasks.length > 0 && schoolTasks.every((t) => isCompletedStatus(t.status));
+  const allExtraCompleted = extraTasks.length > 0 && extraTasks.every((t) => isCompletedStatus(t.status));
+  const allTasksCompleted = activeTasks.length > 0 && completedTaskCount === activeTasks.length;
+  const allDone = (schoolTasks.length + extraTasks.length) > 0 && allSchoolCompleted && (extraTasks.length === 0 || allExtraCompleted);
 
   useEffect(() => {
     tasksRef.current = tasks;
@@ -508,14 +521,61 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
     dispatchTimer({ type: "reset" });
   }
 
+  /* 孩子自主添加课外任务 */
+  async function addExtraTask() {
+    if (!supabase || !extraTitle.trim() || !today || addingExtra) return;
+    setAddingExtra(true);
+    const client: SupabaseClient = supabase;
+    const { error } = await client.from("tasks").insert({
+      board_id: boardId,
+      due_date: today,
+      title: extraTitle.trim(),
+      status: "pending",
+      sort_order: tasks.length,
+      source: "manual",
+      category: "extra",
+      last_updated_by: "child",
+    });
+    if (error) {
+      setMessage(error.message);
+    } else {
+      setExtraTitle("");
+      // 数据会通过 realtime 自动刷新
+    }
+    setAddingExtra(false);
+  }
+
+  /* AI 完成鼓励 */
+  async function loadDailySummary() {
+    if (summaryLoading || dailySummary) return;
+    setSummaryLoading(true);
+    try {
+      const res = await fetch("/api/daily-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          board: boardId,
+          tasks: tasks.map((t) => ({ subject: t.subject || "", title: t.title, category: t.category || "school" })),
+        }),
+      });
+      const data = await res.json();
+      if (data.summary) setDailySummary(data.summary);
+    } catch {} finally {
+      setSummaryLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background px-4 py-5 text-[var(--foreground)] sm:px-6 md:px-8 md:py-8">
       <div className="mx-auto max-w-[960px] space-y-5">
         <ChildHeader
           today={today}
-          totalCount={tasks.length}
+          totalCount={activeTasks.length}
           completedCount={completedTaskCount}
         />
+
+        {/* 学习日历 + streak */}
+        <LearningCalendar boardId={boardId} />
 
         {!supabase ? (
           <div className="mt-4">
@@ -554,6 +614,67 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
                 ) : (
                   "✨ 查看今日作战计划"
                 )}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 学校/课外 Tab */}
+        <div className="flex gap-1.5 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/60 p-1.5">
+          {([
+            ["school", `学校任务${schoolTasks.length > 0 ? ` (${schoolTasks.length})` : ""}`],
+            ["extra", `课外学习${extraTasks.length > 0 ? ` (${extraTasks.length})` : ""}`],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveTab(key)}
+              className={`flex-1 rounded-[10px] px-3 py-2.5 text-sm font-semibold transition-colors ${
+                activeTab === key
+                  ? "bg-card text-[var(--foreground)] shadow-[var(--shadow-sm)]"
+                  : "text-[var(--text-secondary)]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* 课外学习：孩子自主添加 */}
+        {activeTab === "extra" && (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={extraTitle}
+              onChange={(e) => setExtraTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") addExtraTask(); }}
+              placeholder="今天我还想做…"
+              className="min-w-0 flex-1 rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+            />
+            <button
+              type="button"
+              disabled={!extraTitle.trim() || addingExtra}
+              onClick={addExtraTask}
+              className="shrink-0 rounded-[12px] bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {addingExtra ? "添加中..." : "添加"}
+            </button>
+          </div>
+        )}
+
+        {/* 全部完成鼓励 */}
+        {allDone && (
+          <div className="rounded-[1.5rem] border border-[var(--success)]/20 bg-[var(--success-subtle)] p-4 text-center">
+            {dailySummary ? (
+              <p className="text-base font-medium leading-7 text-[var(--foreground)]">{dailySummary}</p>
+            ) : (
+              <button
+                type="button"
+                disabled={summaryLoading}
+                onClick={loadDailySummary}
+                className="text-sm font-semibold text-[var(--success)]"
+              >
+                {summaryLoading ? "正在生成..." : "🎉 今天全部完成了，点击看看 AI 怎么说"}
               </button>
             )}
           </div>
