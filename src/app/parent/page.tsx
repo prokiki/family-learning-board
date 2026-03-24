@@ -2,10 +2,11 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, useCallback } from "react";
 import { ParentDashboard } from "@/components/parent-dashboard";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AISettingsButton } from "@/components/ai-settings-button";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { DEFAULT_BOARD_ID } from "@/lib/board";
 
 function ParentContent() {
@@ -13,7 +14,12 @@ function ParentContent() {
   const board = searchParams.get("board") || DEFAULT_BOARD_ID;
   const isDemo = board === "demo";
 
+  const handleRefresh = useCallback(async () => {
+    window.location.reload();
+  }, []);
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <main className="min-h-screen bg-background">
       <div className="flex items-center justify-between px-3 pt-3 sm:px-4 sm:pt-4 md:px-6">
         <div className="flex items-center gap-2">
@@ -39,6 +45,7 @@ function ParentContent() {
       </div>
       <ParentDashboard boardId={board} />
     </main>
+    </PullToRefresh>
   );
 }
 
