@@ -83,18 +83,25 @@ export default function Home() {
             家长把老师作业整理成清晰任务，孩子在固定设备上大字查看、点按反馈。
           </p>
 
-          {/* 孩子看板入口：始终显示 */}
+          {/* 孩子看板入口 */}
           <div className="mt-8">
-            <button
-              type="button"
-              onClick={() => {
-                const board = authBoard || DEFAULT_BOARD || DEMO_BOARD;
-                router.push(`/child?board=${board}`);
-              }}
-              className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3.5 text-base font-semibold text-white"
-            >
-              进入孩子看板
-            </button>
+            {authBoard ? (
+              <button
+                type="button"
+                onClick={() => router.push(`/child?board=${authBoard}`)}
+                className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3.5 text-base font-semibold text-white"
+              >
+                进入孩子看板
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => router.push(`/child?board=${DEMO_BOARD}`)}
+                className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3.5 text-base font-semibold text-white"
+              >
+                体验 Demo 看板
+              </button>
+            )}
           </div>
 
           {/* 分隔线 */}
@@ -157,13 +164,15 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Demo 入口 */}
-        <p
-          onClick={() => router.push(`/child?board=${DEMO_BOARD}`)}
-          className="mt-4 cursor-pointer text-center text-xs text-[var(--text-muted)]"
-        >
-          体验 Demo 看板
-        </p>
+        {/* 已登录时底部显示 Demo 入口 */}
+        {authBoard && (
+          <p
+            onClick={() => router.push(`/child?board=${DEMO_BOARD}`)}
+            className="mt-4 cursor-pointer text-center text-xs text-[var(--text-muted)]"
+          >
+            体验 Demo 看板
+          </p>
+        )}
       </div>
     </main>
   );
