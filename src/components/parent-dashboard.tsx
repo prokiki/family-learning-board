@@ -880,8 +880,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
 
               {/* 学校/课外 切换 */}
               {(activeTab === "import" || activeTab === "manual" || activeTab === "template") && (
-                <div className="mb-4 flex items-center gap-2">
-                  <span className="text-xs text-[var(--text-muted)]">归类：</span>
+                <div className="mb-4 flex gap-1.5 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/60 p-1.5">
                   {([
                     ["school", "学校任务"],
                     ["extra", "课外学习"],
@@ -890,10 +889,10 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
                       key={key}
                       type="button"
                       onClick={() => setTaskCategory(key)}
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                      className={`flex-1 rounded-[12px] px-3 py-2.5 text-sm font-semibold transition-colors ${
                         taskCategory === key
-                          ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
-                          : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
+                          ? "bg-card text-[var(--foreground)] shadow-[var(--shadow-sm)]"
+                          : "text-[var(--text-secondary)] hover:text-[var(--foreground)]"
                       }`}
                     >
                       {label}

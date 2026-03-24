@@ -575,8 +575,10 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
           completedCount={completedTaskCount}
         />
 
-        {/* 学习日历 + streak */}
-        <LearningCalendar boardId={boardId} />
+        {/* 学习日历在手机端显示在顶部，iPad 上显示在左侧栏 */}
+        <div className="md:hidden">
+          <LearningCalendar boardId={boardId} />
+        </div>
 
         {!supabase ? (
           <div className="mt-4">
@@ -683,8 +685,8 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
 
         {/* Main Layout: Timer (left) + Tasks (right) on iPad+ */}
         <div className="flex flex-col gap-6 md:flex-row md:items-start">
-          {/* Timer Column — sticky on iPad+ */}
-          <div className="w-full shrink-0 md:sticky md:top-6 md:w-[260px] lg:w-[280px]">
+          {/* Timer + Calendar Column — sticky on iPad+ */}
+          <div className="w-full shrink-0 space-y-4 md:sticky md:top-6 md:w-[260px] lg:w-[280px]">
             <PomodoroSection
               timerState={timerState}
               timerProgress={timerProgress}
@@ -693,6 +695,9 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
               onPause={() => dispatchTimer({ type: "pause" })}
               onReset={resetTimer}
             />
+            <div className="hidden md:block">
+              <LearningCalendar boardId={boardId} />
+            </div>
           </div>
 
           {/* Task Area */}
