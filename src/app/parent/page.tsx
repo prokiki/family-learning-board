@@ -26,7 +26,7 @@ function ParentContent() {
           <Link href="/" className="nav-button">
             ← 返回首页
           </Link>
-          <Link href={`/child?board=${board}`} className="nav-button">
+          <Link href={`/child?board=${board}&from=parent`} className="nav-button">
             孩子看板
           </Link>
           <Link href={`/parent/report?board=${board}`} className="nav-button">
