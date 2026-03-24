@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -11,6 +11,21 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [authBoard, setAuthBoard] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
+
+  /* 检查是否已登录 */
+  useEffect(() => {
+    fetch("/api/auth")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.board) {
+          setAuthBoard(data.board);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setChecking(false));
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -36,9 +51,7 @@ export default function Home() {
     }
   }
 
-  function handleDemo() {
-    router.push(`/child?board=${DEMO_BOARD}`);
-  }
+  if (checking) return null;
 
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6 md:py-14">
@@ -58,31 +71,53 @@ export default function Home() {
             家长把老师作业整理成清晰任务，孩子在固定设备上大字查看、点按反馈。
           </p>
 
-          {/* 密码登录区 */}
-          <form onSubmit={handleLogin} className="mt-8">
-            <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">
-              进入我的看板
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="输入访问密码"
-                className="min-w-0 flex-1 rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
-              />
+          {authBoard ? (
+            /* 已登录：直接显示入口 */
+            <div className="mt-8 space-y-3">
               <button
-                type="submit"
-                disabled={loading || !password.trim()}
-                className="shrink-0 rounded-[12px] bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                type="button"
+                onClick={() => router.push(`/child?board=${authBoard}`)}
+                className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3.5 text-base font-semibold text-white"
               >
-                {loading ? "验证中..." : "进入"}
+                进入孩子看板
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push(`/parent?board=${authBoard}`)}
+                className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm font-semibold text-[var(--text-secondary)]"
+              >
+                进入家长端
               </button>
             </div>
-            {error && (
-              <p className="mt-2 text-sm font-medium text-[var(--error)]">{error}</p>
-            )}
-          </form>
+          ) : (
+            /* 未登录：密码表单 */
+            <>
+              <form onSubmit={handleLogin} className="mt-8">
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">
+                  进入我的看板
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="输入访问密码"
+                    className="min-w-0 flex-1 rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading || !password.trim()}
+                    className="shrink-0 rounded-[12px] bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {loading ? "验证中..." : "进入"}
+                  </button>
+                </div>
+                {error && (
+                  <p className="mt-2 text-sm font-medium text-[var(--error)]">{error}</p>
+                )}
+              </form>
+            </>
+          )}
 
           {/* 分隔线 */}
           <div className="my-6 flex items-center gap-3">
@@ -94,7 +129,7 @@ export default function Home() {
           {/* Demo 入口 */}
           <button
             type="button"
-            onClick={handleDemo}
+            onClick={() => router.push(`/child?board=${DEMO_BOARD}`)}
             className="w-full rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] px-4 py-3 text-sm font-semibold text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
           >
             免密码体验 Demo 看板

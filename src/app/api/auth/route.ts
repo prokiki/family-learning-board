@@ -1,4 +1,15 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+
+/** GET — 检查登录状态 */
+export async function GET() {
+  const cookieStore = await cookies();
+  const board = cookieStore.get("board_auth")?.value;
+  if (board) {
+    return NextResponse.json({ authenticated: true, board });
+  }
+  return NextResponse.json({ authenticated: false });
+}
 
 /** POST — 验证密码，成功后设置 cookie */
 export async function POST(request: Request) {
