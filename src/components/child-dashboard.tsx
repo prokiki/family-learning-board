@@ -666,7 +666,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
 
         {/* 全部完成鼓励 */}
         {allDone && (
-          <div className="rounded-[1.5rem] border border-[var(--success)]/20 bg-[var(--success-subtle)] p-4 text-center">
+          <div className="rounded-[1.5rem] border border-[var(--primary)]/20 bg-[var(--primary-light)] p-4 text-center">
             {dailySummary ? (
               <p className="text-base font-medium leading-7 text-[var(--foreground)]">{dailySummary}</p>
             ) : (
@@ -674,7 +674,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
                 type="button"
                 disabled={summaryLoading}
                 onClick={loadDailySummary}
-                className="text-sm font-semibold text-[var(--success)]"
+                className="text-sm font-semibold text-[var(--primary)]"
               >
                 {summaryLoading ? "正在生成..." : "🎉 今天全部完成了，点击看看 AI 怎么说"}
               </button>

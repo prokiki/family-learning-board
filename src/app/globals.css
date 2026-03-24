@@ -117,6 +117,15 @@ html[data-theme="dark"] {
 
 /* ── 孩子端配色覆盖（暗色）── */
 html[data-theme="dark"] [data-view="child"] {
+  /* 必须重置亮色覆盖的表面色，否则子元素层级优先级高于 :root */
+  --surface-0: #171816;
+  --surface-2: #262824;
+  --surface-3: #2e312c;
+  --border-subtle: #2a2d28;
+  --background: #171816;
+  --card-alt: #262824;
+  --line-light: #2a2d28;
+  /* 暖蓝主色 */
   --accent: #6dabe0;
   --accent-hover: #88bfeb;
   --accent-subtle: rgba(109, 171, 224, 0.16);
