@@ -96,17 +96,30 @@ export function LearningCalendar({ boardId }: { boardId: string }) {
           </p>
         )}
       </div>
+      {/* 星期标题 */}
+      <div className="grid grid-cols-7 gap-1.5 mb-1">
+        {["一", "二", "三", "四", "五", "六", "日"].map((w) => (
+          <p key={w} className="text-center text-[10px] text-[var(--text-muted)]">{w}</p>
+        ))}
+      </div>
       <div className="grid grid-cols-7 gap-1.5">
         {days.map((day) => {
           const status = dayStatusMap.get(day) || "empty";
           const d = new Date(`${day}T00:00:00`);
+          const dateNum = d.getDate();
           const isToday = day === days[days.length - 1];
           return (
             <div
               key={day}
-              title={`${d.getMonth() + 1}/${d.getDate()} ${status === "full" ? "✓ 全部完成" : status === "partial" ? "部分完成" : status === "none" ? "未完成" : "无任务"}`}
-              className={`aspect-square rounded-[6px] ${statusColor[status]} ${isToday ? "ring-2 ring-[var(--primary)] ring-offset-1 ring-offset-[var(--card)]" : ""}`}
-            />
+              title={`${d.getMonth() + 1}/${dateNum} ${status === "full" ? "✓ 全部完成" : status === "partial" ? "部分完成" : status === "none" ? "未完成" : "无任务"}`}
+              className={`flex aspect-square items-center justify-center rounded-[6px] ${statusColor[status]} ${isToday ? "ring-2 ring-[var(--primary)] ring-offset-1 ring-offset-[var(--card)]" : ""}`}
+            >
+              <span className={`text-[10px] font-medium ${
+                status === "full" ? "text-white" : status === "partial" ? "text-white" : isToday ? "text-[var(--primary)]" : "text-[var(--text-muted)]"
+              }`}>
+                {dateNum}
+              </span>
+            </div>
           );
         })}
       </div>
