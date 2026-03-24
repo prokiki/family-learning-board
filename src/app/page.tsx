@@ -13,6 +13,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [authBoard, setAuthBoard] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
+  const [showParentLogin, setShowParentLogin] = useState(false);
 
   /* 检查是否已登录 */
   useEffect(() => {
@@ -51,6 +52,14 @@ export default function Home() {
     }
   }
 
+  function handleParentEntry() {
+    if (authBoard) {
+      router.push(`/parent?board=${authBoard}`);
+    } else {
+      setShowParentLogin(true);
+    }
+  }
+
   if (checking) return null;
 
   return (
@@ -71,71 +80,57 @@ export default function Home() {
             家长把老师作业整理成清晰任务，孩子在固定设备上大字查看、点按反馈。
           </p>
 
-          {authBoard ? (
-            /* 已登录：直接进入孩子看板 */
-            <div className="mt-8">
-              <button
-                type="button"
-                onClick={() => router.push(`/child?board=${authBoard}`)}
-                className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3.5 text-base font-semibold text-white"
-              >
-                进入孩子看板
-              </button>
-              <p
-                onClick={() => router.push(`/parent?board=${authBoard}`)}
-                className="mt-3 cursor-pointer text-center text-xs text-[var(--text-muted)]"
-              >
-                家长入口
-              </p>
-            </div>
-          ) : (
-            /* 未登录：密码表单 */
-            <>
-              <form onSubmit={handleLogin} className="mt-8">
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">
-                  进入我的看板
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="输入访问密码"
-                    className="min-w-0 flex-1 rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
-                  />
-                  <button
-                    type="submit"
-                    disabled={loading || !password.trim()}
-                    className="shrink-0 rounded-[12px] bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
-                  >
-                    {loading ? "验证中..." : "进入"}
-                  </button>
-                </div>
-                {error && (
-                  <p className="mt-2 text-sm font-medium text-[var(--error)]">{error}</p>
-                )}
-              </form>
-            </>
-          )}
+          {/* 孩子看板入口：始终显示 */}
+          <div className="mt-8">
+            <button
+              type="button"
+              onClick={() => router.push(authBoard ? `/child?board=${authBoard}` : `/child?board=${DEMO_BOARD}`)}
+              className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3.5 text-base font-semibold text-white"
+            >
+              {authBoard ? "进入孩子看板" : "体验 Demo 看板"}
+            </button>
+          </div>
 
           {/* 分隔线 */}
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-[var(--line)]" />
-            <span className="text-xs text-[var(--text-muted)]">或者</span>
+            <span className="text-xs text-[var(--text-muted)]">家长区域</span>
             <div className="h-px flex-1 bg-[var(--line)]" />
           </div>
 
-          {/* Demo 入口 */}
-          <button
-            type="button"
-            onClick={() => router.push(`/child?board=${DEMO_BOARD}`)}
-            className="w-full rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] px-4 py-3 text-sm font-semibold text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
-          >
-            免密码体验 Demo 看板
-          </button>
-          <p className="mt-2 text-center text-xs text-[var(--text-muted)]">
-            Demo 数据所有人共享，仅供体验功能
-          </p>
+          {/* 家长入口 */}
+          {showParentLogin && !authBoard ? (
+            <form onSubmit={handleLogin}>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="输入家长密码"
+                  autoFocus
+                  className="min-w-0 flex-1 rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !password.trim()}
+                  className="shrink-0 rounded-[12px] bg-[var(--foreground)] px-5 py-3 text-sm font-semibold text-[var(--background)] disabled:opacity-50"
+                >
+                  {loading ? "验证中..." : "进入"}
+                </button>
+              </div>
+              {error && (
+                <p className="mt-2 text-sm font-medium text-[var(--error)]">{error}</p>
+              )}
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={handleParentEntry}
+              className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm font-semibold text-[var(--text-secondary)]"
+            >
+              进入家长端
+            </button>
+          )}
         </div>
 
         {/* 功能亮点 */}
