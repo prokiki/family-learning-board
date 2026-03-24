@@ -585,7 +585,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
           </div>
         ) : null}
 
-        {/* AI 今日作战计划（全部完成时隐藏，显示完成鼓励） */}
+        {/* AI 卡片：未完成显示作战计划，全部完成显示鼓励 */}
         {tasks.length > 0 && !allDone && (
           <div className="rounded-[1.5rem] border border-[var(--primary)]/20 bg-[var(--primary-light)] p-4">
             {dailyPlan ? (
@@ -616,6 +616,22 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
                 ) : (
                   "✨ 查看今日作战计划"
                 )}
+              </button>
+            )}
+          </div>
+        )}
+        {allDone && (
+          <div className="rounded-[1.5rem] border border-[var(--primary)]/20 bg-[var(--primary-light)] p-4 text-center">
+            {dailySummary ? (
+              <p className="text-base font-medium leading-7 text-[var(--foreground)]">{dailySummary}</p>
+            ) : (
+              <button
+                type="button"
+                disabled={summaryLoading}
+                onClick={loadDailySummary}
+                className="text-sm font-semibold text-[var(--primary)]"
+              >
+                {summaryLoading ? "正在生成..." : "🎉 今天全部完成了，点击看看 AI 怎么说"}
               </button>
             )}
           </div>
@@ -661,24 +677,6 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
             >
               {addingExtra ? "添加中..." : "添加"}
             </button>
-          </div>
-        )}
-
-        {/* 全部完成鼓励 */}
-        {allDone && (
-          <div className="rounded-[1.5rem] border border-[var(--primary)]/20 bg-[var(--primary-light)] p-4 text-center">
-            {dailySummary ? (
-              <p className="text-base font-medium leading-7 text-[var(--foreground)]">{dailySummary}</p>
-            ) : (
-              <button
-                type="button"
-                disabled={summaryLoading}
-                onClick={loadDailySummary}
-                className="text-sm font-semibold text-[var(--primary)]"
-              >
-                {summaryLoading ? "正在生成..." : "🎉 今天全部完成了，点击看看 AI 怎么说"}
-              </button>
-            )}
           </div>
         )}
 
