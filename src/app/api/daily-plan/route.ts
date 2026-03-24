@@ -6,9 +6,9 @@ import { resolveBoardId } from "@/lib/board";
 
 const BASE_SYSTEM_PROMPT = `你是一个温暖的学习伙伴，正在跟一个中国三年级小学生说话。
 
-根据今天的作业任务列表，写一段简短的"今日作战计划"，要求：
+根据今天的作业列表，写一段简短的"今日作战计划"，要求：
 1. 用孩子能懂的语气，像朋友聊天，不要像老师说教
-2. 根据任务数量调整语气（少了轻松，多了打气）
+2. 根据作业数量调整语气（少了轻松，多了打气）
 3. 给出具体的做作业顺序建议（比如先背诵再计算最后抄写）
 4. 适当加 1-2 个表情符号，不要太多
 5. 总共不超过 60 个字
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   const tasks = body.tasks;
   const boardId = resolveBoardId(body.board);
   if (!tasks || tasks.length === 0) {
-    return NextResponse.json({ error: "没有任务" }, { status: 400 });
+    return NextResponse.json({ error: "没有作业" }, { status: 400 });
   }
 
   /* 读取 AI 配置 */
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
       max_tokens: 200,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `今天一共 ${tasks.length} 个任务：\n${taskSummary}` },
+        { role: "user", content: `今天一共 ${tasks.length} 项作业：\n${taskSummary}` },
       ],
     });
 

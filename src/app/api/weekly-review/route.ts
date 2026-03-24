@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   const boardId = resolveBoardId(board);
 
   if (total === 0) {
-    return NextResponse.json({ error: "本周没有任务数据" }, { status: 400 });
+    return NextResponse.json({ error: "本周没有作业数据" }, { status: 400 });
   }
 
   /* 读取 AI 配置 */
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
   /* 构建数据摘要 */
   const lines: string[] = [
     `周期：${week_label}`,
-    `总任务 ${total} 个，完成 ${completed} 个，完成率 ${completion_rate}%`,
+    `总共 ${total} 项，完成 ${completed} 个，完成率 ${completion_rate}%`,
   ];
 
   if (prev_rate !== undefined && prev_rate !== null) {
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
   if (day_stats.length > 0) {
     const dayLines = day_stats
       .filter((d) => d.total > 0)
-      .map((d) => `${d.weekday}：${d.total}个任务，完成${d.completed}个${d.helpCount > 0 ? `，求助${d.helpCount}次` : ""}`);
+      .map((d) => `${d.weekday}：${d.total}项，完成${d.completed}项${d.helpCount > 0 ? `，求助${d.helpCount}次` : ""}`);
     if (dayLines.length > 0) {
       lines.push(`每日详情：\n${dayLines.join("\n")}`);
     }
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
 
   if (subject_stats.length > 0) {
     const subjectLines = subject_stats.map(
-      (s) => `${s.subject}：${s.total}个任务，完成${s.completed}个${s.helpCount > 0 ? `，求助${s.helpCount}次` : ""}`,
+      (s) => `${s.subject}：${s.total}项，完成${s.completed}项${s.helpCount > 0 ? `，求助${s.helpCount}次` : ""}`,
     );
     lines.push(`学科分布：\n${subjectLines.join("\n")}`);
   }

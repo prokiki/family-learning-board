@@ -56,7 +56,7 @@ function TaskHelpButton({ boardId, task }: { boardId: string; task: TaskRecord }
   return <TaskHelpCard boardId={boardId} task={task} onClose={() => setOpen(false)} />;
 }
 
-/* ───── 非作文任务：任务攻略卡（卡片内展开） ───── */
+/* ───── 非作文作业：作业攻略卡（卡片内展开） ───── */
 
 function TaskHelpCard({ boardId, task, onClose }: { boardId: string; task: TaskRecord; onClose: () => void }) {
   const [loading, setLoading] = useState(true);
@@ -722,8 +722,8 @@ export function ChildTasksSection({
   if (groups.length === 0) {
     return (
       <EmptyState
-        title="今天的任务还没到"
-        description="家长一添加任务，这里就会马上出现。"
+        title="今天的作业还没到"
+        description="家长一添加作业，这里就会马上出现。"
       />
     );
   }

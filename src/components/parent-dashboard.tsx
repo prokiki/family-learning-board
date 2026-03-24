@@ -882,8 +882,8 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
               {(activeTab === "import" || activeTab === "manual" || activeTab === "template") && (
                 <div className="mb-4 flex gap-1.5 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/60 p-1.5">
                   {([
-                    ["school", "学校任务"],
-                    ["extra", "课外学习"],
+                    ["school", "学校作业"],
+                    ["extra", "课外练习"],
                   ] as const).map(([key, label]) => (
                     <button
                       key={key}

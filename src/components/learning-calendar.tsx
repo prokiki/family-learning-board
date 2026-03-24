@@ -79,7 +79,7 @@ export function LearningCalendar({ boardId, refreshKey = 0 }: { boardId: string;
       if (status === "full") {
         count++;
       } else if (status === "empty") {
-        continue; // 没有任务的天不中断 streak
+        continue; // 没有作业的天不中断 streak
       } else {
         break;
       }
@@ -121,7 +121,7 @@ export function LearningCalendar({ boardId, refreshKey = 0 }: { boardId: string;
           return (
             <div
               key={day}
-              title={`${d.getMonth() + 1}/${dateNum} ${status === "full" ? "✓ 全部完成" : status === "partial" ? "部分完成" : status === "none" ? "未完成" : "无任务"}`}
+              title={`${d.getMonth() + 1}/${dateNum} ${status === "full" ? "✓ 全部完成" : status === "partial" ? "部分完成" : status === "none" ? "未完成" : "无作业"}`}
               className={`flex aspect-square items-center justify-center rounded-[6px] ${statusColor[status]} ${isToday ? "ring-2 ring-[var(--primary)] ring-offset-1 ring-offset-[var(--card)]" : ""}`}
             >
               <span className={`text-[10px] font-medium ${

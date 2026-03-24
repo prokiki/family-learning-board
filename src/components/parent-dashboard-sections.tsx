@@ -186,11 +186,11 @@ export function ParentHeader({
         <div>
           <p className="text-xs font-semibold tracking-[0.18em] text-[var(--primary)]">家长端</p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)]">
-            今天的学习任务
+            今天的学习内容
           </h1>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
             {todayLabel}
-            {isToday ? "，固定设备会实时同步这里的内容。" : "，这里展示这一天的历史任务。"}
+            {isToday ? "，固定设备会实时同步这里的内容。" : "，这里展示这一天的历史作业。"}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
@@ -229,7 +229,7 @@ export function ParentHeader({
               <p className="text-2xl font-bold text-[var(--foreground)]">
                 {progress.total}
               </p>
-              <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">总任务</p>
+              <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">总数</p>
             </div>
           </div>
           <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--success-subtle)] px-3 py-3">
@@ -261,12 +261,12 @@ export function HistoricalTasksNotice({
 }) {
   return (
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5">
-      <h2 className="text-xl font-semibold text-[var(--foreground)]">历史任务查看</h2>
+      <h2 className="text-xl font-semibold text-[var(--foreground)]">历史作业查看</h2>
       <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-        当前正在查看 {selectedDateLabel} 的任务记录。历史日期先保持只读，避免误改以前的完成情况。
+        当前正在查看 {selectedDateLabel} 的作业记录。历史日期先保持只读，避免误改以前的完成情况。
       </p>
       <div className="mt-3 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)] px-4 py-3 text-sm text-[var(--text-secondary)]">
-        如果要新增、导入或加入固定任务，请先切回今天。
+        如果要新增、导入或加入固定作业，请先切回今天。
       </div>
     </div>
   );
@@ -295,7 +295,7 @@ export function ManualTaskSection({
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5">
       <h2 className="text-xl font-semibold text-[var(--foreground)]">手动新增</h2>
       <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-        适合临时增加当天的新任务，孩子端会马上同步显示。
+        适合临时增加当天的新作业，孩子端会马上同步显示。
       </p>
       <div className="mt-4 rounded-[1rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4">
         <div className="space-y-3">
@@ -319,7 +319,7 @@ export function ManualTaskSection({
             onClick={onCreate}
             className="w-full rounded-[12px] bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
-            添加到今日任务
+            添加到今日作业
           </button>
         </div>
       </div>
@@ -360,9 +360,9 @@ export function TemplatesSection({
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-[var(--foreground)]">每天固定任务</h2>
+          <h2 className="text-xl font-semibold text-[var(--foreground)]">每天固定作业</h2>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-            先维护常用模板，再一键加入今天任务，避免每天重复录入。
+            先维护常用模板，再一键加入今天作业，避免每天重复录入。
           </p>
         </div>
         <button
@@ -380,7 +380,7 @@ export function TemplatesSection({
         <input
           value={title}
           onChange={(event) => onTitleChange(event.target.value)}
-          placeholder="固定任务标题，例如：英语听读 15 分钟"
+          placeholder="固定作业标题，例如：英语听读 15 分钟"
           className="mt-3 w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
         />
         <textarea
@@ -396,14 +396,14 @@ export function TemplatesSection({
           onClick={onCreate}
           className="mt-3 w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-sm font-semibold text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          保存为固定任务
+          保存为固定作业
         </button>
       </div>
 
       <div className="mt-4 space-y-3">
         {templates.length === 0 ? (
           <div className="rounded-[1rem] bg-[var(--card-alt)] px-4 py-4 text-sm text-[var(--text-secondary)]">
-            还没有固定任务模板，先加一条每天都会出现的常规任务。
+            还没有固定作业模板，先加一条每天都会出现的常规作业。
           </div>
         ) : (
           templates.map((template) => (
@@ -490,7 +490,7 @@ export function ImportPreviewSection({
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5">
       <h2 className="text-xl font-semibold text-[var(--foreground)]">导入预览</h2>
       <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-        支持粘贴文字或拍照识别，按学科分组拆成孩子可执行的子任务。
+        支持粘贴文字或拍照识别，按学科分组拆成孩子可执行的子项。
       </p>
       <div className="mt-4 rounded-[1rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4">
         <textarea
@@ -551,7 +551,7 @@ export function ImportPreviewSection({
       <div className="mt-4 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/50 p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-[var(--foreground)]">任务拆分预览</h3>
+            <h3 className="text-base font-semibold text-[var(--foreground)]">作业拆分预览</h3>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
               上方保留原始文本，下面按学科展示并支持逐条校对。
             </p>
@@ -577,7 +577,7 @@ export function ImportPreviewSection({
                   <div className="min-w-0">
                     <h4 className="text-base font-semibold text-[var(--foreground)]">{group.subject}</h4>
                     <p className="mt-1 text-xs text-[var(--text-secondary)]">
-                      {group.tasks.length} 条可执行子任务
+                      {group.tasks.length} 条可执行子项
                     </p>
                   </div>
                   <button
@@ -600,7 +600,7 @@ export function ImportPreviewSection({
                       <input
                         value={task.title}
                         onChange={(event) => onTaskUpdate(subjectIndex, taskIndex, event.target.value)}
-                        placeholder="补充子任务"
+                        placeholder="补充子项"
                         className="min-w-0 flex-1 rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)] px-3 py-2.5 text-sm outline-none focus:border-[var(--primary)]"
                       />
                       <button
@@ -676,7 +676,7 @@ export function AttachmentSection({
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5">
       <h2 className="text-xl font-semibold text-[var(--foreground)]">老师图片资料</h2>
       <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-        图片作为参考资料保存，不会自动生成任务。先按学科归组，孩子需要时再点开查看。
+        图片作为参考资料保存，不会自动生成作业。先按学科归组，孩子需要时再点开查看。
       </p>
 
       <div className="mt-4 rounded-[1rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4">
@@ -877,8 +877,8 @@ export function LiveStatusSection({
           <h2 className="text-xl font-semibold text-[var(--foreground)]">孩子端实时状态</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
             {readOnly
-              ? "历史日期默认不新增任务，但可以把误点完成的任务恢复为待开始。"
-              : "家长可在这里确认完成，或删除当天任务。"}
+              ? "历史日期默认不新增作业，但可以把误点完成的作业恢复为待开始。"
+              : "家长可在这里确认完成，或删除当天作业。"}
           </p>
         </div>
         {message ? (
@@ -895,7 +895,7 @@ export function LiveStatusSection({
       ) : tasks.length === 0 ? (
         <div className="mt-6">
           <EmptyState
-            title="今天还没有任务"
+            title="今天还没有作业"
             description={emptyDescription}
           />
         </div>
@@ -905,7 +905,7 @@ export function LiveStatusSection({
             <section
               key={group.subject}
               className={`relative overflow-hidden rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/45 p-3 before:absolute before:inset-y-0 before:left-0 before:w-1 ${
-                subjectAccentClass(group.subject === "今日任务" ? null : group.subject)
+                subjectAccentClass(group.subject === "今日作业" ? null : group.subject)
               }`}
             >
               <div className="rounded-[1rem] bg-card/65 px-4 py-2.5">
@@ -914,7 +914,7 @@ export function LiveStatusSection({
                     {group.subject}
                   </h3>
                   <span className="rounded-full bg-card px-3 py-1 text-xs font-semibold text-[var(--text-secondary)]">
-                    {group.tasks.length} 条任务
+                    {group.tasks.length} 条作业
                   </span>
                 </div>
               </div>

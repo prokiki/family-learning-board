@@ -77,7 +77,7 @@ const STATUS_LABEL: Record<TaskStatus, string> = {
 
 function exportCSV(tasks: TaskRecord[], weekLabel: string) {
   const BOM = "\uFEFF";
-  const header = ["日期", "学科", "任务", "状态", "来源", "详情"];
+  const header = ["日期", "学科", "内容", "状态", "来源", "详情"];
   const rows = tasks.map((t) => [
     t.due_date,
     t.subject?.trim() || "其他",
@@ -298,8 +298,8 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
         <CardSkeleton />
       ) : totalCount === 0 ? (
         <EmptyState
-          title="这周还没有任务记录"
-          description="有任务数据后，这里会展示完成情况统计。"
+          title="这周还没有作业记录"
+          description="有作业数据后，这里会展示完成情况统计。"
         />
       ) : (
         <div className="space-y-5">
@@ -311,7 +311,7 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
               <p className="text-xs font-medium text-[var(--text-tertiary)]">本周完成率</p>
               <p className="mt-2 text-3xl font-bold text-[var(--foreground)]">{completionRate}%</p>
               <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                {completedCount}/{totalCount} 个任务
+                {completedCount}/{totalCount} 项
               </p>
               {prevTotalCount > 0 ? (
                 <p className={`mt-2 text-xs font-medium ${
@@ -349,7 +349,7 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
           {(schoolTasks.length > 0 || extraTasks.length > 0) && (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
-                <p className="text-xs font-medium text-[var(--text-tertiary)]">学校任务</p>
+                <p className="text-xs font-medium text-[var(--text-tertiary)]">学校作业</p>
                 <p className="mt-2 text-2xl font-bold text-[var(--foreground)]">
                   {schoolCompleted}/{schoolTasks.length}
                   <span className="ml-2 text-sm font-semibold text-[var(--text-secondary)]">
@@ -364,7 +364,7 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
                 </div>
               </div>
               <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
-                <p className="text-xs font-medium text-[var(--text-tertiary)]">课外学习</p>
+                <p className="text-xs font-medium text-[var(--text-tertiary)]">课外练习</p>
                 {extraTasks.length > 0 ? (
                   <>
                     <p className="mt-2 text-2xl font-bold text-[var(--foreground)]">
@@ -381,7 +381,7 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
                     </div>
                   </>
                 ) : (
-                  <p className="mt-2 text-sm text-[var(--text-muted)]">本周无课外任务</p>
+                  <p className="mt-2 text-sm text-[var(--text-muted)]">本周无课外练习</p>
                 )}
               </div>
             </div>
@@ -435,7 +435,7 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
           {/* ───── Subject Distribution ───── */}
           <div className="rounded-[1.5rem] border border-[var(--line)] bg-card p-5 shadow-[var(--shadow-sm)]">
             <h2 className="text-base font-semibold text-[var(--foreground)]">学科分布</h2>
-            <p className="mt-1 text-xs text-[var(--text-tertiary)]">各学科任务量和完成率</p>
+            <p className="mt-1 text-xs text-[var(--text-tertiary)]">各学科完成情况</p>
             <div className="mt-4 space-y-3">
               {subjectStats.map((stat) => {
                 const rate = stat.total === 0 ? 0 : Math.round((stat.completed / stat.total) * 100);
@@ -445,7 +445,7 @@ export function WeeklyReport({ boardId }: { boardId: string }) {
                       <div className="flex items-center gap-2">
                         <span className={`inline-block h-2.5 w-2.5 rounded-full ${subjectDotClass(stat.subject)}`} />
                         <span className="text-sm font-medium text-[var(--foreground)]">{stat.subject}</span>
-                        {stat.subject === "课外学习" && (
+                        {stat.subject === "课外练习" && (
                           <span className="rounded-full bg-[var(--primary-light)] px-2 py-0.5 text-[10px] font-semibold text-[var(--primary)]">课外</span>
                         )}
                       </div>

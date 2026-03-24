@@ -4,15 +4,15 @@ import { createClient } from "@supabase/supabase-js";
 import { getProvider } from "@/lib/ai-providers";
 import { resolveBoardId } from "@/lib/board";
 
-const SYSTEM_PROMPT = `你是一个温暖的学习伙伴，孩子今天的任务全部完成了，你要给一句个性化的鼓励总结。
+const SYSTEM_PROMPT = `你是一个温暖的学习伙伴，孩子今天的作业全部完成了，你要给一句个性化的鼓励总结。
 
 规则：
 1. 夸具体的事，不要泛泛说"真棒"
    ✅ "今天数学那 5 道竖式全做对了，计算越来越稳了"
    ✅ "你今天主动给自己加了练字任务，这种自律很酷"
    ❌ "你真棒！继续加油！"
-2. 如果有课外学习任务（孩子自己加的），特别表扬自主性
-3. 根据任务数量调整语气（少了轻松，多了更感叹）
+2. 如果有课外练习（孩子自己加的），特别表扬自主性
+3. 根据作业数量调整语气（少了轻松，多了更感叹）
 4. 适当加 1 个表情符号
 5. 不超过 40 个字
 6. 只输出这句话`;
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   const boardId = resolveBoardId(body.board);
   const tasks = body.tasks;
   if (!tasks || tasks.length === 0) {
-    return NextResponse.json({ error: "没有任务" }, { status: 400 });
+    return NextResponse.json({ error: "没有作业" }, { status: 400 });
   }
 
   let apiKey = process.env.OPENAI_API_KEY || "";
@@ -71,12 +71,12 @@ export async function POST(request: Request) {
   const schoolTasks = tasks.filter((t) => t.category !== "extra");
   const extraTasks = tasks.filter((t) => t.category === "extra");
 
-  const lines: string[] = [`今天一共完成了 ${tasks.length} 个任务：`];
+  const lines: string[] = [`今天一共完成了 ${tasks.length} 项：`];
   if (schoolTasks.length > 0) {
-    lines.push(`学校任务（${schoolTasks.length}个）：${schoolTasks.map((t) => `${t.subject ? `【${t.subject}】` : ""}${t.title}`).join("、")}`);
+    lines.push(`学校作业（${schoolTasks.length}项）：${schoolTasks.map((t) => `${t.subject ? `【${t.subject}】` : ""}${t.title}`).join("、")}`);
   }
   if (extraTasks.length > 0) {
-    lines.push(`课外学习（${extraTasks.length}个，孩子自己安排的）：${extraTasks.map((t) => t.title).join("、")}`);
+    lines.push(`课外练习（${extraTasks.length}项，孩子自己安排的）：${extraTasks.map((t) => t.title).join("、")}`);
   }
 
   const systemPrompt = soulDesc ? `${SYSTEM_PROMPT}\n\n你的人设：${soulDesc}` : SYSTEM_PROMPT;

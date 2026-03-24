@@ -532,7 +532,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
     const { error } = await client.from("tasks").insert({
       board_id: boardId,
       due_date: today,
-      subject: "课外学习",
+      subject: "课外练习",
       title: extraTitle.trim(),
       status: "pending",
       sort_order: tasks.length,
@@ -640,8 +640,8 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
         {/* 学校/课外 Tab */}
         <div className="flex gap-1.5 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/60 p-1.5">
           {([
-            ["school", `学校任务${schoolTasks.length > 0 ? ` (${schoolTasks.length})` : ""}`],
-            ["extra", `课外学习${extraTasks.length > 0 ? ` (${extraTasks.length})` : ""}`],
+            ["school", `学校作业${schoolTasks.length > 0 ? ` (${schoolTasks.length})` : ""}`],
+            ["extra", `课外练习${extraTasks.length > 0 ? ` (${extraTasks.length})` : ""}`],
           ] as const).map(([key, label]) => (
             <button
               key={key}
@@ -658,7 +658,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
           ))}
         </div>
 
-        {/* 课外学习：孩子自主添加 */}
+        {/* 课外练习：孩子自主添加 */}
         {activeTab === "extra" && (
           <div className="flex gap-2">
             <input

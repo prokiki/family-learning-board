@@ -4,11 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 import { getProvider } from "@/lib/ai-providers";
 import { resolveBoardId } from "@/lib/board";
 
-const SYSTEM_PROMPT = `你是一个三年级小学生的学习助手。根据给出的作业任务，生成一张"任务攻略卡"，帮孩子快速理解并开始做。
+const SYSTEM_PROMPT = `你是一个三年级小学生的学习助手。根据给出的作业，生成一张"作业攻略卡"，帮孩子快速理解并开始做。
 
 攻略卡包含三部分，严格输出 JSON：
 {
-  "explain": "用一句大白话解释这个任务是什么意思，不超过 25 字",
+  "explain": "用一句大白话解释这个作业是什么意思，不超过 25 字",
   "steps": ["第一步做什么", "第二步做什么", "第三步做什么"],
   "check": "一句话告诉孩子怎么确认自己做完了，不超过 20 字"
 }
@@ -16,7 +16,7 @@ const SYSTEM_PROMPT = `你是一个三年级小学生的学习助手。根据给
 规则：
 1. explain 要具体，不要说"完成作业"这种废话
    ✅ "翻开语文书第88页，把新课文先读一遍"
-   ❌ "按老师要求完成任务"
+   ❌ "按老师要求完成作业"
 2. steps 给 2-3 步，每步是一个具体动作，不超过 15 字
    ✅ "先读一遍课文，遇到生字画圈"
    ❌ "认真完成"
@@ -24,7 +24,7 @@ const SYSTEM_PROMPT = `你是一个三年级小学生的学习助手。根据给
    ✅ "能说出课文大意就算完成"
    ❌ "检查是否正确"
 4. 语气像朋友聊天，亲切简短
-5. 如果任务有页码、单元号等信息，steps 里要提到具体翻到哪一页`;
+5. 如果作业有页码、单元号等信息，steps 里要提到具体翻到哪一页`;
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   const { subject, title, details } = body;
   const boardId = resolveBoardId(body.board);
   if (!title) {
-    return NextResponse.json({ error: "缺少任务信息" }, { status: 400 });
+    return NextResponse.json({ error: "缺少作业信息" }, { status: 400 });
   }
 
   /* 读取 AI 配置 */
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
 
   const taskDesc = [
     subject ? `学科：${subject}` : "",
-    `任务：${title}`,
+    `作业：${title}`,
     details ? `补充说明：${details}` : "",
   ]
     .filter(Boolean)
