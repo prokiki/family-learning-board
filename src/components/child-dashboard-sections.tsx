@@ -18,11 +18,7 @@ function isWritingTask(task: TaskRecord): boolean {
   return WRITING_KEYWORDS.some((kw) => text.includes(kw));
 }
 
-const HELP_OPTIONS = [
-  { key: "explain", label: "这是什么意思？" },
-  { key: "how_to_start", label: "怎么开始做？" },
-  { key: "how_to_check", label: "做完怎么检查？" },
-] as const;
+type HelpCard = { explain: string; steps: string[]; check: string };
 
 type MindmapPoint = { tip: string; example: string };
 type MindmapSection = { name: string; color: string; points: MindmapPoint[] };
@@ -53,65 +49,91 @@ function TaskHelpButton({ boardId, task }: { boardId: string; task: TaskRecord }
     );
   }
 
-  return writing
-    ? <WritingAssistant boardId={boardId} task={task} onClose={() => setOpen(false)} />
-    : <GeneralHelpPanel boardId={boardId} task={task} onClose={() => setOpen(false)} />;
+  if (writing) {
+    return <WritingAssistant boardId={boardId} task={task} onClose={() => setOpen(false)} />;
+  }
+
+  return <TaskHelpCard boardId={boardId} task={task} onClose={() => setOpen(false)} />;
 }
 
-/* ───── 非作文任务：问一问 ───── */
+/* ───── 非作文任务：任务攻略卡（卡片内展开） ───── */
 
-function GeneralHelpPanel({ boardId, task, onClose }: { boardId: string; task: TaskRecord; onClose: () => void }) {
-  const [loading, setLoading] = useState(false);
-  const [answer, setAnswer] = useState<string | null>(null);
-  const [activeKey, setActiveKey] = useState<string | null>(null);
+function TaskHelpCard({ boardId, task, onClose }: { boardId: string; task: TaskRecord; onClose: () => void }) {
+  const [loading, setLoading] = useState(true);
+  const [card, setCard] = useState<HelpCard | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const askHelp = useCallback(async (key: string) => {
-    setActiveKey(key);
-    setLoading(true);
-    setAnswer(null);
-    try {
-      const res = await fetch("/api/task-help", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ board: boardId, subject: task.subject || "", title: task.title, details: task.details || "", question_type: key }),
-      });
-      const data = await res.json();
-      setAnswer(!res.ok ? (data.error || "暂时回答不了") : data.answer);
-    } catch {
-      setAnswer("网络异常，请重试");
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/task-help", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ board: boardId, subject: task.subject || "", title: task.title, details: task.details || "" }),
+        });
+        const data = await res.json();
+        if (!active) return;
+        if (!res.ok) {
+          setError(data.error || "加载失败");
+        } else {
+          setCard(data.card);
+        }
+      } catch {
+        if (active) setError("网络异常");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
   }, [boardId, task]);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
-      <div className="mx-auto max-w-3xl px-4 py-6 md:px-6 md:py-8">
-        <div className="mb-6">
-          <button type="button" onClick={onClose} className="nav-button">← 返回任务</button>
-          <p className="mt-4 text-sm font-semibold tracking-[0.18em] text-[var(--primary)]">问一问</p>
-          <h1 className="mt-2 text-2xl font-semibold text-[var(--foreground)]">{task.title}</h1>
-          {task.details && <p className="mt-1 text-sm text-[var(--text-secondary)]">{task.details}</p>}
+    <div className="mt-2 rounded-[12px] border border-[var(--primary)]/20 bg-[var(--primary-light)] p-3.5">
+      {loading && (
+        <div className="flex items-center gap-2 py-2">
+          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
+          <p className="text-sm text-[var(--text-muted)]">正在生成攻略...</p>
         </div>
-        <div className="mb-6 flex flex-wrap gap-2">
-          {HELP_OPTIONS.map((opt) => (
-            <button key={opt.key} type="button" disabled={loading} onClick={() => askHelp(opt.key)}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
-                activeKey === opt.key ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]" : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
-              } disabled:opacity-50`}>{opt.label}</button>
-          ))}
-        </div>
-        <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5 md:p-6">
-          {!activeKey && !loading && <p className="py-8 text-center text-base text-[var(--text-muted)]">点上方按钮，我来帮你</p>}
-          {loading && (
-            <div className="flex items-center gap-2 py-8">
-              <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
-              <p className="text-base text-[var(--text-muted)]">思考中...</p>
+      )}
+      {error && <p className="text-sm text-[var(--error)]">{error}</p>}
+      {card && !loading && (
+        <div className="space-y-2.5">
+          {/* 解释 */}
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 shrink-0 text-sm">📖</span>
+            <p className="text-sm leading-6 text-[var(--foreground)]">{card.explain}</p>
+          </div>
+          {/* 步骤 */}
+          {card.steps.length > 0 && (
+            <div className="flex items-start gap-2">
+              <span className="mt-0.5 shrink-0 text-sm">👣</span>
+              <div className="space-y-1">
+                {card.steps.map((step, i) => (
+                  <p key={i} className="text-sm leading-6 text-[var(--foreground)]">
+                    {card.steps.length > 1 ? `${i + 1}. ${step}` : step}
+                  </p>
+                ))}
+              </div>
             </div>
           )}
-          {answer && !loading && <p className="whitespace-pre-line text-base leading-8 text-[var(--foreground)]">{answer}</p>}
+          {/* 检查 */}
+          {card.check && (
+            <div className="flex items-start gap-2">
+              <span className="mt-0.5 shrink-0 text-sm">✅</span>
+              <p className="text-sm leading-6 text-[var(--text-secondary)]">{card.check}</p>
+            </div>
+          )}
         </div>
-      </div>
+      )}
+      {/* 收起按钮 */}
+      <button
+        type="button"
+        onClick={onClose}
+        className="mt-2 w-full rounded-[8px] py-1 text-center text-xs text-[var(--text-muted)]"
+      >
+        收起
+      </button>
     </div>
   );
 }

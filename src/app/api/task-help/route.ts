@@ -4,28 +4,27 @@ import { createClient } from "@supabase/supabase-js";
 import { getProvider } from "@/lib/ai-providers";
 import { resolveBoardId } from "@/lib/board";
 
-const QUESTION_PROMPTS: Record<string, string> = {
-  explain: `用三年级小学生能懂的话，解释这个任务是什么意思。
-要求：
-- 用简单的词语，像跟孩子聊天一样
-- 如果有页码、课文名等信息，告诉孩子具体指什么
-- 不超过 50 个字
-- 不要用"首先""其次"等结构化词语`,
+const SYSTEM_PROMPT = `你是一个三年级小学生的学习助手。根据给出的作业任务，生成一张"任务攻略卡"，帮孩子快速理解并开始做。
 
-  how_to_start: `告诉一个三年级小学生，这个任务应该怎么开始做，第一步做什么。
-要求：
-- 给出具体的第一步动作（比如"先翻开书本第X页"）
-- 如果有多个小步骤，最多列 3 步，用 1. 2. 3. 标注
-- 每步不超过 15 个字
-- 语气像朋友提醒，不要像老师命令`,
+攻略卡包含三部分，严格输出 JSON：
+{
+  "explain": "用一句大白话解释这个任务是什么意思，不超过 25 字",
+  "steps": ["第一步做什么", "第二步做什么", "第三步做什么"],
+  "check": "一句话告诉孩子怎么确认自己做完了，不超过 20 字"
+}
 
-  how_to_check: `告诉一个三年级小学生，做完这个任务后怎么自己检查。
-要求：
-- 给 2-3 个简单的检查点，用 ✓ 开头
-- 每条不超过 15 个字
-- 适合孩子自己对照检查
-- 语气轻松鼓励`,
-};
+规则：
+1. explain 要具体，不要说"完成作业"这种废话
+   ✅ "翻开语文书第88页，把新课文先读一遍"
+   ❌ "按老师要求完成任务"
+2. steps 给 2-3 步，每步是一个具体动作，不超过 15 字
+   ✅ "先读一遍课文，遇到生字画圈"
+   ❌ "认真完成"
+3. check 是孩子自己能判断的标准
+   ✅ "能说出课文大意就算完成"
+   ❌ "检查是否正确"
+4. 语气像朋友聊天，亲切简短
+5. 如果任务有页码、单元号等信息，steps 里要提到具体翻到哪一页`;
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,7 +39,7 @@ export async function POST(request: Request) {
     subject?: string;
     title?: string;
     details?: string;
-    question_type?: string;
+    question_type?: string; // 保留兼容，但不再使用
   };
 
   try {
@@ -49,15 +48,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "请求格式错误" }, { status: 400 });
   }
 
-  const { subject, title, details, question_type } = body;
+  const { subject, title, details } = body;
   const boardId = resolveBoardId(body.board);
-  if (!title || !question_type) {
+  if (!title) {
     return NextResponse.json({ error: "缺少任务信息" }, { status: 400 });
-  }
-
-  const questionPrompt = QUESTION_PROMPTS[question_type];
-  if (!questionPrompt) {
-    return NextResponse.json({ error: "未知问题类型" }, { status: 400 });
   }
 
   /* 读取 AI 配置 */
@@ -91,7 +85,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "未配置 AI 服务" }, { status: 500 });
   }
 
-  /* 构建任务描述 */
   const taskDesc = [
     subject ? `学科：${subject}` : "",
     `任务：${title}`,
@@ -101,8 +94,8 @@ export async function POST(request: Request) {
     .join("\n");
 
   const systemPrompt = soulDesc
-    ? `${questionPrompt}\n\n你的人设：${soulDesc}`
-    : questionPrompt;
+    ? `${SYSTEM_PROMPT}\n\n你的人设：${soulDesc}`
+    : SYSTEM_PROMPT;
 
   try {
     const openai = new OpenAI({
@@ -113,16 +106,28 @@ export async function POST(request: Request) {
     const completion = await openai.chat.completions.create({
       model,
       temperature: 0.6,
-      max_tokens: 200,
+      max_tokens: 300,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: taskDesc },
       ],
     });
 
-    const answer = completion.choices[0]?.message?.content?.trim() ?? "";
+    let raw = completion.choices[0]?.message?.content?.trim() ?? "{}";
 
-    return NextResponse.json({ answer });
+    /* 去掉可能的 markdown 包装 */
+    const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) raw = jsonMatch[1].trim();
+
+    let card: { explain: string; steps: string[]; check: string };
+    try {
+      card = JSON.parse(raw);
+    } catch {
+      // 兜底：如果不是 JSON，当作纯文本返回
+      return NextResponse.json({ card: { explain: raw, steps: [], check: "" } });
+    }
+
+    return NextResponse.json({ card });
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI 服务异常";
     return NextResponse.json({ error: message }, { status: 502 });
