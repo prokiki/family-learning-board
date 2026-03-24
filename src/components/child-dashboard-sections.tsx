@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { EmptyState, TaskListSkeleton } from "@/components/empty-state";
 import { formatDisplayDate } from "@/lib/date";
@@ -24,179 +24,327 @@ const HELP_OPTIONS = [
   { key: "how_to_check", label: "做完怎么检查？" },
 ] as const;
 
-const WRITING_OPTIONS = [
-  { key: "mindmap", label: "🧠 思维导图" },
-  { key: "analyze", label: "📝 读懂题目" },
-  { key: "recall", label: "👀 回忆画面" },
-  { key: "opening", label: "✍️ 开头帮一把" },
-  { key: "tips", label: "✨ 写作锦囊" },
-] as const;
-
-type MindmapSection = { name: string; color: string; points: string[] };
+type MindmapPoint = { tip: string; example: string };
+type MindmapSection = { name: string; color: string; points: MindmapPoint[] };
 type MindmapData = { title: string; sections: MindmapSection[] };
+type SampleData = { label: string; text: string; comment: string };
 
 function TaskHelpButton({ boardId, task }: { boardId: string; task: TaskRecord }) {
   const writing = isWritingTask(task);
   const [open, setOpen] = useState(false);
+
+  if (!open) {
+    return writing ? (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-2 w-full rounded-[10px] border border-dashed border-[var(--subject-chinese,#e8a735)] bg-[var(--warning-subtle)] px-3 py-2.5 text-xs font-semibold text-[var(--subject-chinese,#c47a20)] transition-colors"
+      >
+        ✏️ 不知道怎么写？点这里帮你理思路
+      </button>
+    ) : (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-2 w-full rounded-[10px] border border-dashed border-[var(--line)] px-3 py-2 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+      >
+        💡 问一问
+      </button>
+    );
+  }
+
+  return writing
+    ? <WritingAssistant boardId={boardId} task={task} onClose={() => setOpen(false)} />
+    : <GeneralHelpPanel boardId={boardId} task={task} onClose={() => setOpen(false)} />;
+}
+
+/* ───── 非作文任务：问一问 ───── */
+
+function GeneralHelpPanel({ boardId, task, onClose }: { boardId: string; task: TaskRecord; onClose: () => void }) {
   const [loading, setLoading] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
-  const [mindmap, setMindmap] = useState<MindmapData | null>(null);
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
-  const options = writing ? WRITING_OPTIONS : HELP_OPTIONS;
-  const apiPath = writing ? "/api/writing-help" : "/api/task-help";
-
-  const askHelp = useCallback(
-    async (key: string) => {
-      setActiveKey(key);
-      setLoading(true);
-      setAnswer(null);
-      setMindmap(null);
-
-      /* 思维导图走独立的 API */
-      if (key === "mindmap") {
-        try {
-          const res = await fetch("/api/writing-mindmap", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ board: boardId, title: task.title, details: task.details || "" }),
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            setAnswer(data.error || "思维导图生成失败");
-          } else {
-            setMindmap(data.mindmap);
-          }
-        } catch {
-          setAnswer("网络异常，请重试");
-        } finally {
-          setLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const payload = writing
-          ? { board: boardId, title: task.title, details: task.details || "", step: key }
-          : { board: boardId, subject: task.subject || "", title: task.title, details: task.details || "", question_type: key };
-
-        const res = await fetch(apiPath, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setAnswer(data.error || "暂时回答不了");
-        } else {
-          setAnswer(data.answer);
-        }
-      } catch {
-        setAnswer("网络异常，请重试");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [boardId, task, writing, apiPath],
-  );
-
-  const handleClose = useCallback(() => {
-    setOpen(false);
+  const askHelp = useCallback(async (key: string) => {
+    setActiveKey(key);
+    setLoading(true);
     setAnswer(null);
-    setMindmap(null);
-    setActiveKey(null);
-  }, []);
+    try {
+      const res = await fetch("/api/task-help", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ board: boardId, subject: task.subject || "", title: task.title, details: task.details || "", question_type: key }),
+      });
+      const data = await res.json();
+      setAnswer(!res.ok ? (data.error || "暂时回答不了") : data.answer);
+    } catch {
+      setAnswer("网络异常，请重试");
+    } finally {
+      setLoading(false);
+    }
+  }, [boardId, task]);
 
   return (
-    <>
-      {/* 入口按钮（卡片内） */}
-      {writing ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="mt-2 w-full rounded-[10px] border border-dashed border-[var(--subject-chinese,#e8a735)] bg-[var(--warning-subtle)] px-3 py-2.5 text-xs font-semibold text-[var(--subject-chinese,#c47a20)] transition-colors"
-        >
-          ✏️ 不知道怎么写？点这里帮你理思路
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="mt-2 w-full rounded-[10px] border border-dashed border-[var(--line)] px-3 py-2 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
-        >
-          💡 问一问
-        </button>
-      )}
-
-      {/* 全屏页面 */}
-      {open && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
-          <div className="mx-auto max-w-3xl px-4 py-6 md:px-6 md:py-8">
-            {/* 顶栏：返回 + 标题 */}
-            <div className="mb-6">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="nav-button"
-              >
-                ← 返回任务
-              </button>
-              <p className="mt-4 text-sm font-semibold tracking-[0.18em] text-[var(--primary)]">
-                {writing ? "写作小帮手" : "问一问"}
-              </p>
-              <h1 className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
-                {task.title}
-              </h1>
-              {task.details && (
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">{task.details}</p>
-              )}
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
+      <div className="mx-auto max-w-3xl px-4 py-6 md:px-6 md:py-8">
+        <div className="mb-6">
+          <button type="button" onClick={onClose} className="nav-button">← 返回任务</button>
+          <p className="mt-4 text-sm font-semibold tracking-[0.18em] text-[var(--primary)]">问一问</p>
+          <h1 className="mt-2 text-2xl font-semibold text-[var(--foreground)]">{task.title}</h1>
+          {task.details && <p className="mt-1 text-sm text-[var(--text-secondary)]">{task.details}</p>}
+        </div>
+        <div className="mb-6 flex flex-wrap gap-2">
+          {HELP_OPTIONS.map((opt) => (
+            <button key={opt.key} type="button" disabled={loading} onClick={() => askHelp(opt.key)}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                activeKey === opt.key ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]" : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
+              } disabled:opacity-50`}>{opt.label}</button>
+          ))}
+        </div>
+        <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5 md:p-6">
+          {!activeKey && !loading && <p className="py-8 text-center text-base text-[var(--text-muted)]">点上方按钮，我来帮你</p>}
+          {loading && (
+            <div className="flex items-center gap-2 py-8">
+              <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
+              <p className="text-base text-[var(--text-muted)]">思考中...</p>
             </div>
+          )}
+          {answer && !loading && <p className="whitespace-pre-line text-base leading-8 text-[var(--foreground)]">{answer}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-            {/* 选项按钮 */}
-            <div className="mb-6 flex flex-wrap gap-2">
-              {options.map((opt) => (
-                <button
-                  key={opt.key}
-                  type="button"
-                  disabled={loading}
-                  onClick={() => askHelp(opt.key)}
-                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
-                    activeKey === opt.key
-                      ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
-                      : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
-                  } disabled:opacity-50`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+/* ───── 作文任务：三步流程写作助手 ───── */
 
-            {/* 内容区域 */}
-            <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5 md:p-6">
-              {!activeKey && !loading && (
-                <p className="py-8 text-center text-base text-[var(--text-muted)]">
-                  {writing ? "点上方按钮，帮你一步步理清思路" : "点上方按钮，我来帮你"}
-                </p>
-              )}
-              {loading && (
-                <div className="flex items-center gap-2 py-8">
-                  <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
-                  <p className="text-base text-[var(--text-muted)]">
-                    {activeKey === "mindmap" ? "正在拆解作文思路..." : "思考中..."}
-                  </p>
-                </div>
-              )}
-              {answer && !loading && (
-                <p className="whitespace-pre-line text-base leading-8 text-[var(--foreground)]">
-                  {answer}
-                </p>
-              )}
-              {mindmap && !loading && <MindmapView data={mindmap} />}
+const WRITING_STEPS = [
+  { key: "mindmap", label: "① 思维导图" },
+  { key: "write", label: "② 分段写" },
+  { key: "sample", label: "③ 赏析学习" },
+] as const;
+
+function WritingAssistant({ boardId, task, onClose }: { boardId: string; task: TaskRecord; onClose: () => void }) {
+  const [step, setStep] = useState<"mindmap" | "write" | "sample">("mindmap");
+  const [loading, setLoading] = useState(true); // 自动加载思维导图
+  const [mindmap, setMindmap] = useState<MindmapData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // 分段写作状态
+  const [drafts, setDrafts] = useState<string[]>([]);
+  const [feedbacks, setFeedbacks] = useState<(string | null)[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState<number | null>(null);
+
+  // 赏析状态
+  const [samples, setSamples] = useState<SampleData[] | null>(null);
+  const [sampleLoading, setSampleLoading] = useState(false);
+
+  // 自动加载思维导图
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/writing-mindmap", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ board: boardId, title: task.title, details: task.details || "" }),
+        });
+        const data = await res.json();
+        if (!active) return;
+        if (!res.ok) {
+          setError(data.error || "思维导图生成失败");
+        } else {
+          setMindmap(data.mindmap);
+          // 初始化分段草稿
+          setDrafts(data.mindmap.sections.map(() => ""));
+          setFeedbacks(data.mindmap.sections.map(() => null));
+        }
+      } catch {
+        if (active) setError("网络异常，请重试");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [boardId, task]);
+
+  // 获取每段反馈
+  const getFeedback = useCallback(async (sectionIndex: number) => {
+    if (!mindmap || !drafts[sectionIndex]?.trim()) return;
+    setFeedbackLoading(sectionIndex);
+    try {
+      const res = await fetch("/api/writing-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          board: boardId,
+          title: task.title,
+          section_name: mindmap.sections[sectionIndex].name,
+          text: drafts[sectionIndex],
+        }),
+      });
+      const data = await res.json();
+      setFeedbacks((prev) => {
+        const next = [...prev];
+        next[sectionIndex] = !res.ok ? (data.error || "反馈失败") : data.feedback;
+        return next;
+      });
+    } catch {
+      setFeedbacks((prev) => { const n = [...prev]; n[sectionIndex] = "网络异常"; return n; });
+    } finally {
+      setFeedbackLoading(null);
+    }
+  }, [boardId, task, mindmap, drafts]);
+
+  // 加载赏析
+  const loadSamples = useCallback(async () => {
+    setSampleLoading(true);
+    try {
+      const res = await fetch("/api/writing-sample", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ board: boardId, title: task.title, details: task.details || "" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.samples) setSamples(data.samples);
+    } catch { /* ignore */ } finally {
+      setSampleLoading(false);
+    }
+  }, [boardId, task]);
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
+      <div className="mx-auto max-w-3xl px-4 py-6 md:px-6 md:py-8">
+        {/* 顶栏 */}
+        <div className="mb-6">
+          <button type="button" onClick={onClose} className="nav-button">← 返回任务</button>
+          <p className="mt-4 text-sm font-semibold tracking-[0.18em] text-[var(--primary)]">写作小帮手</p>
+          <h1 className="mt-2 text-2xl font-semibold text-[var(--foreground)]">{task.title}</h1>
+          {task.details && <p className="mt-1 text-sm text-[var(--text-secondary)]">{task.details}</p>}
+        </div>
+
+        {/* 步骤指示器 */}
+        <div className="mb-6 flex gap-2">
+          {WRITING_STEPS.map((s) => (
+            <button key={s.key} type="button" onClick={() => {
+              if (s.key === "sample" && !samples && !sampleLoading) loadSamples();
+              setStep(s.key as typeof step);
+            }}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                step === s.key ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]" : "border-[var(--line)] bg-card text-[var(--text-secondary)]"
+              }`}>{s.label}</button>
+          ))}
+        </div>
+
+        {/* 加载中 */}
+        {loading && (
+          <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5 md:p-6">
+            <div className="flex items-center gap-2 py-8">
+              <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
+              <p className="text-base text-[var(--text-muted)]">正在拆解作文思路...</p>
             </div>
           </div>
-        </div>
-      )}
-    </>
+        )}
+
+        {error && !loading && (
+          <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5 md:p-6">
+            <p className="text-base text-[var(--error)]">{error}</p>
+          </div>
+        )}
+
+        {/* 步骤 1：思维导图 */}
+        {!loading && mindmap && step === "mindmap" && (
+          <div className="space-y-4">
+            <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5 md:p-6">
+              <MindmapView data={mindmap} />
+            </div>
+            <button type="button" onClick={() => setStep("write")}
+              className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white">
+              看懂了，开始写 →
+            </button>
+          </div>
+        )}
+
+        {/* 步骤 2：分段写作 */}
+        {!loading && mindmap && step === "write" && (
+          <div className="space-y-4">
+            {mindmap.sections.map((section, si) => {
+              const s = SECTION_STYLES[section.color] || SECTION_STYLES.sky;
+              return (
+                <div key={si} className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5 md:p-6">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <span className="inline-block h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: s.dot }} />
+                    <span className="text-base font-bold" style={{ color: s.name }}>{section.name}</span>
+                  </div>
+                  {/* 要点提示 */}
+                  <div className="mb-3 space-y-2 rounded-[10px] border border-[var(--line-light)] bg-[var(--card-alt)] p-3">
+                    {section.points.map((pt, pi) => (
+                      <div key={pi}>
+                        <p className="text-sm text-[var(--text-secondary)]">‣ {pt.tip}</p>
+                        {pt.example && (
+                          <p className="mt-0.5 pl-4 text-sm italic leading-6" style={{ color: s.name }}>“{pt.example}”</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {/* 输入框 */}
+                  <textarea
+                    value={drafts[si] || ""}
+                    onChange={(e) => setDrafts((prev) => { const n = [...prev]; n[si] = e.target.value; return n; })}
+                    placeholder="在这里写这一段..."
+                    rows={4}
+                    className="w-full rounded-[12px] border border-[var(--line)] bg-card px-4 py-3 text-base leading-8 outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+                  />
+                  {/* 反馈按钮 */}
+                  <div className="mt-2 flex items-center gap-3">
+                    <button type="button" disabled={!drafts[si]?.trim() || feedbackLoading === si}
+                      onClick={() => getFeedback(si)}
+                      className="rounded-full border border-[var(--line)] bg-card px-4 py-1.5 text-sm font-medium text-[var(--text-secondary)] disabled:opacity-40">
+                      {feedbackLoading === si ? "评价中..." : "✨ 帮我看看这段写得怎么样"}
+                    </button>
+                  </div>
+                  {/* 反馈内容 */}
+                  {feedbacks[si] && (
+                    <div className="mt-3 rounded-[10px] border border-[var(--line-light)] bg-[var(--primary-light)] p-3">
+                      <p className="text-sm leading-7 text-[var(--foreground)]">{feedbacks[si]}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            <button type="button" onClick={() => { if (!samples && !sampleLoading) loadSamples(); setStep("sample"); }}
+              className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white">
+              写完了，看看别人怎么写 →
+            </button>
+          </div>
+        )}
+
+        {/* 步骤 3：赏析学习 */}
+        {!loading && step === "sample" && (
+          <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5 md:p-6">
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">精彩片段赏析</h2>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">看看同样的题目，别人是怎么写的</p>
+            {sampleLoading && (
+              <div className="flex items-center gap-2 py-8">
+                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
+                <p className="text-base text-[var(--text-muted)]">正在生成精彩片段...</p>
+              </div>
+            )}
+            {samples && (
+              <div className="mt-4 space-y-4">
+                {samples.map((sample, i) => (
+                  <div key={i} className="rounded-[12px] border border-[var(--line-light)] bg-[var(--card-alt)] p-4">
+                    <p className="text-xs font-bold text-[var(--primary)]">{sample.label}</p>
+                    <p className="mt-2 text-base leading-8 text-[var(--foreground)]">“{sample.text}”</p>
+                    <p className="mt-2 text-sm text-[var(--text-secondary)]">💡 {sample.comment}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -236,11 +384,18 @@ function MindmapView({ data }: { data: MindmapData }) {
                   {section.name}
                 </span>
               </div>
-              <div className="mt-3 ml-[22px] space-y-2.5">
+              <div className="mt-3 ml-[22px] space-y-3">
                 {section.points.map((point, pi) => (
-                  <div key={pi} className="flex items-start gap-2.5">
-                    <span className="mt-0.5 shrink-0 text-sm" style={{ color: s.dot }}>‣</span>
-                    <p className="text-sm leading-7 text-[var(--foreground)]">{point}</p>
+                  <div key={pi}>
+                    <div className="flex items-start gap-2.5">
+                      <span className="mt-0.5 shrink-0 text-sm" style={{ color: s.dot }}>‣</span>
+                      <p className="text-sm leading-7 text-[var(--foreground)]">{point.tip}</p>
+                    </div>
+                    {point.example && (
+                      <p className="ml-[18px] mt-1 text-sm italic leading-6 text-[var(--text-secondary)]">
+                        “{point.example}”
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>

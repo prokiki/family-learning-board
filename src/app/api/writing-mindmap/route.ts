@@ -4,39 +4,41 @@ import { createClient } from "@supabase/supabase-js";
 import { getProvider } from "@/lib/ai-providers";
 import { resolveBoardId } from "@/lib/board";
 
-const SYSTEM_PROMPT = `你是一个有趣的三年级作文小老师。根据作文题目，生成一棵思维导图，帮孩子把作文拆解成具体可写的内容。
+const SYSTEM_PROMPT = `你是一个有趣的三年级作文小老师。根据作文题目，生成一棵详细的思维导图，帮孩子把作文拆解成具体可写的内容，并给每个要点附上示范写法。
 
-思维导图结构（三层）：
+思维导图结构：
 - 第一层：作文题目（根节点）
-- 第二层：作文的 3-4 个段落，每段用一个有趣的名字（不要叫“开头”“中间”“结尾”，而是叫““认识他”“那件小事”“我想说”这样生动的名字）
-- 第三层：每段具体要写什么（2-3 个要点）
+- 第二层：作文的 3-4 个段落，每段用一个有趣的名字（不要叫"开头""中间""结尾"，而是叫"认识他""那件小事""我想说"这样生动的名字）
+- 第三层：每段 2-3 个要点，每个要点包含：
+  - tip：具体要写什么（引导提示）
+  - example：示范写法（一两句话，展示这个要点可以怎么写）
 
 规则：
-1. 第三层的每个节点必须是具体的、孩子能直接写的内容提示
-   ✅ "写他递给你橡皮时说了什么"
-   ✅ "写你心里当时在想什么"
+1. tip 必须具体，孩子看了就知道写什么
+   ✅ "写他递给你橡皮时的动作和表情"
    ❌ "写你的感受"（太抽象）
-   ❌ "用优美的语言描述"（太笼统）
-2. 中间段要拆得最细，引导孩子写一个具体的“小片段”
-3. 每个段落至少插入 1 个好词好句提示，用“试试用”“可以写”开头，要求包含修辞手法：
-   比喻："写他跑得快，试试‘像一阵风一样冲过终点’"
-   拟人："写小花，可以说‘小花笑着向我点头’"
-   排比："写开心，试试‘开心得想唱歌，开心得想跳舞，开心得想飞起来’"
-   夸张："写声音大，可以说‘欢呼声都快把屋顶掀翻了’"
-   心理："写紧张，试试‘我的心像揣了只小兔子，砰砰直跳’"
-   五感："写食物，可以写‘香味钻进鼻子，口水都要流下来了’"
-   注意：推荐的句子要生动有画面感，三年级能理解但又不是平常轻易想到的，让孩子觉得“这个说法真有意思”
-4. 语气要活泼有趣，像和孩子聊天，每个节点不超过 20 个字
-5. 内容贴近三年级孩子日常生活
+2. example 是重点！每个要点都必须有一个具体的示范句子，让孩子看到"原来可以这样写"
+   - 示范要用修辞手法（比喻、拟人、排比、夸张、五感描写等）
+   - 示范要生动有画面感，不是干巴巴的叙述
+   - 示范是一两句话（不是完整段落），三年级能懂能仿
+   例如 tip:"写他跑得快的样子" → example:"他像一支箭一样冲了出去，脚下像装了风火轮。"
+   例如 tip:"写你紧张的心情" → example:"我的心怦怦直跳，像揣了一只小兔子在里面蹦来蹦去。"
+   例如 tip:"写教室里很安静" → example:"教室里安静极了，连一根针掉在地上都听得见。"
+3. 中间段拆得最细，要点最多，示范最精彩
+4. 语气活泼有趣，像和孩子聊天
+5. tip 不超过 20 字，example 不超过 35 字
+6. 内容贴近三年级孩子日常生活
 
-严格输出 JSON，不要其他文字：
+严格输出 JSON：
 {
   "title": "作文题目",
   "sections": [
     {
       "name": "段落的有趣名字",
       "color": "rose/amber/sky/emerald 四选一",
-      "points": ["要点1", "要点2"]
+      "points": [
+        { "tip": "具体要写什么", "example": "示范写法，一两句话" }
+      ]
     }
   ]
 }`;
@@ -109,7 +111,7 @@ export async function POST(request: Request) {
     const completion = await openai.chat.completions.create({
       model,
       temperature: 0.7,
-      max_tokens: 600,
+      max_tokens: 1200,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: taskDesc },
@@ -122,7 +124,14 @@ export async function POST(request: Request) {
     const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) raw = jsonMatch[1].trim();
 
-    let mindmap: { title: string; sections: { name: string; color: string; points: string[] }[] };
+    let mindmap: {
+      title: string;
+      sections: {
+        name: string;
+        color: string;
+        points: { tip: string; example: string }[] | string[];
+      }[];
+    };
     try {
       mindmap = JSON.parse(raw);
     } catch {
@@ -131,6 +140,13 @@ export async function POST(request: Request) {
 
     if (!mindmap.sections || mindmap.sections.length < 3) {
       return NextResponse.json({ error: "内容不完整，请重试" }, { status: 502 });
+    }
+
+    /* 兼容旧格式：如果 points 是 string[]，转为 {tip, example}[] */
+    for (const section of mindmap.sections) {
+      section.points = section.points.map((p) =>
+        typeof p === "string" ? { tip: p, example: "" } : p,
+      );
     }
 
     return NextResponse.json({ mindmap });
