@@ -586,8 +586,8 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
           </div>
         ) : null}
 
-        {/* AI 今日作战计划 */}
-        {tasks.length > 0 && (
+        {/* AI 今日作战计划（全部完成时隐藏，显示完成鼓励） */}
+        {tasks.length > 0 && !allDone && (
           <div className="rounded-[1.5rem] border border-[var(--primary)]/20 bg-[var(--primary-light)] p-4">
             {dailyPlan ? (
               <p className="text-sm leading-7 text-[var(--foreground)]">{dailyPlan}</p>
