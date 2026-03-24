@@ -156,6 +156,14 @@ export default function Home() {
             </div>
           ))}
         </div>
+
+        {/* Demo 入口 */}
+        <p
+          onClick={() => router.push(`/child?board=${DEMO_BOARD}`)}
+          className="mt-4 cursor-pointer text-center text-xs text-[var(--text-muted)]"
+        >
+          体验 Demo 看板
+        </p>
       </div>
     </main>
   );
