@@ -7,13 +7,14 @@
 | 首页入口 | 家长端 | 孩子端 |
 |:---:|:---:|:---:|
 | ![home](docs/screenshots/01-home.png) | ![parent](docs/screenshots/02-parent.jpg) | ![child](docs/screenshots/03-child.png) |
-| 密码登录 / Demo 体验 | 作业导入、AI 解析、实时状态 | 番茄钟、任务卡片、图片资料 |
+| 孩子看板直达 / 家长密码进入 | 作业导入、AI 解析、实时状态 | 番茄钟、任务卡片、图片资料 |
 
 ## 功能特性
 
 - 家长端创建和管理今日任务
 - 孩子端查看任务并更新状态，家长端实时同步
 - 老师作业文本导入 + AI 智能解析（自动识别学科、拆分子任务）
+- 学校作业 / 课外练习分类查看与管理
 - AI 今日作战计划（孩子端个性化鼓励 + 做作业顺序建议）
 - AI 人设自定义（定义 AI 生成内容的语气和风格）
 - “每天固定任务”模板并一键加入当天任务
@@ -72,6 +73,7 @@ BOARD_PASSWORD=your_access_password
 5. [005_add_task_attachments.sql](supabase/migrations/005_add_task_attachments.sql)
 6. [006_add_ai_config.sql](supabase/migrations/006_add_ai_config.sql)
 7. [007_add_ai_soul.sql](supabase/migrations/007_add_ai_soul.sql)
+8. [008_add_task_category.sql](supabase/migrations/008_add_task_category.sql)
 
 这些 migration 会创建或补齐：
 
@@ -86,6 +88,7 @@ BOARD_PASSWORD=your_access_password
 - 常用索引与基础约束
 - `teacher-attachments` storage bucket 与公开读写策略
 - `public.ai_config` AI 服务配置表（含 `soul` 人设描述字段）
+- `tasks.category` 字段与分类索引（学校作业 / 课外练习）
 
 ### 3. 建议执行后的快速检查
 
@@ -118,8 +121,11 @@ npm run dev
 4. 打开页面
 
 - 首页：`http://localhost:3000`
-- 家长端：`http://localhost:3000/parent`
-- 孩子端：`http://localhost:3000/child`
+- 家长端：从首页点击“进入家长端”，输入 `BOARD_PASSWORD`
+- 孩子端：从首页点击“进入孩子看板”
+- 也可以直接访问：
+  - `http://localhost:3000/parent`
+  - `http://localhost:3000/child`
 
 如果 3000 端口被占用，请以终端输出的实际端口为准。
 
@@ -152,6 +158,7 @@ npm run dev
 - `details`: 任务说明
 - `status`: `pending` / `in_progress` / `done_by_child` / `needs_help` / `confirmed_by_parent`
 - `source`: `manual` / `imported` / `template`
+- `category`: `school` / `extra`
 - `last_updated_by`: `parent` / `child`
 
 ### task_templates
@@ -210,13 +217,14 @@ API Key 存储在 Supabase 数据库中，前端仅显示脱敏值。所有 AI �
 
 ## 访问保护
 
-项目采用 **密码门 + board_id 隔离** 方案：
+项目采用 **孩子看板直达 + 家长端密码验证 + board_id 隔离** 方案：
 
-- **私有看板**：首页输入密码后进入，URL 带 `?board=你的ID`，数据完全隔离
-- **Demo 看板**：免密码，URL 带 `?board=demo`，所有访客共享，仅供体验
+- **孩子看板**：首页可直接进入，适合家里固定设备使用
+- **家长端**：首页点击后输入密码进入，验证成功后写入 httpOnly cookie（90 天有效）
+- **board_id**：任务、图片资料、AI 配置等数据继续按 board 隔离
 - **PWA**：iPad 桌面图标直接打开 `/child`，无参数时自动使用环境变量中的私有 board_id
 
-密码通过 `BOARD_PASSWORD` 环境变量设置，验证成功后设置 httpOnly cookie（90 天有效）。
+密码通过 `BOARD_PASSWORD` 环境变量设置。
 
 ## 部署到 Vercel
 
