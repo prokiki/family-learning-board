@@ -96,6 +96,19 @@ function filterAttachmentsForVisibleTasks(
   );
 }
 
+function summarizeImportedAttachments(
+  attachments: TaskAttachmentRecord[],
+  dueDate: string,
+) {
+  const items = attachments.filter((attachment) => attachment.due_date === dueDate);
+  const subjects = new Set(items.map((attachment) => attachment.subject?.trim() || "今日任务"));
+
+  return {
+    count: items.length,
+    subjectCount: subjects.size,
+  };
+}
+
 /** 图片转 base64（压缩到 1200px 宽度以内） */
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -150,7 +163,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
   const supabase = getSupabaseBrowserClient();
   const [loading, setLoading] = useState(Boolean(supabase));
   const [isPending, startTransition] = useTransition();
-  const [activeTab, setActiveTab] = useState<"import" | "manual" | "template" | "attachment">("import");
+  const [activeTab, setActiveTab] = useState<"import" | "manual" | "template">("import");
   const [taskCategory, setTaskCategory] = useState<"school" | "extra">("school");
   const [aiParsing, setAiParsing] = useState(false);
   const [ocrScanning, setOcrScanning] = useState(false);
@@ -158,6 +171,15 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
   const [selectedDate, setSelectedDate] = useState("");
   const yesterday = useMemo(() => (today ? shiftLocalDate(today, -1) : ""), [today]);
   const importDrafts = useMemo(() => flattenHomeworkGroups(importGroups), [importGroups]);
+  const attachmentCountsBySubject = useMemo(
+    () =>
+      attachments.reduce<Record<string, number>>((acc, attachment) => {
+        const key = attachment.subject?.trim() || "其他";
+        acc[key] = (acc[key] ?? 0) + 1;
+        return acc;
+      }, {}),
+    [attachments],
+  );
   const progress = useMemo(() => summarizeProgress(tasks), [tasks]);
   const effectiveSelectedDate = selectedDate || today;
   const isTodaySelected = effectiveSelectedDate === today;
@@ -408,7 +430,17 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
       return;
     }
 
-    setMessage(`已添加 ${drafts.length} 条任务`);
+    if (source === "imported") {
+      const attachmentSummary = summarizeImportedAttachments(attachments, effectiveSelectedDate);
+      const attachmentMessage =
+        attachmentSummary.count > 0
+          ? `，补充 ${attachmentSummary.count} 张参考图片${attachmentSummary.subjectCount > 1 ? `（${attachmentSummary.subjectCount} 个学科）` : ""}`
+          : "";
+
+      setMessage(`已整理到今天任务：新增 ${drafts.length} 条作业${attachmentMessage}`);
+    } else {
+      setMessage(`已添加 ${drafts.length} 条任务`);
+    }
     setManualTitle("");
     setManualDetails("");
     setRawText("");
@@ -707,13 +739,17 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
     setAttachmentRole("reference");
     setAttachmentVisibleToChild(true);
     /* 学科保留上次选择，方便连续上传同一学科的多张图片 */
-    setMessage("已保存老师图片资料");
     const { data } = await fetchTaskAttachments(client, effectiveSelectedDate, boardId);
-    setAttachments(
-      filterAttachmentsForVisibleTasks(
-        (data as TaskAttachmentRecord[]) ?? [],
-        tasksRef.current,
-      ),
+    const nextAttachments = filterAttachmentsForVisibleTasks(
+      (data as TaskAttachmentRecord[]) ?? [],
+      tasksRef.current,
+    );
+    setAttachments(nextAttachments);
+    const sameSubjectCount = nextAttachments.filter(
+      (attachment) => (attachment.subject?.trim() || "其他") === attachmentSubject.trim(),
+    ).length;
+    setMessage(
+      `已补充老师图片资料：归到${attachmentSubject.trim()}，当前共 ${sameSubjectCount} 张`,
     );
   }
 
@@ -861,7 +897,6 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
                   ["import", "作业导入"],
                   ["manual", "手动新增"],
                   ["template", "固定模板"],
-                  ["attachment", "图片资料"],
                 ] as const).map(([key, label]) => (
                   <button
                     key={key}
@@ -903,26 +938,58 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
 
               {/* Tab Content */}
               {activeTab === "import" ? (
-                <ImportPreviewSection
-                  rawText={rawText}
-                  groups={importGroups}
-                  drafts={importDrafts}
-                  onRawTextChange={setRawText}
-                  onAIParse={handleAIParse}
-                  aiParsing={aiParsing}
-                  ocrScanning={ocrScanning}
-                  onOCR={handleOCR}
-                  onTaskUpdate={updateImportedTask}
-                  onTaskDelete={deleteImportedTask}
-                  onTaskAdd={addImportedTask}
-                  onImport={handleImport}
-                  importDisabled={
-                    !rawText.trim() ||
-                    !supabase ||
-                    isPending ||
-                    importDrafts.filter((draft) => draft.title.trim()).length === 0
-                  }
-                />
+                <>
+                  <ImportPreviewSection
+                    rawText={rawText}
+                    groups={importGroups}
+                    drafts={importDrafts}
+                    attachmentCount={attachments.length}
+                    attachmentSubjectCount={new Set(attachments.map((item) => item.subject?.trim() || "其他")).size}
+                    attachmentCountsBySubject={attachmentCountsBySubject}
+                    onRawTextChange={setRawText}
+                    onAIParse={handleAIParse}
+                    aiParsing={aiParsing}
+                    ocrScanning={ocrScanning}
+                    onOCR={handleOCR}
+                    onTaskUpdate={updateImportedTask}
+                    onTaskDelete={deleteImportedTask}
+                    onTaskAdd={addImportedTask}
+                    onImport={handleImport}
+                    importDisabled={
+                      !rawText.trim() ||
+                      !supabase ||
+                      isPending ||
+                      importDrafts.filter((draft) => draft.title.trim()).length === 0
+                    }
+                  />
+                  <div className="mt-6">
+                    <AttachmentSection
+                      attachments={attachments}
+                      subject={attachmentSubject}
+                      note={attachmentNote}
+                      role={attachmentRole}
+                      visibleToChild={attachmentVisibleToChild}
+                      uploading={uploadingAttachment}
+                      disabled={!supabase || isPending || uploadingAttachment}
+                      onSubjectChange={setAttachmentSubject}
+                      onNoteChange={setAttachmentNote}
+                      onRoleChange={(value) => {
+                        setAttachmentRole(value);
+                        if (value === "parent_only") {
+                          setAttachmentVisibleToChild(false);
+                        }
+                      }}
+                      onVisibleToChildChange={setAttachmentVisibleToChild}
+                      onUpload={(file) => {
+                        startTransition(() => {
+                          void uploadAttachment(file);
+                        });
+                      }}
+                      onDelete={deleteAttachment}
+                      onMove={moveAttachment}
+                    />
+                  </div>
+                </>
               ) : null}
 
               {activeTab === "manual" ? (
@@ -955,34 +1022,6 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
                   addDisabled={
                     !supabase || isPending || templates.filter((item) => item.is_active).length === 0
                   }
-                />
-              ) : null}
-
-              {activeTab === "attachment" ? (
-                <AttachmentSection
-                  attachments={attachments}
-                  subject={attachmentSubject}
-                  note={attachmentNote}
-                  role={attachmentRole}
-                  visibleToChild={attachmentVisibleToChild}
-                  uploading={uploadingAttachment}
-                  disabled={!supabase || isPending || uploadingAttachment}
-                  onSubjectChange={setAttachmentSubject}
-                  onNoteChange={setAttachmentNote}
-                  onRoleChange={(value) => {
-                    setAttachmentRole(value);
-                    if (value === "parent_only") {
-                      setAttachmentVisibleToChild(false);
-                    }
-                  }}
-                  onVisibleToChildChange={setAttachmentVisibleToChild}
-                  onUpload={(file) => {
-                    startTransition(() => {
-                      void uploadAttachment(file);
-                    });
-                  }}
-                  onDelete={deleteAttachment}
-                  onMove={moveAttachment}
                 />
               ) : null}
             </div>

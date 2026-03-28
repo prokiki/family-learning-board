@@ -461,6 +461,9 @@ export function ImportPreviewSection({
   rawText,
   groups,
   drafts,
+  attachmentCount,
+  attachmentSubjectCount,
+  attachmentCountsBySubject,
   onRawTextChange,
   onAIParse,
   aiParsing,
@@ -475,6 +478,9 @@ export function ImportPreviewSection({
   rawText: string;
   groups: SubjectTaskGroup[];
   drafts: TaskDraft[];
+  attachmentCount: number;
+  attachmentSubjectCount: number;
+  attachmentCountsBySubject: Record<string, number>;
   onRawTextChange: (value: string) => void;
   onAIParse: () => void;
   aiParsing: boolean;
@@ -488,11 +494,32 @@ export function ImportPreviewSection({
 }) {
   return (
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5">
-      <h2 className="text-xl font-semibold text-[var(--foreground)]">导入预览</h2>
-      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-        支持粘贴文字或拍照识别，按学科分组拆成孩子可执行的子项。
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold text-[var(--foreground)]">今日作业整理</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+            先粘贴老师原文并拆分任务，如果还有截图资料，可以继续补充到对应学科。
+          </p>
+        </div>
+        <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/65 px-3 py-2 text-right">
+          <p className="text-xs font-medium text-[var(--text-tertiary)]">当前整理进度</p>
+          <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+            {drafts.filter((draft) => draft.title.trim()).length} 条作业
+          </p>
+          <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+            {attachmentCount} 张资料图 / {attachmentSubjectCount} 个学科
+          </p>
+        </div>
+      </div>
       <div className="mt-4 rounded-[1rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-semibold text-[var(--foreground)]">1. 老师作业原文</h3>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              支持粘贴文字或拍照识别，再按学科拆成孩子可执行的子项。
+            </p>
+          </div>
+        </div>
         <textarea
           value={rawText}
           onChange={(event) => onRawTextChange(event.target.value)}
@@ -551,9 +578,9 @@ export function ImportPreviewSection({
       <div className="mt-4 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/50 p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-[var(--foreground)]">作业拆分预览</h3>
+            <h3 className="text-base font-semibold text-[var(--foreground)]">2. 作业拆分预览</h3>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              上方保留原始文本，下面按学科展示并支持逐条校对。
+              上方保留老师原文，下面按学科展示并支持逐条校对。
             </p>
           </div>
           <p className="shrink-0 whitespace-nowrap rounded-full bg-card px-3 py-1 text-sm font-semibold text-[var(--text-secondary)]">
@@ -576,9 +603,14 @@ export function ImportPreviewSection({
                 <div className="flex items-center justify-between gap-3 border-b border-[var(--line-light)] bg-[var(--card-alt)]/70 px-4 py-3">
                   <div className="min-w-0">
                     <h4 className="text-base font-semibold text-[var(--foreground)]">{group.subject}</h4>
-                    <p className="mt-1 text-xs text-[var(--text-secondary)]">
-                      {group.tasks.length} 条可执行子项
-                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)]">
+                      <p>{group.tasks.length} 条可执行子项</p>
+                      {(attachmentCountsBySubject[group.subject] ?? 0) > 0 ? (
+                        <span className="rounded-full border border-[var(--line-light)] bg-card px-2 py-0.5 font-medium text-[var(--text-tertiary)]">
+                          已补 {(attachmentCountsBySubject[group.subject] ?? 0)} 张资料图
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -671,13 +703,27 @@ export function AttachmentSection({
     acc[key].push(attachment);
     return acc;
   }, {});
+  const childVisibleCount = attachments.filter((attachment) => attachment.visible_to_child).length;
 
   return (
     <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5">
-      <h2 className="text-xl font-semibold text-[var(--foreground)]">老师图片资料</h2>
-      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-        图片作为参考资料保存，不会自动生成作业。先按学科归组，孩子需要时再点开查看。
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold text-[var(--foreground)]">3. 补充老师图片资料</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+            如果老师还发了截图，可以继续补到对应学科。图片只作为参考资料，不会生成无意义作业。
+          </p>
+        </div>
+        <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/65 px-3 py-2 text-right">
+          <p className="text-xs font-medium text-[var(--text-tertiary)]">当前资料概览</p>
+          <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+            {attachments.length} 张资料图
+          </p>
+          <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+            {childVisibleCount} 张给孩子看
+          </p>
+        </div>
+      </div>
 
       <div className="mt-4 rounded-[1rem] border border-[var(--line-light)] bg-[var(--card-alt)]/55 p-4">
         <SubjectPicker value={subject} onChange={onSubjectChange} />
@@ -871,7 +917,7 @@ export function LiveStatusSection({
     .sort((a, b) => (subjectPriority[a.subject] ?? 99) - (subjectPriority[b.subject] ?? 99));
 
   return (
-    <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-5">
+    <div className="rounded-[1.5rem] border border-[var(--line)] bg-[var(--card-alt)]/45 p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-[var(--foreground)]">孩子端实时状态</h2>
@@ -882,7 +928,7 @@ export function LiveStatusSection({
           </p>
         </div>
         {message ? (
-          <div className="rounded-full bg-[var(--info-subtle)] px-4 py-2 text-sm font-medium text-[var(--info)]">
+          <div className="rounded-full border border-[var(--line-light)] bg-card px-4 py-2 text-sm font-medium text-[var(--text-secondary)]">
             {message}
           </div>
         ) : null}
@@ -904,16 +950,16 @@ export function LiveStatusSection({
           {orderedGroups.map((group) => (
             <section
               key={group.subject}
-              className={`relative overflow-hidden rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/45 p-3 before:absolute before:inset-y-0 before:left-0 before:w-1 ${
+              className={`relative overflow-hidden rounded-[1rem] border border-[var(--line-light)] bg-card/65 p-3 before:absolute before:inset-y-0 before:left-0 before:w-1 ${
                 subjectAccentClass(group.subject === "今日作业" ? null : group.subject)
               }`}
             >
-              <div className="rounded-[1rem] bg-card/65 px-4 py-2.5">
+              <div className="rounded-[1rem] bg-[var(--card-alt)]/65 px-4 py-2">
                 <div className="flex items-center justify-between gap-3">
-                  <h3 className="pl-2 text-base font-semibold text-[var(--foreground)]">
+                  <h3 className="pl-2 text-sm font-semibold text-[var(--foreground)]">
                     {group.subject}
                   </h3>
-                  <span className="rounded-full bg-card px-3 py-1 text-xs font-semibold text-[var(--text-secondary)]">
+                  <span className="rounded-full border border-[var(--line-light)] bg-card px-3 py-1 text-xs font-medium text-[var(--text-secondary)]">
                     {group.tasks.length} 条作业
                   </span>
                 </div>
@@ -923,10 +969,10 @@ export function LiveStatusSection({
                 {group.tasks.map((task) => (
                   <article
                     key={task.id}
-                    className={`soft-shadow relative overflow-hidden rounded-[1rem] border border-[var(--line)] p-4 ${
+                    className={`relative overflow-hidden rounded-[1rem] border border-[var(--line-light)] p-4 ${
                       task.status === "confirmed_by_parent"
-                        ? "bg-[var(--card-alt)] opacity-75"
-                        : "bg-card"
+                        ? "bg-[var(--card-alt)]/75 opacity-80"
+                        : "bg-card/90"
                     } ${highlightedTaskId === task.id ? "status-change-pulse" : ""}`}
                   >
                     <div className="flex flex-col gap-4">
@@ -935,7 +981,7 @@ export function LiveStatusSection({
                           <div className="flex flex-wrap items-center gap-2">
                             <StatusPill status={task.status} />
                             {task.due_date !== selectedDate ? (
-                              <span className="rounded-full border border-[var(--line-light)] bg-[var(--card-alt)] px-3 py-1 text-xs font-semibold text-[var(--text-secondary)]">
+                              <span className="rounded-full border border-[var(--line-light)] bg-[var(--card-alt)] px-3 py-1 text-xs font-medium text-[var(--text-secondary)]">
                                 之前没完成
                               </span>
                             ) : null}
@@ -943,7 +989,7 @@ export function LiveStatusSection({
                               {sourceLabel(task.source)}
                             </span>
                             {task.category === "extra" && (
-                              <span className="rounded-full bg-[var(--primary-light)] px-2.5 py-1 text-xs font-semibold text-[var(--primary)]">
+                              <span className="rounded-full border border-[var(--line-light)] bg-[var(--primary-light)]/55 px-2.5 py-1 text-xs font-medium text-[var(--primary)]">
                                 课外
                               </span>
                             )}
@@ -972,7 +1018,7 @@ export function LiveStatusSection({
                           <button
                             type="button"
                             onClick={() => onStatusChange(task.id, "pending")}
-                            className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)]/45 px-3 py-2 text-sm font-semibold text-[var(--text-secondary)]"
+                            className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)]/35 px-3 py-2 text-sm font-medium text-[var(--text-secondary)]"
                           >
                             ↺ 重置为待开始
                           </button>
@@ -993,7 +1039,7 @@ export function LiveStatusSection({
                             <button
                               type="button"
                               onClick={() => onStatusChange(task.id, "pending")}
-                              className="rounded-[12px] border border-[var(--line)] bg-card px-3 py-2.5 text-sm font-semibold text-[var(--text-secondary)]"
+                              className="rounded-[12px] border border-[var(--line)] bg-[var(--card-alt)]/25 px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)]"
                             >
                               ↺ 重置
                             </button>
@@ -1001,7 +1047,7 @@ export function LiveStatusSection({
                           <button
                             type="button"
                             onClick={() => onDelete(task.id)}
-                            className="rounded-[12px] px-3 py-2.5 text-sm font-semibold text-[var(--error)]/70"
+                            className="rounded-[12px] px-3 py-2.5 text-sm font-medium text-[var(--error)]/70"
                           >
                             删除
                           </button>

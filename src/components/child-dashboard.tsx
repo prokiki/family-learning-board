@@ -245,10 +245,8 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
   );
   const openAttachmentGroup =
     groupedAttachments.find((item) => item.subject === openAttachmentSubject) ?? null;
-  const completedTaskCount = activeTasks.filter((task) => isCompletedStatus(task.status)).length;
   const allSchoolCompleted = schoolTasks.length > 0 && schoolTasks.every((t) => isCompletedStatus(t.status));
   const allExtraCompleted = extraTasks.length > 0 && extraTasks.every((t) => isCompletedStatus(t.status));
-  const allTasksCompleted = activeTasks.length > 0 && completedTaskCount === activeTasks.length;
   const allDone = (schoolTasks.length + extraTasks.length) > 0 && allSchoolCompleted && (extraTasks.length === 0 || allExtraCompleted);
 
   useEffect(() => {
@@ -706,12 +704,11 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
           today={today}
           highlightedTaskId={highlightedTaskId}
           isPending={isPending}
-              onUpdateTask={updateTask}
-              onOpenAttachments={setOpenAttachmentSubject}
-              allTasksCompleted={allTasksCompleted}
-              loading={loading}
-              message={message}
-            />
+          onUpdateTask={updateTask}
+          onOpenAttachments={setOpenAttachmentSubject}
+          loading={loading}
+          message={message}
+        />
           </div>
         </div>
 

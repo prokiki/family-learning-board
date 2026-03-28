@@ -691,7 +691,6 @@ export function ChildTasksSection({
   isPending,
   onUpdateTask,
   onOpenAttachments,
-  allTasksCompleted,
   loading,
   message,
 }: {
@@ -703,7 +702,6 @@ export function ChildTasksSection({
   isPending: boolean;
   onUpdateTask: (id: string, status: TaskStatus) => void;
   onOpenAttachments: (subject: string) => void;
-  allTasksCompleted: boolean;
   loading: boolean;
   message: string | null;
 }) {
