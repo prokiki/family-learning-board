@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const DEMO_BOARD = "demo";
 const DEFAULT_BOARD = process.env.NEXT_PUBLIC_DEFAULT_BOARD_ID || "";
 
 export default function Home() {
@@ -56,11 +55,13 @@ export default function Home() {
   function handleParentEntry() {
     if (authBoard) {
       router.push(`/parent?board=${authBoard}`);
-    } else if (DEFAULT_BOARD) {
-      setShowParentLogin(true);
     } else {
       setShowParentLogin(true);
     }
+  }
+
+  function handleChildEntry() {
+    router.push(`/child?board=${authBoard || DEFAULT_BOARD}`);
   }
 
   if (checking) return null;
@@ -85,23 +86,13 @@ export default function Home() {
 
           {/* 孩子看板入口 */}
           <div className="mt-8">
-            {authBoard ? (
-              <button
-                type="button"
-                onClick={() => router.push(`/child?board=${authBoard}`)}
-                className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3.5 text-base font-semibold text-white"
-              >
-                进入孩子看板
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => router.push(`/child?board=${DEMO_BOARD}`)}
-                className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3.5 text-base font-semibold text-white"
-              >
-                体验 Demo 看板
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleChildEntry}
+              className="w-full rounded-[12px] bg-[var(--primary)] px-4 py-3.5 text-base font-semibold text-white"
+            >
+              进入孩子看板
+            </button>
           </div>
 
           {/* 分隔线 */}
@@ -164,15 +155,6 @@ export default function Home() {
           ))}
         </div>
 
-        {/* 已登录时底部显示 Demo 入口 */}
-        {authBoard && (
-          <p
-            onClick={() => router.push(`/child?board=${DEMO_BOARD}`)}
-            className="mt-4 cursor-pointer text-center text-xs text-[var(--text-muted)]"
-          >
-            体验 Demo 看板
-          </p>
-        )}
       </div>
     </main>
   );

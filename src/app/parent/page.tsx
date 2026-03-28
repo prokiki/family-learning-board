@@ -12,7 +12,6 @@ import { DEFAULT_BOARD_ID } from "@/lib/board";
 function ParentContent() {
   const searchParams = useSearchParams();
   const board = searchParams.get("board") || DEFAULT_BOARD_ID;
-  const isDemo = board === "demo";
 
   const handleRefresh = useCallback(async () => {
     window.location.reload();
@@ -32,16 +31,9 @@ function ParentContent() {
           <Link href={`/parent/report?board=${board}`} className="nav-button">
             📊 周报统计
           </Link>
-          {!isDemo && <AISettingsButton boardId={board} />}
+          <AISettingsButton boardId={board} />
         </div>
-        <div className="flex items-center gap-2">
-          {isDemo && (
-            <span className="rounded-full bg-[var(--warning-subtle)] px-2.5 py-1 text-xs font-semibold text-[var(--warning)]">
-              Demo
-            </span>
-          )}
-          <ThemeToggle />
-        </div>
+        <ThemeToggle />
       </div>
       <ParentDashboard boardId={board} />
     </main>

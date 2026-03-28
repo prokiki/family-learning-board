@@ -11,7 +11,6 @@ import { DEFAULT_BOARD_ID } from "@/lib/board";
 function ChildContent() {
   const searchParams = useSearchParams();
   const board = searchParams.get("board") || DEFAULT_BOARD_ID;
-  const isDemo = board === "demo";
   const fromParent = searchParams.get("from") === "parent";
 
   const handleRefresh = useCallback(async () => {
@@ -27,11 +26,6 @@ function ChildContent() {
               <Link href={`/parent?board=${board}`} className="nav-button">
                 ← 返回家长端
               </Link>
-            )}
-            {isDemo && (
-              <span className="rounded-full bg-[var(--warning-subtle)] px-2.5 py-1 text-xs font-semibold text-[var(--warning)]">
-                Demo 模式
-              </span>
             )}
           </div>
           <ThemeToggle />
