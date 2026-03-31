@@ -24,6 +24,7 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
+    "google-adsense-account": "ca-pub-1428600598243465",
   },
 };
 
