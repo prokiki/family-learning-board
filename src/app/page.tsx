@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -69,13 +68,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6 md:py-14">
-      <Script
-        id="adsense-auto-ads"
-        async
-        strategy="afterInteractive"
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1428600598243465"
-        crossOrigin="anonymous"
-      />
       <div className="mx-auto max-w-[480px]">
         <div className="mb-6 flex items-center justify-between px-2">
           <p className="text-sm font-semibold tracking-[0.14em] text-[var(--text-secondary)]">
