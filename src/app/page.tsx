@@ -76,7 +76,7 @@ export default function Home() {
           <ThemeToggle />
         </div>
 
-        <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-6 sm:p-8">
+        <div className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card p-6 sm:p-7">
           <h1 className="text-2xl font-semibold leading-tight text-[var(--foreground)] sm:text-3xl">
             放学后，孩子一眼就知道该做什么。
           </h1>
@@ -85,7 +85,7 @@ export default function Home() {
           </p>
 
           {/* 孩子看板入口 */}
-          <div className="mt-8">
+          <div className="mt-7">
             <button
               type="button"
               onClick={handleChildEntry}
@@ -96,7 +96,7 @@ export default function Home() {
           </div>
 
           {/* 分隔线 */}
-          <div className="my-6 flex items-center gap-3">
+          <div className="my-5 flex items-center gap-3">
             <div className="h-px flex-1 bg-[var(--line)]" />
             <span className="text-xs text-[var(--text-muted)]">家长区域</span>
             <div className="h-px flex-1 bg-[var(--line)]" />
@@ -138,7 +138,7 @@ export default function Home() {
         </div>
 
         {/* 功能亮点 */}
-        <div className="mt-6 grid grid-cols-3 gap-3">
+        <div className="mt-5 grid grid-cols-3 gap-2.5 px-1">
           {[
             ["📋", "作业导入", "AI 智能拆分"],
             ["🔄", "实时同步", "状态即时更新"],
@@ -146,11 +146,11 @@ export default function Home() {
           ].map(([icon, title, desc]) => (
             <div
               key={title}
-              className="rounded-[1rem] border border-[var(--line)] bg-card p-4 text-center"
+              className="rounded-[0.875rem] border border-[var(--line-light)] bg-transparent p-3 text-center"
             >
-              <p className="text-xl">{icon}</p>
-              <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">{title}</p>
-              <p className="mt-1 text-xs text-[var(--text-secondary)]">{desc}</p>
+              <p className="text-lg opacity-75">{icon}</p>
+              <p className="mt-1.5 text-xs font-semibold text-[var(--foreground)]">{title}</p>
+              <p className="mt-0.5 text-[11px] leading-4 text-[var(--text-muted)]">{desc}</p>
             </div>
           ))}
         </div>

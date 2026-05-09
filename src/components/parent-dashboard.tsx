@@ -892,7 +892,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
           {isTodaySelected ? (
             <div>
               {/* Tab Bar */}
-              <div className="mb-4 flex gap-1.5 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/60 p-1.5">
+              <div className="mb-3 flex gap-1 rounded-[0.875rem] border border-[var(--line)] bg-[var(--card-alt)]/50 p-1">
                 {([
                   ["import", "作业导入"],
                   ["manual", "手动新增"],
@@ -902,9 +902,9 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
                     key={key}
                     type="button"
                     onClick={() => setActiveTab(key)}
-                    className={`flex-1 rounded-[12px] px-2 py-2.5 text-sm font-semibold transition-colors ${
+                    className={`flex-1 rounded-[10px] px-2 py-2 text-sm font-semibold transition-colors ${
                       activeTab === key
-                        ? "bg-card text-[var(--foreground)] shadow-[var(--shadow-sm)]"
+                        ? "bg-card text-[var(--foreground)] shadow-[var(--shadow-xs)]"
                         : "text-[var(--text-secondary)] hover:text-[var(--foreground)]"
                     }`}
                   >
@@ -915,7 +915,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
 
               {/* 学校/课外 切换 */}
               {(activeTab === "import" || activeTab === "manual" || activeTab === "template") && (
-                <div className="mb-4 flex gap-1.5 rounded-[1rem] border border-[var(--line)] bg-[var(--card-alt)]/60 p-1.5">
+                <div className="mb-4 flex gap-1 rounded-[0.875rem] border border-[var(--line-light)] bg-transparent p-1">
                   {([
                     ["school", "学校作业"],
                     ["extra", "课外练习"],
@@ -924,9 +924,9 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
                       key={key}
                       type="button"
                       onClick={() => setTaskCategory(key)}
-                      className={`flex-1 rounded-[12px] px-3 py-2.5 text-sm font-semibold transition-colors ${
+                      className={`flex-1 rounded-[10px] px-3 py-1.5 text-xs font-semibold transition-colors ${
                         taskCategory === key
-                          ? "bg-card text-[var(--foreground)] shadow-[var(--shadow-sm)]"
+                          ? "border border-[var(--line)] bg-[var(--card-alt)] text-[var(--primary)]"
                           : "text-[var(--text-secondary)] hover:text-[var(--foreground)]"
                       }`}
                     >

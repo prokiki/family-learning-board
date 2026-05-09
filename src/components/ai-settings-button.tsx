@@ -11,7 +11,7 @@ export function AISettingsButton({ boardId }: { boardId: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="nav-button"
+        className="parent-toolbar-button"
       >
         ⚙ AI 设置
       </button>

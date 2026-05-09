@@ -22,13 +22,13 @@ function ParentContent() {
     <main className="min-h-screen bg-background">
       <div className="flex items-center justify-between px-3 pt-3 sm:px-4 sm:pt-4 md:px-6">
         <div className="flex items-center gap-2">
-          <Link href="/" className="nav-button">
+          <Link href="/" className="parent-toolbar-button">
             ← 返回首页
           </Link>
-          <Link href={`/child?board=${board}&from=parent`} className="nav-button">
+          <Link href={`/child?board=${board}&from=parent`} className="parent-toolbar-button">
             孩子看板
           </Link>
-          <Link href={`/parent/report?board=${board}`} className="nav-button">
+          <Link href={`/parent/report?board=${board}`} className="parent-toolbar-button">
             📊 周报统计
           </Link>
           <AISettingsButton boardId={board} />

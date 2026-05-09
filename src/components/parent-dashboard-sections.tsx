@@ -179,6 +179,8 @@ export function ParentHeader({
   isToday: boolean;
 }) {
   const isYesterday = selectedDate === yesterdayDate;
+  const hasDoneTasks = progress.done > 0;
+  const hasHelpTasks = progress.help > 0;
 
   return (
     <section className="soft-shadow rounded-[1.5rem] border border-[var(--line)] bg-card px-5 py-5 md:px-8 md:py-6">
@@ -232,17 +234,33 @@ export function ParentHeader({
               <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">总数</p>
             </div>
           </div>
-          <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--success-subtle)] px-3 py-3">
+          <div
+            className={`rounded-[1rem] border border-[var(--line)] px-3 py-3 ${
+              hasDoneTasks ? "bg-[var(--success-subtle)]" : "bg-[var(--card-alt)]/45"
+            }`}
+          >
             <div>
-              <p className="text-2xl font-bold text-[var(--success)]">
+              <p
+                className={`text-2xl font-bold ${
+                  hasDoneTasks ? "text-[var(--success)]" : "text-[var(--text-secondary)]"
+                }`}
+              >
                 {progress.done}
               </p>
               <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">已完成</p>
             </div>
           </div>
-          <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--warning-subtle)] px-3 py-3">
+          <div
+            className={`rounded-[1rem] border border-[var(--line)] px-3 py-3 ${
+              hasHelpTasks ? "bg-[var(--warning-subtle)]" : "bg-[var(--card-alt)]/45"
+            }`}
+          >
             <div>
-              <p className="text-2xl font-bold text-[var(--warning)]">
+              <p
+                className={`text-2xl font-bold ${
+                  hasHelpTasks ? "text-[var(--warning)]" : "text-[var(--text-secondary)]"
+                }`}
+              >
                 {progress.help}
               </p>
               <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">待协助</p>

@@ -98,7 +98,6 @@ export async function POST(request: Request) {
     });
 
     let raw = completion.choices[0]?.message?.content?.trim() ?? "[]";
-    console.log("[parse-homework] AI raw response:", raw);
 
     /* 去掉可能的 markdown 代码块包装 */
     const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);

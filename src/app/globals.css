@@ -257,6 +257,31 @@ select:disabled {
   transform: scale(0.98);
 }
 
+.parent-toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 10px;
+  border: 1px solid var(--line-light);
+  background: color-mix(in srgb, var(--card) 72%, transparent);
+  padding: 0.48rem 0.78rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  box-shadow: none;
+}
+
+.parent-toolbar-button:hover {
+  border-color: var(--line);
+  background: var(--card);
+  color: var(--foreground);
+  transform: translateY(-1px);
+}
+
+.parent-toolbar-button:active {
+  transform: scale(0.98);
+}
+
 .section-kicker {
   font-size: 0.75rem;
   font-weight: 600;
