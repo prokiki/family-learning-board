@@ -1,5 +1,6 @@
+import { PrivateImage } from "@/components/private-image";
 import { useState } from "react";
-import Image from "next/image";
+
 import { EmptyState, TaskListSkeleton } from "@/components/empty-state";
 import { StatusPill } from "@/components/status-pill";
 import type {
@@ -823,11 +824,10 @@ export function AttachmentSection({
                       </div>
                       <div className="grid gap-4 md:grid-cols-[132px_1fr]">
                         <div className="relative h-32 w-full overflow-hidden rounded-[0.9rem] border border-[var(--line)]">
-                          <Image
-                            src={attachment.public_url}
+                          <PrivateImage
+                            path={attachment.storage_path}
                             alt={attachment.note ?? `${groupSubject} 参考图片`}
-                            fill
-                            sizes="132px"
+
                             className="object-cover"
                           />
                         </div>

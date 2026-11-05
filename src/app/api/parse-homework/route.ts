@@ -1,8 +1,8 @@
+import { secureRoute } from "@/lib/api-security";
+import { getAISettings } from "@/lib/ai-server";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { createClient } from "@supabase/supabase-js";
-import { getProvider } from "@/lib/ai-providers";
-import { resolveBoardId } from "@/lib/board";
+
 
 const BASE_SYSTEM_PROMPT = `你是一个中国小学作业解析助手。用户粘贴老师布置的作业文字，你要按学科分组解析。
 
@@ -23,14 +23,8 @@ const FEW_SHOT_USER = `语文作业
 
 const FEW_SHOT_ASSISTANT = `[{"subject":"语文","tasks":[{"title":"预习书本P88","details":""}]},{"subject":"英语","tasks":[{"title":"听写单词","details":""},{"title":"背课文","details":""}]}]`;
 
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key);
-}
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   let body: { text?: string; board?: string };
 
   try {
@@ -40,37 +34,12 @@ export async function POST(request: Request) {
   }
 
   const text = body.text?.trim();
-  const boardId = resolveBoardId(body.board);
   if (!text) {
     return NextResponse.json({ error: "作业文字不能为空" }, { status: 400 });
   }
 
   /* 从数据库读取 AI 配置 */
-  let apiKey = process.env.OPENAI_API_KEY || "";
-  let model = "gpt-4o-mini";
-  let baseURL: string | undefined;
-  let soulDesc = "";
-
-  const supabase = getAdminClient();
-  if (supabase) {
-    const { data } = await supabase
-      .from("ai_config")
-      .select("provider, api_key, model, is_active, soul")
-      .eq("board_id", boardId)
-      .single();
-
-    if (data?.is_active && data.api_key) {
-      apiKey = data.api_key;
-      model = data.model || "gpt-4o-mini";
-      const provider = getProvider(data.provider);
-      if (provider?.baseURL) {
-        baseURL = provider.baseURL;
-      }
-      if (data.soul) {
-        soulDesc = data.soul;
-      }
-    }
-  }
+  const { apiKey, model, baseURL, soulDesc } = getAISettings();
 
   if (!apiKey) {
     return NextResponse.json(
@@ -124,8 +93,10 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ groups });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "AI 服务异常";
+  } catch {
+    const message = "AI 服务暂不可用";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+
+export const POST = secureRoute(handlePost, true, true, 65536);
