@@ -1,8 +1,8 @@
+import { secureRoute } from "@/lib/api-security";
+import { getAISettings } from "@/lib/ai-server";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { createClient } from "@supabase/supabase-js";
-import { getProvider } from "@/lib/ai-providers";
-import { resolveBoardId } from "@/lib/board";
+
 
 const SYSTEM_PROMPT = `你是一个三年级小学生的学习助手。根据给出的作业，生成一张"作业攻略卡"，帮孩子快速理解并开始做。
 
@@ -26,14 +26,8 @@ const SYSTEM_PROMPT = `你是一个三年级小学生的学习助手。根据给
 4. 语气像朋友聊天，亲切简短
 5. 如果作业有页码、单元号等信息，steps 里要提到具体翻到哪一页`;
 
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key);
-}
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   let body: {
     board?: string;
     subject?: string;
@@ -49,37 +43,12 @@ export async function POST(request: Request) {
   }
 
   const { subject, title, details } = body;
-  const boardId = resolveBoardId(body.board);
   if (!title) {
     return NextResponse.json({ error: "缺少作业信息" }, { status: 400 });
   }
 
   /* 读取 AI 配置 */
-  let apiKey = process.env.OPENAI_API_KEY || "";
-  let model = "gpt-4o-mini";
-  let baseURL: string | undefined;
-  let soulDesc = "";
-
-  const supabase = getAdminClient();
-  if (supabase) {
-    const { data } = await supabase
-      .from("ai_config")
-      .select("provider, api_key, model, is_active, soul")
-      .eq("board_id", boardId)
-      .single();
-
-    if (data?.is_active && data.api_key) {
-      apiKey = data.api_key;
-      model = data.model || "gpt-4o-mini";
-      const provider = getProvider(data.provider);
-      if (provider?.baseURL) {
-        baseURL = provider.baseURL;
-      }
-      if (data.soul) {
-        soulDesc = data.soul;
-      }
-    }
-  }
+  const { apiKey, model, baseURL, soulDesc } = getAISettings();
 
   if (!apiKey) {
     return NextResponse.json({ error: "未配置 AI 服务" }, { status: 500 });
@@ -128,8 +97,10 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ card });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "AI 服务异常";
+  } catch {
+    const message = "AI 服务暂不可用";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+
+export const POST = secureRoute(handlePost, false, true, 65536);

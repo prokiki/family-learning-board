@@ -1,8 +1,8 @@
+import { secureRoute } from "@/lib/api-security";
+import { getAISettings } from "@/lib/ai-server";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { createClient } from "@supabase/supabase-js";
-import { getProvider } from "@/lib/ai-providers";
-import { resolveBoardId } from "@/lib/board";
+
 
 const SYSTEM_PROMPT = `你是一个有趣的三年级作文小老师。根据作文题目，生成一棵详细的思维导图，帮孩子把作文拆解成具体可写的内容，并给每个要点附上示范写法。
 
@@ -43,14 +43,8 @@ const SYSTEM_PROMPT = `你是一个有趣的三年级作文小老师。根据作
   ]
 }`;
 
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key);
-}
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   let body: { board?: string; title?: string; details?: string };
 
   try {
@@ -60,37 +54,12 @@ export async function POST(request: Request) {
   }
 
   const { title, details } = body;
-  const boardId = resolveBoardId(body.board);
   if (!title) {
     return NextResponse.json({ error: "缺少作文题目" }, { status: 400 });
   }
 
   /* 读取 AI 配置 */
-  let apiKey = process.env.OPENAI_API_KEY || "";
-  let model = "gpt-4o-mini";
-  let baseURL: string | undefined;
-  let soulDesc = "";
-
-  const supabase = getAdminClient();
-  if (supabase) {
-    const { data } = await supabase
-      .from("ai_config")
-      .select("provider, api_key, model, is_active, soul")
-      .eq("board_id", boardId)
-      .single();
-
-    if (data?.is_active && data.api_key) {
-      apiKey = data.api_key;
-      model = data.model || "gpt-4o-mini";
-      const provider = getProvider(data.provider);
-      if (provider?.baseURL) {
-        baseURL = provider.baseURL;
-      }
-      if (data.soul) {
-        soulDesc = data.soul;
-      }
-    }
-  }
+  const { apiKey, model, baseURL, soulDesc } = getAISettings();
 
   if (!apiKey) {
     return NextResponse.json({ error: "未配置 AI 服务" }, { status: 500 });
@@ -150,8 +119,10 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ mindmap });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "AI 服务异常";
+  } catch {
+    const message = "AI 服务暂不可用";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+
+export const POST = secureRoute(handlePost, false, true, 65536);

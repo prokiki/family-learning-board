@@ -1,8 +1,8 @@
+import { secureRoute } from "@/lib/api-security";
+import { getAISettings } from "@/lib/ai-server";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { createClient } from "@supabase/supabase-js";
-import { getProvider } from "@/lib/ai-providers";
-import { resolveBoardId } from "@/lib/board";
+
 
 const SYSTEM_PROMPT = `你是一个 OCR 文字识别助手。用户会发送一张包含中国小学作业内容的照片（可能是老师手写的、打印的、或者钉钉/微信截图）。
 
@@ -14,14 +14,8 @@ const SYSTEM_PROMPT = `你是一个 OCR 文字识别助手。用户会发送一�
 5. 只输出识别到的文字，不要加任何解释或标注
 6. 如果图片模糊或无法识别，回复"图片不清晰，请重新拍照"`;
 
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key);
-}
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   let body: { image?: string; board?: string };
 
   try {
@@ -31,33 +25,12 @@ export async function POST(request: Request) {
   }
 
   const { image } = body;
-  const boardId = resolveBoardId(body.board);
-  if (!image) {
+  if (typeof image !== "string" || !/^(?:data:image\/(?:jpeg|png|webp);base64,)?[A-Za-z0-9+/]+={0,2}$/.test(image)) {
     return NextResponse.json({ error: "缺少图片数据" }, { status: 400 });
   }
 
   /* 读取 AI 配置 */
-  let apiKey = process.env.OPENAI_API_KEY || "";
-  let model = "gpt-4o-mini";
-  let baseURL: string | undefined;
-
-  const supabase = getAdminClient();
-  if (supabase) {
-    const { data } = await supabase
-      .from("ai_config")
-      .select("provider, api_key, model, is_active")
-      .eq("board_id", boardId)
-      .single();
-
-    if (data?.is_active && data.api_key) {
-      apiKey = data.api_key;
-      model = data.model || "gpt-4o-mini";
-      const provider = getProvider(data.provider);
-      if (provider?.baseURL) {
-        baseURL = provider.baseURL;
-      }
-    }
-  }
+  const { apiKey, model, baseURL } = getAISettings();
 
   if (!apiKey) {
     return NextResponse.json({ error: "未配置 AI 服务" }, { status: 500 });
@@ -97,8 +70,10 @@ export async function POST(request: Request) {
     const text = completion.choices[0]?.message?.content?.trim() ?? "";
 
     return NextResponse.json({ text });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "AI 服务异常";
+  } catch {
+    const message = "AI 服务暂不可用";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+
+export const POST = secureRoute(handlePost, true, true, 3145728);

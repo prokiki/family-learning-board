@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:security": "node tests/security-db.test.mjs && TEST_CONTAINED=1 node tests/security-db.test.mjs && node tests/containment.test.mjs && node --import tsx tests/security-api.test.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
@@ -16,6 +17,7 @@
     "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.15",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -23,6 +25,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
+    "tsx": "4.23.15",
     "typescript": "^5"
   }
 }

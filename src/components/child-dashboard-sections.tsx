@@ -1,7 +1,9 @@
 "use client";
+import { PrivateImage } from "@/components/private-image";
+import { authFetch } from "@/lib/auth-fetch";
 
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
+
 import { EmptyState, TaskListSkeleton } from "@/components/empty-state";
 import { formatDisplayDate } from "@/lib/date";
 import type { TaskAttachmentRecord, TaskRecord, TaskStatus } from "@/types/task";
@@ -67,7 +69,7 @@ function TaskHelpCard({ boardId, task, onClose }: { boardId: string; task: TaskR
     let active = true;
     (async () => {
       try {
-        const res = await fetch("/api/task-help", {
+        const res = await authFetch("/api/task-help", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ board: boardId, subject: task.subject || "", title: task.title, details: task.details || "" }),
@@ -166,7 +168,7 @@ function WritingAssistant({ boardId, task, onClose }: { boardId: string; task: T
     let active = true;
     (async () => {
       try {
-        const res = await fetch("/api/writing-mindmap", {
+        const res = await authFetch("/api/writing-mindmap", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ board: boardId, title: task.title, details: task.details || "" }),
@@ -195,7 +197,7 @@ function WritingAssistant({ boardId, task, onClose }: { boardId: string; task: T
     if (!mindmap || !drafts[sectionIndex]?.trim()) return;
     setFeedbackLoading(sectionIndex);
     try {
-      const res = await fetch("/api/writing-feedback", {
+      const res = await authFetch("/api/writing-feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -222,7 +224,7 @@ function WritingAssistant({ boardId, task, onClose }: { boardId: string; task: T
   const loadSamples = useCallback(async () => {
     setSampleLoading(true);
     try {
-      const res = await fetch("/api/writing-sample", {
+      const res = await authFetch("/api/writing-sample", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ board: boardId, title: task.title, details: task.details || "" }),
@@ -751,11 +753,10 @@ export function ChildTasksSection({
                 className="mb-3 flex w-full items-center gap-3 rounded-[1rem] border border-[var(--primary)]/25 bg-[var(--primary-light)] p-2.5 text-left"
               >
                 <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[10px] border border-[var(--line)] bg-[var(--surface-3)]">
-                  <Image
-                    src={attachmentGroup.attachments[0].public_url}
+                  <PrivateImage
+                    path={attachmentGroup.attachments[0].storage_path}
                     alt="参考图片"
-                    fill
-                    sizes="40px"
+
                     className="object-cover"
                   />
                 </div>
@@ -930,13 +931,11 @@ export function AttachmentModal({
 
       {/* 主图区域 */}
       <div className="relative min-h-0 flex-1 overflow-hidden">
-        <Image
-          src={activeAttachment.public_url}
+        <PrivateImage
+          path={activeAttachment.storage_path}
           alt={activeAttachment.note ?? `${group.subject} 参考图片 ${selectedIndex + 1}`}
-          fill
-          sizes="100vw"
+
           className="object-contain p-2"
-          priority
         />
 
         {/* 左右切换按钮（iPad / 横屏） */}
@@ -981,11 +980,10 @@ export function AttachmentModal({
                     : "border-transparent opacity-50"
                 }`}
               >
-                <Image
-                  src={attachment.public_url}
+                <PrivateImage
+                  path={attachment.storage_path}
                   alt={`缩略图 ${index + 1}`}
-                  fill
-                  sizes="56px"
+
                   className="object-cover"
                 />
               </button>

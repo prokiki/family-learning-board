@@ -1,4 +1,5 @@
 "use client";
+import { authFetch } from "@/lib/auth-fetch";
 
 import {
   useEffect,
@@ -552,7 +553,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
     if (summaryLoading || dailySummary) return;
     setSummaryLoading(true);
     try {
-      const res = await fetch("/api/daily-summary", {
+      const res = await authFetch("/api/daily-summary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -595,7 +596,7 @@ export function ChildDashboard({ boardId }: { boardId: string }) {
                 onClick={async () => {
                   setPlanLoading(true);
                   try {
-                    const res = await fetch("/api/daily-plan", {
+                    const res = await authFetch("/api/daily-plan", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({

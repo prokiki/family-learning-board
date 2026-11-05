@@ -1,4 +1,5 @@
 "use client";
+import { authFetch } from "@/lib/auth-fetch";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -552,7 +553,7 @@ function AIWeeklyReview({
     setReview(null);
     try {
       const weekdayNames = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
-      const res = await fetch("/api/weekly-review", {
+      const res = await authFetch("/api/weekly-review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

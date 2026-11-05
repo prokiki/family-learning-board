@@ -1,4 +1,5 @@
 "use client";
+import { authFetch } from "@/lib/auth-fetch";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { SetupNotice } from "@/components/setup-notice";
@@ -249,7 +250,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
     try {
       /* 压缩图片到合理大小 */
       const base64 = await fileToBase64(file);
-      const res = await fetch("/api/ocr-homework", {
+      const res = await authFetch("/api/ocr-homework", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: base64, board: boardId }),
@@ -276,7 +277,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
     if (!rawText.trim() || aiParsing) return;
     setAiParsing(true);
     try {
-      const response = await fetch("/api/parse-homework", {
+      const response = await authFetch("/api/parse-homework", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: rawText, board: boardId }),
@@ -680,6 +681,9 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
       return;
     }
 
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      setMessage("请选择不超过 5MB 的 JPG、PNG 或 WebP 图片"); return;
+    }
     const client: SupabaseClient = supabase;
     const normalizedRole = attachmentRole;
     const visibleToChild = normalizedRole === "parent_only" ? false : attachmentVisibleToChild;
@@ -709,7 +713,6 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
       return;
     }
 
-    const publicUrlResult = client.storage.from("teacher-attachments").getPublicUrl(storagePath);
     const nextSortOrder =
       attachments.filter(
         (attachment) => (attachment.subject?.trim() || "其他") === attachmentSubject.trim(),
@@ -720,7 +723,7 @@ export function ParentDashboard({ boardId }: { boardId: string }) {
       due_date: effectiveSelectedDate,
       subject: attachmentSubject.trim(),
       storage_path: storagePath,
-      public_url: publicUrlResult.data.publicUrl,
+      public_url: "",
       note: attachmentNote.trim() || null,
       role: normalizedRole,
       visible_to_child: visibleToChild,
